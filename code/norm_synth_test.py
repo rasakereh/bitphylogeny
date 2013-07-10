@@ -28,7 +28,7 @@ print "Codename: ", codename
 #data = concatenate([0.5 + 0.2*randn(70,1), -0.8 + 0.1*randn(35,1), -1.5+0.1*randn(35,1)])
 #data = sigmoid(data)
 
-reader = csv.DictReader(open('/home/yuan03/Dropbox/dp/synthetic/syn_freq.csv'),
+reader = csv.DictReader(open('./syn_freq.csv'),
                         delimiter=',')
 
 data = []
