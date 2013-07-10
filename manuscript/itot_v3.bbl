@@ -1,0 +1,129 @@
+\begin{thebibliography}{10}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Adams et~al.(2010)Adams, Ghahramani, and Jordan]{Adams2010}
+R.~P. Adams, Z.~Ghahramani, and M.~I. Jordan.
+\newblock Tree-structured stick breaking processes for hierarchical data.
+\newblock June 2010.
+
+\bibitem[Aparicio and Caldas(2013)]{Aparicio2013}
+S.~Aparicio and C.~Caldas.
+\newblock The implications of clonal genome evolution for cancer medicine.
+\newblock \emph{N Engl J Med}, 368\penalty0 (9):\penalty0 842--851, Feb 2013.
+\newblock \doi{10.1056/NEJMra1204892}.
+\newblock URL \url{http://dx.doi.org/10.1056/NEJMra1204892}.
+
+\bibitem[Maley et~al.(2006)Maley, Galipeau, Finley, Wongsurawat, Li, Sanchez,
+  Paulson, Blount, Risques, Rabinovitch, and Reid]{Maley2006}
+C.~C. Maley, P.~C. Galipeau, J.~C. Finley, V.~J. Wongsurawat, X.~Li, C.~A.
+  Sanchez, T.~G. Paulson, P.~L. Blount, R.-A. Risques, P.~S. Rabinovitch, and
+  B.~J. Reid.
+\newblock Genetic clonal diversity predicts progression to esophageal
+  adenocarcinoma.
+\newblock \emph{Nat Genet}, 38\penalty0 (4):\penalty0 468--473, Apr 2006.
+\newblock \doi{10.1038/ng1768}.
+\newblock URL \url{http://dx.doi.org/10.1038/ng1768}.
+
+\bibitem[Nik-Zainal et~al.(2012{\natexlab{a}})Nik-Zainal, Alexandrov, Wedge,
+  {Van Loo}, Greenman, Raine, Jones, Hinton, Marshall, Stebbings, Menzies,
+  Martin, Leung, Chen, Leroy, Ramakrishna, Rance, Lau, Mudie, Varela, McBride,
+  Bignell, Cooke, Shlien, Gamble, Whitmore, Maddison, Tarpey, Davies,
+  Papaemmanuil, Stephens, McLaren, Butler, Teague, Jönsson, Garber, Silver,
+  Miron, Fatima, Boyault, Langerød, Tutt, Martens, Aparicio, Borg, Salomon,
+  Thomas, Børresen-Dale, Richardson, Neuberger, Futreal, Campbell, Stratton,
+  and ~]{Nik-Zainal2012}
+S.~Nik-Zainal, L.~B. Alexandrov, D.~C. Wedge, P.~{Van Loo}, C.~D. Greenman,
+  K.~Raine, D.~Jones, J.~Hinton, J.~Marshall, L.~A. Stebbings, A.~Menzies,
+  S.~Martin, K.~Leung, L.~Chen, C.~Leroy, M.~Ramakrishna, R.~Rance, K.~W. Lau,
+  L.~J. Mudie, I.~Varela, D.~J. McBride, G.~R. Bignell, S.~L. Cooke, A.~Shlien,
+  J.~Gamble, I.~Whitmore, M.~Maddison, P.~S. Tarpey, H.~R. Davies,
+  E.~Papaemmanuil, P.~J. Stephens, S.~McLaren, A.~P. Butler, J.~W. Teague,
+  G.~Jönsson, J.~E. Garber, D.~Silver, P.~Miron, A.~Fatima, S.~Boyault,
+  A.~Langerød, A.~Tutt, J.~W.~M. Martens, S.~A. J.~R. Aparicio, Å.~Borg, A.~V.
+  Salomon, G.~Thomas, A.-L. Børresen-Dale, A.~L. Richardson, M.~S. Neuberger,
+  P.~A. Futreal, P.~J. Campbell, M.~R. Stratton, and B.~C. W. G. o. t. I. C.
+  G.~C. ~.
+\newblock Mutational processes molding the genomes of 21 breast cancers.
+\newblock \emph{Cell}, 149\penalty0 (5):\penalty0 979--993, May
+  2012{\natexlab{a}}.
+
+\bibitem[Nik-Zainal et~al.(2012{\natexlab{b}})Nik-Zainal, {Van Loo}, Wedge,
+  Alexandrov, Greenman, Lau, Raine, Jones, Marshall, Ramakrishna, Shlien,
+  Cooke, Hinton, Menzies, Stebbings, Leroy, Jia, Rance, Mudie, Gamble,
+  Stephens, McLaren, Tarpey, Papaemmanuil, Davies, Varela, McBride, Bignell,
+  Leung, Butler, Teague, Martin, Jönsson, Mariani, Boyault, Miron, Fatima,
+  Langerød, Aparicio, Tutt, Sieuwerts, Borg, Thomas, Salomon, Richardson,
+  Børresen-Dale, Futreal, Stratton, Campbell, and ~]{Nik-Zainal2012a}
+S.~Nik-Zainal, P.~{Van Loo}, D.~C. Wedge, L.~B. Alexandrov, C.~D. Greenman,
+  K.~W. Lau, K.~Raine, D.~Jones, J.~Marshall, M.~Ramakrishna, A.~Shlien, S.~L.
+  Cooke, J.~Hinton, A.~Menzies, L.~A. Stebbings, C.~Leroy, M.~Jia, R.~Rance,
+  L.~J. Mudie, S.~J. Gamble, P.~J. Stephens, S.~McLaren, P.~S. Tarpey,
+  E.~Papaemmanuil, H.~R. Davies, I.~Varela, D.~J. McBride, G.~R. Bignell,
+  K.~Leung, A.~P. Butler, J.~W. Teague, S.~Martin, G.~Jönsson, O.~Mariani,
+  S.~Boyault, P.~Miron, A.~Fatima, A.~Langerød, S.~A. J.~R. Aparicio, A.~Tutt,
+  A.~M. Sieuwerts, Å.~Borg, G.~Thomas, A.~V. Salomon, A.~L. Richardson, A.-L.
+  Børresen-Dale, P.~A. Futreal, M.~R. Stratton, P.~J. Campbell, and B.~C. W. G.
+  o. t. I. C. G.~C. ~.
+\newblock The life history of 21 breast cancers.
+\newblock \emph{Cell}, 149\penalty0 (5):\penalty0 994--1007, May
+  2012{\natexlab{b}}.
+
+\bibitem[Schwarz and many others(2013{\natexlab{a}})]{Schwarz2013a}
+R.~F. Schwarz and many others.
+\newblock Phylogenetic quantification of intra-tumor heterogeneity.
+\newblock \emph{yes}, yes:\penalty0 yes, 2013{\natexlab{a}}.
+
+\bibitem[Schwarz and many others(2013{\natexlab{b}})]{Schwarz2013b}
+R.~F. Schwarz and many others.
+\newblock Phylogenetic quantification of intra-tumor heterogeneity predicts
+  time to relapse in high-grade serous ovarian cancer.
+\newblock \emph{yes}, yes:\penalty0 yes, 2013{\natexlab{b}}.
+
+\bibitem[Shah et~al.(2009)Shah, Morin, Khattra, Prentice, Pugh, Burleigh,
+  Delaney, Gelmon, Guliany, Senz, Steidl, Holt, Jones, Sun, Leung, Moore,
+  Severson, Taylor, Teschendorff, Tse, Turashvili, Varhol, Warren, Watson,
+  Zhao, Caldas, Huntsman, Hirst, Marra, and Aparicio]{Shah2009}
+S.~P. Shah, R.~D. Morin, J.~Khattra, L.~Prentice, T.~Pugh, A.~Burleigh,
+  A.~Delaney, K.~Gelmon, R.~Guliany, J.~Senz, C.~Steidl, R.~A. Holt, S.~Jones,
+  M.~Sun, G.~Leung, R.~Moore, T.~Severson, G.~A. Taylor, A.~E. Teschendorff,
+  K.~Tse, G.~Turashvili, R.~Varhol, R.~L. Warren, P.~Watson, Y.~Zhao,
+  C.~Caldas, D.~Huntsman, M.~Hirst, M.~A. Marra, and S.~Aparicio.
+\newblock Mutational evolution in a lobular breast tumour profiled at single
+  nucleotide resolution.
+\newblock \emph{Nature}, 461\penalty0 (7265):\penalty0 809--813, Oct 2009.
+\newblock \doi{10.1038/nature08489}.
+\newblock URL \url{http://dx.doi.org/10.1038/nature08489}.
+
+\bibitem[Shah et~al.(2012)Shah, Roth, Goya, Oloumi, Ha, Zhao, Turashvili, Ding,
+  Tse, Haffari, Bashashati, Prentice, Khattra, Burleigh, Yap, Bernard,
+  McPherson, Shumansky, Crisan, Giuliany, Heravi-Moussavi, Rosner, Lai, Birol,
+  Varhol, Tam, Dhalla, Zeng, Ma, Chan, Griffith, Moradian, Cheng, Morin,
+  Watson, Gelmon, Chia, Chin, Curtis, Rueda, Pharoah, Damaraju, Mackey, Hoon,
+  Harkins, Tadigotla, Sigaroudinia, Gascard, Tlsty, Costello, Meyer, Eaves,
+  Wasserman, Jones, Huntsman, Hirst, Caldas, Marra, and Aparicio]{Shah2012}
+S.~P. Shah, A.~Roth, R.~Goya, A.~Oloumi, G.~Ha, Y.~Zhao, G.~Turashvili,
+  J.~Ding, K.~Tse, G.~Haffari, A.~Bashashati, L.~M. Prentice, J.~Khattra,
+  A.~Burleigh, D.~Yap, V.~Bernard, A.~McPherson, K.~Shumansky, A.~Crisan,
+  R.~Giuliany, A.~Heravi-Moussavi, J.~Rosner, D.~Lai, I.~Birol, R.~Varhol,
+  A.~Tam, N.~Dhalla, T.~Zeng, K.~Ma, S.~K. Chan, M.~Griffith, A.~Moradian,
+  S.-W.~G. Cheng, G.~B. Morin, P.~Watson, K.~Gelmon, S.~Chia, S.-F. Chin,
+  C.~Curtis, O.~M. Rueda, P.~D. Pharoah, S.~Damaraju, J.~Mackey, K.~Hoon,
+  T.~Harkins, V.~Tadigotla, M.~Sigaroudinia, P.~Gascard, T.~Tlsty, J.~F.
+  Costello, I.~M. Meyer, C.~J. Eaves, W.~W. Wasserman, S.~Jones, D.~Huntsman,
+  M.~Hirst, C.~Caldas, M.~A. Marra, and S.~Aparicio.
+\newblock The clonal and mutational evolution spectrum of primary
+  triple-negative breast cancers.
+\newblock \emph{Nature}, 486\penalty0 (7403):\penalty0 395--399, Jun 2012.
+\newblock \doi{10.1038/nature10933}.
+\newblock URL \url{http://dx.doi.org/10.1038/nature10933}.
+
+\bibitem[Williams(1999)]{Williams1999}
+C.~K.~I. Williams.
+\newblock A mcmc approach to hierarchical mixture modelling.
+\newblock In \emph{NIPS}, 1999.
+
+\end{thebibliography}
