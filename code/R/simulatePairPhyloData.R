@@ -133,6 +133,6 @@ for (i in 1:P){
 
 
 
-write.csv(mutmat, 'syn_mutmat.csv', row.names = FALSE)
+write.csv(mutmat, '../data/syn_mutmat.csv', row.names = FALSE)
 
-write.csv(freq, 'syn_freq.csv', row.names = FALSE)
+write.csv(freq, '../data/syn_freq.csv', row.names = FALSE)
