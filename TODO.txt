@@ -5,6 +5,6 @@
 
 3. Check frequency model trees.
 
-3. Code up Bernoulli pairing model.
+3. Code up Bernoulli pairing model. (Thomas: working on it)
 
 4. Code up tranisition kernel for the cascaded model 
