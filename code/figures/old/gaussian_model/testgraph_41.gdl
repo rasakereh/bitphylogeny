@@ -1,0 +1,9 @@
+graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      25                                            yspace:            20           				xspace:            5 
+node: { label:"31 ~ Norm(0.666862,0.000882)" title:"X" width:200}
+node: {  label:"38 ~ Norm(0.238019,0.002668)" title:"X-0" width:200}
+edge: { source:"X" target:"X-0" anchor:1}
+node: {  label:"32 ~ Norm(0.085014,0.000191)" title:"X-0-0" width:200}
+edge: { source:"X-0" target:"X-0-0" anchor:1}
+node: {  label:"40 ~ Norm(0.028697,0.000169)" title:"X-0-1" width:200}
+edge: { source:"X-0" target:"X-0-1" anchor:1}
+}

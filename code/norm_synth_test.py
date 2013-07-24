@@ -24,10 +24,6 @@ alpha_decay   = 0.25
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
 
-#seed(rand_seed)
-#data = concatenate([0.5 + 0.2*randn(70,1), -0.8 + 0.1*randn(35,1), -1.5+0.1*randn(35,1)])
-#data = sigmoid(data)
-
 reader = csv.DictReader(open('./syn_freq.csv'),
                         delimiter=',')
 
@@ -166,10 +162,7 @@ plt.savefig('figures/test_39.pdf', format='pdf')
 clf()
 
 
-filename = 'testgraph_39.gdl'
-fh2 = open(filename,'w')
-best_node_fit.print_graph_normal(fh2)
-fh2.close()
+
 
 filename_best = "bests/norm_test.pkl" 
 fh = open(filename_best, 'w')
@@ -180,3 +173,8 @@ fn = "bests/norm_test.pkl"
 fh = open(fn, 'r')
 best_node_fit = cPickle.load(fh)
 fh.close()
+
+filename = 'treescripts/norm_synth_tree_script.gdl'
+fh2 = open(filename,'w')
+best_node_fit.print_graph_normal(fh2)
+fh2.close()

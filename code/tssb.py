@@ -408,21 +408,21 @@ class TSSB(object):
           %(len(self.root['node'].get_data()),self.root['node'].params[0],
            self.root['node'].params[1]**2, "X", min_width)
         def descend(root, name, mass):
-           total   = 0.0
-           edges   = sticks_to_edges(root['sticks'])
-           weights = diff(hstack([0.0, edges]))
-           for i, child in enumerate(root['children']):
-               child_name = "%s-%d" % (name, i)
-               child_mass = mass * weights[i] * child['main']
-               print >>fh, """node: {  label:"%d ~ Norm(%f,%f)" title:"%s" width:%d}""" \
-                 % (len(child['node'].get_data()),
-                    child['node'].params[0], child['node'].params[1]**2,
-                    child_name, min_width)
-               print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-               total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-               return total
-           descend(self.root, 'X', 1)
-           print >>fh, """}"""
+            total   = 0.0
+            edges   = sticks_to_edges(root['sticks'])
+            weights = diff(hstack([0.0, edges]))
+            for i, child in enumerate(root['children']):
+                child_name = "%s-%d" % (name, i)
+                child_mass = mass * weights[i] * child['main']
+                print >>fh, """node: {  label:"%d ~ Norm(%f,%f)" title:"%s" width:%d}""" \
+                  % (len(child['node'].get_data()),
+                     child['node'].params[0], child['node'].params[1]**2,
+                     child_name, min_width)
+                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
+                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
+            return total
+        descend(self.root, 'X', 1)
+        print >>fh, """}"""
 
 
         
