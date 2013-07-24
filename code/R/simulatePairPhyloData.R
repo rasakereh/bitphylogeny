@@ -4,9 +4,9 @@
 ###############################################################################
 
 
-P=200
+P=20
 
-N=20000
+N=2000
 
 mix<-c(0.3,0.1,0.3,0.07,0.14,0.05,0.04)
 
@@ -133,6 +133,6 @@ for (i in 1:P){
 
 
 
-write.csv(mutmat, '../data/syn_mutmat.csv', row.names = FALSE)
+write.csv(mutmat, '../data/syn_mutmat_2000_20.csv', row.names = FALSE)
 
-write.csv(freq, '../data/syn_freq.csv', row.names = FALSE)
+write.csv(freq, '../data/syn_freq_2000_20.csv', row.names = FALSE)
