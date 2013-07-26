@@ -112,29 +112,42 @@ class SNVLogistic(Node):
         
         def logpost(params):
             #dirty way of truncating the params space
-            if( any(abs(params)>self.max_param ) ):
-                 llh = -sys.maxint
-                 return llh
+            ## if( any(abs(params)>self.max_param ) ):
+            ##      llh = -sys.maxint
+            ##      return llh
             if self.parent() is None:
                 #TODO: change here to proper root level prior
                 #llh = normpdfln(params, self.init_mean, drifts)
                 #llh = sum(gammapdfln(params-self.init_mean, galpha, gbeta))
+
                 llh = normpdfln(params, self.init_mean, gbeta**2)
             else:
                 #llh = normpdfln(params, self.parent().params, drifts)
-                llh = sum(mixgammapdfln(params-self.parent().params, galpha, gbeta))
+                #llh = sum(mixgammapdfln(params-self.parent().params, galpha, gbeta))
+
+                llh = sum(gammapdfln(params-self.parent().params, galpha, gbeta))
             #llh = llh + sum(counts*sigmoidln(params)) + sum((num_data-counts)*sigmoidln(-params))
+
             for i in range(num_data):
-                llh = llh + data[i][2]*sigmoidln(params[data[i][0]-1]) + (1.0-data[i][2])*sigmoidln(params[data[i][0]-1]) + data[i][3]*sigmoidln(params[data[i][1]-1]) + (1.0-data[i][3])*sigmoidln(params[data[i][1]-1]) + log(1/float(self.dims*(self.dims-1)))
+                llh = llh + data[i][2]*sigmoidln(params[data[i][0]-1]) + (1.0-data[i][2])*sigmoidln(-params[data[i][0]-1]) + \
+                  data[i][3]*sigmoidln(params[data[i][1]-1]) + (1.0-data[i][3])*sigmoidln(-params[data[i][1]-1]) #+ log(1/float(self.dims*(self.dims-1)))
+
+            ## count1 = sum(data[:,2], axis=0)
+
+            ## count2 = sum(data[:,3], axis=0)
+
             for child in self.children():
+                
                 #llh = llh + normpdfln( child.params, params, drifts)
-                llh = llh + sum(mixgammapdfln( child.params - params, galpha, gbeta))
+                #llh = llh + sum(mixgammapdfln( child.params - params, galpha, gbeta))
+                
+                llh = llh + sum(gammapdfln( child.params - params, galpha, gbeta))
             return llh
 
         def logpost_grad(params):
-            if( any(abs(params)>self.max_param ) ):
-                 grad = -sys.maxint*ones(self.dims)
-                 return grad
+            ## if( any(abs(params)>self.max_param ) ):
+            ##      grad = -sys.maxint*ones(self.dims)
+            ##      return grad
             if self.parent() is None:
                 #TODO: change here to proper root level prior
                 #grad = -(params-self.init_mean)/drifts**2
@@ -147,35 +160,39 @@ class SNVLogistic(Node):
             #grad = grad + counts*(1.0-probs) - (num_data-counts)*probs
             #how about the 1/(N*(N-1))? does the gradient remove this?
             for i in range(num_data):
-               # grad[data[i][0]-1] = grad[data[i][0]-1] + data[i][2]*(1.0-probs[data[i][0]-1]) - data[i][2]*probs[data[i][0]-1]
-                #grad[data[i][1]-1] = grad[data[i][1]-1] + data[i][3]*(1.0-probs[data[i][1]-1]) - data[i][3]*probs[data[i][1]-1]
-                grad[data[i][0]-1] = grad[data[i][0]-1] + (1-data[i][2])*(1.0-probs[data[i][0]-1])*exp(params[data[i][0]-1]) - data[i][2]*probs[data[i][0]-1]*exp(-params[data[i][0]-1])
-                grad[data[i][1]-1] = grad[data[i][1]-1] + (1-data[i][3])*(1.0-probs[data[i][1]-1])*exp(params[data[i][1]-1]) - data[i][3]*probs[data[i][1]-1]*exp(-params[data[i][1]-1])
+                grad[data[i][0]-1] = grad[data[i][0]-1] + data[i][2]*(1.0-probs[data[i][0]-1]) - (1-data[i][2])*probs[data[i][0]-1]
+                grad[data[i][1]-1] = grad[data[i][1]-1] + data[i][3]*(1.0-probs[data[i][1]-1]) - (1-data[i][3])*probs[data[i][1]-1]
+                ## grad[data[i][0]-1] = grad[data[i][0]-1] + (1-data[i][2])*(1.0-probs[data[i][0]-1])*exp(params[data[i][0]-1]) - data[i][2]*probs[data[i][0]-1]*exp(-params[data[i][0]-1])
+                ## grad[data[i][1]-1] = grad[data[i][1]-1] + (1-data[i][3])*(1.0-probs[data[i][1]-1])*exp(params[data[i][1]-1]) - data[i][3]*probs[data[i][1]-1]*exp(-params[data[i][1]-1])
+
             for child in self.children():
                 #grad = grad + (child.params - params)/drifts**2
-                grad = grad + (galpha-1.0)/(child.params-params) - gbeta
+                grad = grad - (galpha-1.0)/(child.params-params) + gbeta
             return grad
 
-        #func   = logpost(self.params)
-        #eps    = 1e-4
-        #mygrad = logpost_grad(self.params)
-        #fdgrad = zeros(self.params.shape)
-        #for d in range(len(self.params)):
-        #    mask      = zeros(self.params.shape)
-        #    mask[d]   = 1
-        #    fdgrad[d] = (logpost(self.params + eps*mask) - logpost(self.params - eps*mask))/(2*eps)       
-        #print "MYGRAD: ", mygrad
-        #print "FDGRAD: ", fdgrad
-        #error = sum(abs(mygrad-fdgrad))
-        #print sum(abs(mygrad-fdgrad))
-
-        if rand() < 0.1:
-            self.params = slice_sample(self.params, logpost, step_out=True, compwise=True)
-        else:
-            self.params, accepted = hmc(self.params, logpost, logpost_grad, 25, exponential(0.001))
-            assert any(abs(self.params)<self.max_param)
-            SNVLogistic.hmc_rejects += 1 - accepted
-            SNVLogistic.hmc_accepts += accepted
+        ## func   = logpost(self.params)
+        ## eps    = 1e-4
+        ## mygrad = logpost_grad(self.params)
+        ## fdgrad = zeros(self.params.shape)
+        ## for d in range(len(self.params)):
+        ##    mask      = zeros(self.params.shape)
+        ##    mask[d]   = 1
+        ##    fdgrad[d] = (logpost(self.params + eps*mask) - logpost(self.params - eps*mask))/(2*eps)       
+        ## print "MYGRAD: ", mygrad
+        ## print "FDGRAD: ", fdgrad
+        ## error = sum(abs(mygrad-fdgrad))
+        ## print "Error: ", sum(abs(mygrad-fdgrad))
+        ## print "params", self.params
+        ## print "num_data", num_data
+        ## print "data", data
+        
+        ## if rand() < 0.1:
+        ##     self.params = slice_sample(self.params, logpost, step_out=True, compwise=True)
+        ## else:
+        self.params, accepted = hmc(self.params, logpost, logpost_grad, 25, exponential(0.0001))
+        assert any(abs(self.params)<self.max_param)
+        SNVLogistic.hmc_rejects += 1 - accepted
+        SNVLogistic.hmc_accepts += accepted
         
         self._cache_sigmoidln()
 
