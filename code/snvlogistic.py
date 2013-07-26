@@ -130,11 +130,11 @@ class SNVLogistic(Node):
 
             for i in range(num_data):
                 llh = llh + data[i][2]*sigmoidln(params[data[i][0]-1]) + (1.0-data[i][2])*sigmoidln(-params[data[i][0]-1]) + \
-                  data[i][3]*sigmoidln(params[data[i][1]-1]) + (1.0-data[i][3])*sigmoidln(-params[data[i][1]-1]) #+ log(1/float(self.dims*(self.dims-1)))
+                  data[i][3]*sigmoidln(params[data[i][1]-1]) + (1.0-data[i][3])*sigmoidln(-params[data[i][1]-1]) + log(1/float(self.dims*(self.dims-1)))
 
-            ## count1 = sum(data[:,2], axis=0)
-
-            ## count2 = sum(data[:,3], axis=0)
+            
+            ## ll = sum(xx[2]*sigmoidln(params[xx[0]-1]) + (1-xx[2])*sigmoid(-params[xx[0]-1]) + \
+            ##          xx[3]*sigmoidln(params[xx[1]-1]) + (1-xx[3])*sigmoid(-params[xx[1]-1]))
 
             for child in self.children():
                 
@@ -159,11 +159,15 @@ class SNVLogistic(Node):
             probs = sigmoid(params) 
             #grad = grad + counts*(1.0-probs) - (num_data-counts)*probs
             #how about the 1/(N*(N-1))? does the gradient remove this?
+
             for i in range(num_data):
                 grad[data[i][0]-1] = grad[data[i][0]-1] + data[i][2]*(1.0-probs[data[i][0]-1]) - (1-data[i][2])*probs[data[i][0]-1]
                 grad[data[i][1]-1] = grad[data[i][1]-1] + data[i][3]*(1.0-probs[data[i][1]-1]) - (1-data[i][3])*probs[data[i][1]-1]
                 ## grad[data[i][0]-1] = grad[data[i][0]-1] + (1-data[i][2])*(1.0-probs[data[i][0]-1])*exp(params[data[i][0]-1]) - data[i][2]*probs[data[i][0]-1]*exp(-params[data[i][0]-1])
                 ## grad[data[i][1]-1] = grad[data[i][1]-1] + (1-data[i][3])*(1.0-probs[data[i][1]-1])*exp(params[data[i][1]-1]) - data[i][3]*probs[data[i][1]-1]*exp(-params[data[i][1]-1])
+
+            ## grad[xx[0]-1] = grad[xx[0]-1] + xx[2]*(1.0-probs[xx[0]-1]) - (1-xx[2])*probs[xx[0]-1]
+            ## grad[xx[1]-1] = grad[xx[1]-1] + xx[3]*(1.0-probs[xx[1]-1]) - (1-xx[3])*probs[xx[1]-1]
 
             for child in self.children():
                 #grad = grad + (child.params - params)/drifts**2
@@ -189,7 +193,7 @@ class SNVLogistic(Node):
         ## if rand() < 0.1:
         ##     self.params = slice_sample(self.params, logpost, step_out=True, compwise=True)
         ## else:
-        self.params, accepted = hmc(self.params, logpost, logpost_grad, 25, exponential(0.0001))
+        self.params, accepted = hmc(self.params, logpost, logpost_grad, 25, exponential(0.001))
         assert any(abs(self.params)<self.max_param)
         SNVLogistic.hmc_rejects += 1 - accepted
         SNVLogistic.hmc_accepts += accepted
@@ -217,10 +221,13 @@ class SNVLogistic(Node):
             def loglh(root):
                 llh = 0.0
                 for child in root.children():
-                    llh = llh + sum(mixgammapdfln(child.params - root.params, galphas, root.gbeta()))
+                    ## llh = llh + sum(mixgammapdfln(child.params - root.params, galphas, root.gbeta()))
+                    llh = llh + sum(gammapdfln(child.params - root.params, galphas, root.gbeta()))
                     llh = llh + loglh(child)
                 return llh
-            return loglh(self) + sum(mixgammapdfln(self.params - self.init_mean, galphas, self.gbeta()))
+            return loglh(self) + sum(gammapdfln(self.params - self.init_mean, galphas, self.gbeta()))
+        ## loglh(self) + sum(mixgammapdfln(self.params - self.init_mean, galphas, self.gbeta()))
+        
         
         def logpostb(gbetas):
             if any(gbetas < self.min_gbeta) or any(gbetas > self.max_gbeta):
@@ -228,23 +235,36 @@ class SNVLogistic(Node):
             def loglh(root):
                 llh = 0.0
                 for child in root.children():
-                    llh = llh + sum(mixgammapdfln(child.params - root.params, root.galpha(), gbetas))
+                    ## llh = llh + sum(mixgammapdfln(child.params - root.params, root.galpha(), gbetas))
+                    llh = llh + sum(gammapdfln(child.params - root.params, root.galpha(), gbetas))
                     llh = llh + loglh(child)
                 return llh
-            return loglh(self) + sum(mixgammapdfln(self.params - self.init_mean, self.galpha(), gbetas))
+            return loglh(self) + sum(gammapdfln(self.params - self.init_mean, self.galpha(), gbetas))
+        ## loglh(self) + sum(mixgammapdfln(self.params - self.init_mean, self.galpha(), gbetas))
                     
         #self._drift = slice_sample(self._drift, logpost, step_out=True, compwise=True)
         self._galpha = slice_sample(self._galpha, logposta, step_out=True, compwise=True)
         self._gbeta  = slice_sample(self._gbeta, logpostb, step_out=True, compwise=True)
 
     def logprob(self, x):
-        x = transpose(x)
         #both lines result in the same logprob
         #assert (x[2]*self._sigln[0][x[0]-1] - (1.0-x[2])*self._negsigln[0][x[0]-1] + x[3]*self._sigln[0][x[1]-1] - (1.0-x[3])*self._negsigln[0][x[1]-1] + log(1/float(self.dims*(self.dims-1))))==(-x[2]*log(1+exp(-self.params[x[0]-1])) + (1-x[2])*log(1+exp(self.params[x[0]-1])) - x[3]*log(1+exp(-self.params[x[1]-1])) + (1-x[3])*log(1+exp(self.params[x[1]-1])) + log(1/float(self.dims*(self.dims-1))))
         #return x[2]*self._sigln[0][x[0]-1] - (1.0-x[2])*self._negsigln[0][x[0]-1] + x[3]*self._sigln[0][x[1]-1] - (1.0-x[3])*self._negsigln[0][x[1]-1] + log(1/float(self.dims*(self.dims-1)))
-        res = -x[2]*log(1+exp(-self.params[x[0]-1])) - (1-x[2])*log(1+exp(self.params[x[0]-1])) - x[3]*log(1+exp(-self.params[x[1]-1])) - (1-x[3])*log(1+exp(self.params[x[1]-1])) + log(1/float(self.dims*(self.dims-1)))
+
+        x = transpose(x)
+        res = -x[2]*log(1+exp(-self.params[x[0]-1])) - (1 -x[2])*log(1+exp(self.params[x[0]-1])) - \
+              x[3]*log(1+exp(-self.params[x[1]-1])) - (1-x[3])*log(1+exp(self.params[x[1]-1])) + log(1/float(self.dims*(self.dims-1)))
         assert all(res<0)
         return sum(res)
+              
+        ## res = 0
+        ## for i in range(x.shape[0]):
+        ##     res = res + x[i][2]*sigmoidln(self.params[x[i][0]-1]) + (1.0-x[i][2])*sigmoidln(-self.params[x[i][0]-1]) + \
+        ##           x[i][3]*sigmoidln(self.params[x[i][1]-1]) + (1.0-x[i][3])*sigmoidln(-self.params[x[i][1]-1]) + log(1/float(self.dims*(self.dims-1)))
+            
+        ##     ## res = res -x[i][2]*log(1+exp(-self.params[x[i][0]-1])) - (1 -x[i][2])*log(1+exp(self.params[x[i][0]-1])) - \
+        ##     ##   x[i][3]*log(1+exp(-self.params[x[i][1]-1])) - (1-x[i][3])*log(1+exp(self.params[x[i][1]-1])) + log(1/float(self.dims*(self.dims-1)))
+        ## return res
 
     def complete_logprob(self):
         return self.logprob(self.get_data())

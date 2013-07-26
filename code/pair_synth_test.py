@@ -42,7 +42,6 @@ for row in reader:
     max_snvpos = max( max_snvpos, int(row['V1']), int(row['V2']) )
 
 data = numpy.array(data)
-
 dims = max_snvpos
 
 freq = numpy.zeros([max_snvpos,2])
@@ -77,7 +76,6 @@ print "Starting MCMC run..."
 for iter in range(-burnin,num_samples):
 
     times = [ time.time() ]
-    print tssb.complete_data_log_likelihood()
     tssb.resample_assignments()
     times.append(time.time())
     tssb.cull_tree()
@@ -161,10 +159,10 @@ for iter in range(-burnin,num_samples):
 
 
 
-## nodes_tabular = itemfreq(nodes_traces)
-## best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-## best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-## best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+nodes_tabular = itemfreq(nodes_traces)
+best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
+best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
+best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 ## (weights_best, nodes_best) = best_node_fit.get_mixture()
 ## yy = linspace(0,1,1000)
@@ -179,6 +177,16 @@ plt.plot(cd_llh_traces)
 plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
 clf()
 
+filename_best = "bests/PairLogistic1_test.pkl" 
+fh = open(filename_best, 'w')
+cPickle.dump(best_node_fit, fh)
+fh.close()
+
+fn = "bests/PairLogistic1_test.pkl"
+fh = open(fn, 'r')
+best_node_fit = cPickle.load(fh)
+fh.close()
+
 ## fig2 = plt.figure(2)
 ## plt.plot(yy,pp, color = 'b')
 ## plt.plot(data,-0.1*ones(data.shape), linestyle = 'none',
@@ -188,17 +196,18 @@ clf()
 ## clf()
 
 
-## filename = 'testgraph_PairLogistic1.gdl'
-## fh2 = open(filename,'w')
-## best_node_fit.print_graph(fh2)
-## fh2.close()
+filename = 'treescripts/testgraph_PairLogistic1.gdl'
+fh2 = open(filename,'w')
+best_node_fit.print_graph(fh2)
+fh2.close()
 
-## filename_best = "bests/PairLogistic1_test.pkl" 
-## fh = open(filename_best, 'w')
-## cPickle.dump(best_node_fit, fh)
-## fh.close()
 
-## fn = "bests/PairLogistic1_test.pkl"
-## fh = open(fn, 'r')
-## best_node_fit = cPickle.load(fh)
-## fh.close()
+
+
+
+
+
+
+
+
+
