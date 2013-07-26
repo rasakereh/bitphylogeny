@@ -174,10 +174,10 @@ for iter in range(-burnin,num_samples):
 ##     pp = pp + weights_best[kk]*1/sqrt(2*pi*nodes_best[kk].params[1]**2) * \
 ##       exp(-0.5*(yy-nodes_best[kk].params[0])**2/ nodes_best[kk].params[1]**2)
 
-## fig1 = plt.figure(1)
-## plt.plot(cd_llh_traces)
-## plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
-## clf()
+fig1 = plt.figure(1)
+plt.plot(cd_llh_traces)
+plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
+clf()
 
 ## fig2 = plt.figure(2)
 ## plt.plot(yy,pp, color = 'b')
