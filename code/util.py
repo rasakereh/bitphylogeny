@@ -33,7 +33,7 @@ def exp_gammapdfln(y, a, b):
     return a*numpy.log(b) - gammaln(a) + a*y - b*numpy.exp(y)
 
 def betapdfln(x, a, b):
-    return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + (b-1.0)*numpy.log(1.0-x)
+    return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + (b-1.0)*numpy.log(1.0-x) 
 
 def boundbeta(a,b):
     return (1.0-numpy.finfo(numpy.float64).eps)*(numpy.random.beta(a,b)-0.5) + 0.5
