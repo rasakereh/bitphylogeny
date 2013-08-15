@@ -7,7 +7,7 @@ import csv
 from numpy         import *
 from numpy.random  import *
 from tssb          import *
-from snvbernoulli  import *
+from snvbernoulliXpos  import *
 from util          import *
 from scipy.stats   import itemfreq
 import numpy
@@ -16,7 +16,7 @@ import numpy
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 1000
+num_samples   = 1
 checkpoint    = 50000
 dp_alpha      = 1
 dp_gamma      = 1
@@ -29,26 +29,26 @@ seed(rand_seed)
 #data = concatenate([0.5 + 0.2*randn(70,1), -0.8 + 0.1*randn(35,1), -1.5+0.1*randn(35,1)])
 #data = sigmoid(data)
 
-reader = csv.DictReader(open('./data/syn_mutmat_5000_50.csv'),
+reader = csv.DictReader(open('./data/syn_mutmat_5000_50_16.csv'),
                         delimiter=',')
+dim = 16
 
 data = []
 dataid = []
 max_snvpos = 1
 for row in reader:
-    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4'])])
-    max_snvpos = max( max_snvpos, int(row['V1']), int(row['V2']) )
+    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16']),int(row['V17']),int(row['V18']),int(row['V19']),int(row['V20']),int(row['V21']),int(row['V22']),int(row['V23']),int(row['V24']),int(row['V25']),int(row['V26']),int(row['V27']),int(row['V28']),int(row['V29']),int(row['V30']),int(row['V31']),int(row['V32'])])
+    max_snvpos = max( max_snvpos, int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16']))
 
 data = numpy.array(data)
 
 dims = max_snvpos
 
-freq = numpy.zeros([max_snvpos,2])
+freq = numpy.zeros([max_snvpos,dim])
 for read in data:
-    freq[read[0]-1][0] += read[2]
-    freq[read[0]-1][1] += 1
-    freq[read[1]-1][0] += read[3]
-    freq[read[1]-1][1] += 1
+    for i in range(dim):
+        freq[read[i-1]-1][0] += read[dim+i-1]
+        freq[read[i-1]-1][1] += 1
 
 clonal = 0.05*ones(max_snvpos)
 for index, snv in enumerate(freq):
@@ -56,7 +56,7 @@ for index, snv in enumerate(freq):
         clonal[index] = 0.95
 
 
-root = SNVBernoulli( dims=dims, bbeta=init_bbeta, initial_snvs=clonal )
+root = SNVBernoulliXPos( dims=dims, bbeta=init_bbeta, initial_snvs=clonal, datadim=dim )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, max_depth=4, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
@@ -190,7 +190,7 @@ clf()
 
 filename = 'treescripts/testgraph_pairBernoulli11.gdl'
 fh2 = open(filename,'w')
-best_node_fit.print_graph(fh2)
+best_node_fit.print_graph_pairing(fh2)
 fh2.close()
 
 filename_best = "bests/pairBernoulli11_test.pkl" 

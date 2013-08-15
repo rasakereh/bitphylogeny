@@ -16,27 +16,30 @@ def truncbeta(a, b):
             res[index] = 0.0001
     return res
 
-class SNVBernoulli(Node):
+class SNVBernoulliXPos(Node):
 
     #bbeta        = 0.1
     min_bbeta    = 0.1
     max_bbeta    = 0.9
-    alpha_base   = 50 # 50 soapy; 10 irrupting (bernoulli 8)
+    alpha_base   = 5 #
     beta_base    = 1.1
     hmc_accepts  = 1
     hmc_rejects  = 1
     
-    def __init__(self, parent=None, dims=1, tssb=None, initial_snvs=0, bbeta=0.6):
-        super(SNVBernoulli, self).__init__(parent=parent, tssb=tssb)
+    def __init__(self, parent=None, dims=1, tssb=None, initial_snvs=0, bbeta=0.6, datadim=4):
+        super(SNVBernoulliXPos, self).__init__(parent=parent, tssb=tssb)
 
+        
         if parent is None:
             self.dims   = dims
+            self.datadim = datadim
             self.init_mean = initial_snvs
             self._bbeta  = bbeta*ones(self.dims)
             self.params = truncbeta(self.alpha_base**((self.init_mean-self.bbeta())/abs(self.init_mean-self.bbeta())),self.beta_base**((self.init_mean-self.bbeta())/abs(self.init_mean-self.bbeta())))
             
         else:
             self.dims   = parent.dims
+            self.datadim = parent.datadim
             #self.params = self.drift()*randn(self.dims) + parent.params
             self.params = truncbeta(self.alpha_base**((parent.params-self.bbeta())/abs(parent.params-self.bbeta())), self.beta_base**((parent.params-self.bbeta())/abs(parent.params-self.bbeta())))
                         
@@ -61,7 +64,7 @@ class SNVBernoulli(Node):
     def resample_params(self):
 
         data       = self.get_data()
-        counts     = sum(data[:,[2,3]], axis=0)
+       # counts     = sum(data[:,[2,3]], axis=0)
         num_data   = data.shape[0]
         bbeta      = self.bbeta()
         
@@ -75,29 +78,33 @@ class SNVBernoulli(Node):
                 llh = sum(betapdfln(params, self.alpha_base**((self.parent().params-self.bbeta())/abs(self.parent().params-self.bbeta())), self.beta_base**((self.parent().params-self.bbeta())/abs(self.parent().params-self.bbeta()))))
             for i in range(num_data):
                 #llh = llh + data[i][2]*sigmoidln(params[data[i][0]-1]) + (1.0-data[i][2])*sigmoidln(params[data[i][0]-1]) + data[i][3]*sigmoidln(params[data[i][1]-1]) + (1.0-data[i][3])*sigmoidln(params[data[i][1]-1]) + log(1/float(self.dims*(self.dims-1)))
-                llh = llh + data[i][2]*log(params[data[i][0]-1]) + (1.0-data[i][2])*log(params[data[i][0]-1]) + data[i][3]*log(params[data[i][1]-1]) + (1.0-data[i][3])*log(params[data[i][1]-1]) + log(1/float(self.dims*(self.dims-1)))
+                for l in range(self.datadim):
+                    llh = llh + data[i][self.datadim+l]*log(params[data[i][l]-1]) * 1/float(self.dims-l)
+                    #llh = llh + data[i][4]*log(params[data[i][0]-1]) + (1.0-data[i][4])*log(params[data[i][0]-1]) + data[i][5]*log(params[data[i][1]-1]) + (1.0-data[i][5])*log(params[data[i][1]-1]) + data[i][6]*log(params[data[i][2]-1]) + (1.0-data[i][6])*log(params[data[i][2]-1]) + data[i][7]*log(params[data[i][3]-1]) + (1.0-data[i][7])*log(params[data[i][3]-1]) + log(1/float(self.dims*(self.dims-1)*(self.dims-2)*self.dims-3))
             for child in self.children():
                 #llh = llh + normpdfln( child.params, params, drifts)
                 llh = llh + sum(betapdfln( child.params, self.alpha_base**((params-self.bbeta())/abs(params-self.bbeta())), self.beta_base**((params-self.bbeta())/abs(params-self.bbeta()))))
             return llh
 
-        def logpost_grad(params):
-            if any(params>=1) or any(params<=0):
-                grad = -sys.maxint
-                return grad
-            if self.parent() is None:
-                grad = (self.init_mean**(1/2) -1)/params + (1/bbeta -1)/(1-params)
-            else:
-                grad = (self.parent().params**(1/2) -1)/params + (bbeta -1)/(1-params)
+      #  def logpost_grad(params):
+      #      if any(params>=1) or any(params<=0):
+      #          grad = -sys.maxint
+      #          return grad
+      #      if self.parent() is None:
+      #          grad = (self.init_mean**(1/2) -1)/params + (1/bbeta -1)/(1-params)
+      #      else:
+      #          grad = (self.parent().params**(1/2) -1)/params + (bbeta -1)/(1-params)
             #grad = grad + counts*(1.0-probs) - (num_data-counts)*probs
             #how about the 1/(N*(N-1))? does the gradient remove this?
-            for i in range(num_data):
-                grad[data[i][0]-1] = grad[data[i][0]-1] + data[i][2]/(params[data[i][0]-1]) + (data[i][2]-1)/(1-params[data[i][0]-1])
-                grad[data[i][1]-1] = grad[data[i][1]-1] + data[i][3]/(params[data[i][1]-1]) + (data[i][3]-1)/(1-params[data[i][1]-1])
-            for child in self.children():
+      #      for i in range(num_data):
+      #          grad[data[i][0]-1] = grad[data[i][0]-1] + data[i][4]/(params[data[i][0]-1]) + (data[i][4]-1)/(1-params[data[i][0]-1])
+      #          grad[data[i][1]-1] = grad[data[i][1]-1] + data[i][5]/(params[data[i][1]-1]) + (data[i][5]-1)/(1-params[data[i][1]-1])
+      #          grad[data[i][2]-1] = grad[data[i][2]-1] + data[i][6]/(params[data[i][2]-1]) + (data[i][6]-1)/(1-params[data[i][2]-1])
+      #          grad[data[i][3]-1] = grad[data[i][3]-1] + data[i][7]/(params[data[i][3]-1]) + (data[i][7]-1)/(1-params[data[i][3]-1])
+      #      for child in self.children():
                 #grad = grad + (child.params - params)/drifts**2
-                grad = grad + (params**(1/2) - 1)/child.params + (bbeta -1)/(1-child.params)
-            return grad
+      #          grad = grad + (params**(1/2) - 1)/child.params + (bbeta -1)/(1-child.params)
+      #      return grad
 
         #func   = logpost(self.params)
         #eps    = 1e-4
@@ -113,7 +120,7 @@ class SNVBernoulli(Node):
         #print sum(abs(mygrad-fdgrad))
 
         #if rand() < 0.1:
-        for i in range(50):
+        for i in range(5):
             self.params = slice_sample(self.params, logpost, step_out=True, compwise=False)
         #else:
             #self.params, accepted = hmc(self.params, logpost, logpost_grad, 25, exponential(0.001))
@@ -142,7 +149,10 @@ class SNVBernoulli(Node):
 
     def logprob(self, x):
         x = transpose(x)
-        res = x[2]*self._ln[0][x[0]-1] + (1.0-x[2])*self._negln[0][x[0]-1] + x[3]*self._ln[0][x[1]-1] + (1.0-x[3])*self._negln[0][x[1]-1] + log(1/float(self.dims*(self.dims-1)))
+        res = 0
+        for i in range(self.datadim):
+            res = res + x[self.datadim+i]*self._ln[0][x[i]-1] + (1.0-x[self.datadim+i])*self._negln[0][x[self.datadim]-1] + log(1/float(self.dims-i))
+        #res = x[4]*self._ln[0][x[0]-1] + (1.0-x[4])*self._negln[0][x[0]-1] + x[5]*self._ln[0][x[1]-1] + (1.0-x[5])*self._negln[0][x[1]-1] + x[6]*self._ln[0][x[2]-1] + (1.0-x[6])*self._negln[0][x[2]-1] + x[7]*self._ln[0][x[3]-1] + (1.0-x[7])*self._negln[0][x[3]-1] +log(1/float(self.dims*(self.dims-1)*self.dims-2)*(self.dims-3))
         assert all(res<0)
         return sum(res)
 

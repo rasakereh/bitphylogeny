@@ -8,11 +8,11 @@ from util         import *
 
 class TSSB(object):
 
-    min_dp_alpha    = 0.1
+    min_dp_alpha    = 0.001
     max_dp_alpha    = 10.0
-    min_dp_gamma    = 0.1
+    min_dp_gamma    = 0.001
     max_dp_gamma    = 10.0
-    min_alpha_decay = 0.01
+    min_alpha_decay = 0.001
     max_alpha_decay = 0.80
     
     def __init__(self, dp_alpha=1.0, dp_gamma=1.0, root_node=None, data=None,
@@ -92,7 +92,9 @@ class TSSB(object):
             return cmp(s2, s1)
 
         epsilon = finfo(float64).eps
-        lengths = []        
+        lengths = []
+        reassign = 0
+        better = 0        
         for n in range(self.num_data):
 
             # Get an initial uniform variate.
@@ -107,16 +109,19 @@ class TSSB(object):
             max_u = 1.0
             min_u = 0.0
             llh_s = log(rand()) + self.assignments[n].logprob(self.data[n:n+1])
-
+            #llh_s = self.assignments[n].logprob(self.data[n:n+1]) - 0.0000001
             while True:
                 new_u                = (max_u-min_u)*rand() + min_u
                 (new_node, new_path) = self.find_node(new_u)
                 new_llh              = new_node.logprob(self.data[n:n+1])
                 if new_llh > llh_s:
                     if new_node != self.assignments[n]:
+                        if (new_llh > self.assignments[n].logprob(self.data[n:n+1]) ):
+                            better += 1
                         self.assignments[n].remove_datum(n)
                         new_node.add_datum(n)
                         self.assignments[n] = new_node
+                        reassign += 1
                     break
                 elif abs(max_u-min_u) < epsilon:
                     print >>sys.stderr, "Slice sampler shrank down.  Keep current state."
@@ -131,6 +136,7 @@ class TSSB(object):
                         raise Exception("Slice sampler weirdness.")
             lengths.append(len(new_path))
         lengths = array(lengths)
+        #print "reassign: "+str(reassign)+" better: "+str(better)
 
     def cull_tree(self):
         def descend(root):
@@ -448,6 +454,62 @@ class TSSB(object):
                 child_mass = mass * weights[i] * child['main']
                 print >>fh, """node: {  label:"%d ~ Freq(%f)" title:"%s" width:%d}""" \
                        % (len(child['node'].get_data()), child['node'].params, child_name, min_width)
+                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
+                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
+            return total
+        descend(self.root, 'X', 1)
+        print >>fh, """}"""
+        
+    def print_graph_pairing(self, fh, base_width=5, min_width=200):
+        print >>fh, """graph: { title:            "TSSB Graph"  \
+                                portsharing:      no            \
+                                smanhattanedges:  yes           \
+                                splines:          yes           \
+                                equalydist:       yes           \
+                                layout_algorithm: tree          \
+                                node.fontname:    "helvR8"      \
+                                node.height:      100            \
+                                yspace:            20           \
+                                xspace:            5 """
+        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(5)])), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(5,13)])), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(13,21)])), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(21,29)])), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(29,37)])), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(37,45)])), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(45,50)])), \
+            """" title:"%s" width:%d}""" \
+          %("X", min_width)
+        def descend(root, name, mass):
+            total   = 0.0
+            edges   = sticks_to_edges(root['sticks'])
+            weights = diff(hstack([0.0, edges]))
+            for i, child in enumerate(root['children']):
+                child_name = "%s-%d" % (name, i)
+                child_mass = mass * weights[i] * child['main']
+                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(5)])), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(5,13)])), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(13,21)])), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(21,29)])), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(29,37)])), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(37,45)])), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(45,50)])), \
+                """" title:"%s" width:%d}""" \
+                    %(child_name, min_width)
                 print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
                 total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
             return total
