@@ -3,7 +3,7 @@ import sys
 import time
 import cPickle
 import csv
-#import ipdb
+import ipdb
 import yaml
 
 from collections import namedtuple
@@ -12,7 +12,7 @@ from ordereddict import OrderedDict
 
 from numpy         import *
 from numpy.random  import *
-from tssb_test     import *
+from tssb          import *
 from pyclone_test  import *
 from util          import *
 from scipy.stats   import itemfreq
@@ -21,13 +21,13 @@ from config        import *
 error_rate    = 0.001
 rand_seed     = 1234
 max_data      = 100
-burnin        = 1000
-num_samples   = 5000
+burnin        = 0
+num_samples   = 1
 checkpoint    = 50000
-dp_alpha      = 1.0
-dp_gamma      = 1
+dp_alpha      = 1e-1
+dp_gamma      = 1e-1
 init_drift    = 0.1
-alpha_decay   = 0.25
+alpha_decay   = 0.5
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
 
@@ -79,7 +79,7 @@ def load_sample_data(file_name, error_rate):
     return data
 
 
-file_name = './pyclone-data/SRR385941.yaml'
+file_name = '/home/yuan03/Dropbox/dp/pyclone-data/SRR385941.yaml'
 
 data = load_sample_data(file_name, error_rate)
 data = data.values()
@@ -88,7 +88,7 @@ data = delete(data,139,0)
 
 dims = 1
 root = PyClone_test( dims=dims, drift=init_drift )
-tssb = TSSB_test( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
+tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
 dp_alpha_traces    = zeros((num_samples, 1))
@@ -109,11 +109,12 @@ for iter in range(-burnin,num_samples):
 
     tssb.resample_assignments()
     times.append(time.time())
-                                           
+
+    ipdb.set_trace()
     tssb.cull_tree()
     times.append(time.time())
 
-    ##ipdb.set_trace()
+    
     tssb.resample_node_params()
     times.append(time.time())
 
@@ -128,7 +129,7 @@ for iter in range(-burnin,num_samples):
 
    
     if iter > 0:
-        tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+         tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
     times.append(time.time())
  
     intervals = intervals + diff(array(times))
@@ -144,14 +145,14 @@ for iter in range(-burnin,num_samples):
         nodes_traces[iter]       = len(nodes)
         
 
-    ## if iter > 0 and mod(iter, checkpoint) == 0:
-    ##     filename = "checkpoints/norm1d-test-%s-%06d.pkl" % (codename, iter)
-    ##     fh = open(filename, 'w')
-    ##     cPickle.dump(tssb, fh)
-    ##     fh.close()
+    if iter > 0 and mod(iter, checkpoint) == 0:
+        filename = "checkpoints/norm1d-test-%s-%06d.pkl" % (codename, iter)
+        fh = open(filename, 'w')
+        cPickle.dump(tssb, fh)
+        fh.close()
 
   
-    if mod(iter, 100) == 0:
+    if mod(iter, 1) == 0:
         (weights, nodes) = tssb.get_mixture()
         print codename, iter, len(nodes), cd_llh_traces[iter], \
            mean(root._drift), tssb.dp_alpha, tssb.dp_gamma, \
@@ -192,7 +193,7 @@ best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
 best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 
-(weights_best, nodes_best) = best_node_fit.get_mixture()
+## (weights_best, nodes_best) = best_node_fit.get_mixture()
 ## pp = zeros(yy.shape) 
 
 ## for kk in range(len(weights_best)):
@@ -213,10 +214,10 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 ## clf()
 
 
-filename = 'testgraph_pyclone.gdl'
-fh2 = open(filename,'w')
-best_node_fit.print_graph_binomial(fh2)
-fh2.close()
+## filename = 'testgraph_pyclone.gdl'
+## fh2 = open(filename,'w')
+## best_node_fit.print_graph_binomial(fh2)
+## fh2.close()
 
 
 cell_freq_traces = zeros((num_samples, data.shape[0]))
@@ -227,4 +228,4 @@ for ii in range(num_samples):
     for jj in range(data.shape[0]):
         cell_freq_traces[ii,jj] = assignments[jj].params
 
-numpy.savetxt("pyclone_cell_freq.csv", cell_freq_traces, delimiter=",")
+## numpy.savetxt("pyclone_cell_freq.csv", cell_freq_traces, delimiter=",")

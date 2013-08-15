@@ -8,10 +8,10 @@ from util         import *
 
 class TSSB(object):
 
-    min_dp_alpha    = 0.1
-    max_dp_alpha    = 10.0
-    min_dp_gamma    = 0.1
-    max_dp_gamma    = 10.0
+    min_dp_alpha    = 1e-3
+    max_dp_alpha    = 1.0
+    min_dp_gamma    = 1e-3
+    max_dp_gamma    = 1.0
     min_alpha_decay = 0.01
     max_alpha_decay = 0.80
     
@@ -92,7 +92,8 @@ class TSSB(object):
             return cmp(s2, s1)
 
         epsilon = finfo(float64).eps
-        lengths = []        
+        lengths = []
+
         for n in range(self.num_data):
 
             # Get an initial uniform variate.
@@ -366,7 +367,7 @@ class TSSB(object):
             if node.num_local_data():
                 llhs.append(node.num_local_data()*log(weights[i]) + node.data_log_likelihood())
         return sum(array(llhs))
-    
+
     def print_graph(self, fh, base_width=5000, min_width=5):
         print >>fh, """graph: { title:            "TSSB Graph"  \
                                 portsharing:      no            \
@@ -389,6 +390,7 @@ class TSSB(object):
                 print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
                 total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
             return total
+        descend(self.root, 'X', 1)
         print >>fh, """}"""
 
 

@@ -1,3 +1,33 @@
 graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           equalydist:       no                                            layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      25 
-node: { label:"0.93330" title:"X" width:4666}
+node: { label:"0.03758" title:"X" width:187}
+node: {  label:"0.41346" title:"X-0" width:2067}
+edge: { source:"X" target:"X-0" anchor:1}
+node: {  label:"0.18555" title:"X-1" width:927}
+edge: { source:"X" target:"X-1" anchor:1}
+node: {  label:"0.01333" title:"X-2" width:66}
+edge: { source:"X" target:"X-2" anchor:1}
+node: {  label:"0.00159" title:"X-2-0" width:7}
+edge: { source:"X-2" target:"X-2-0" anchor:1}
+node: {  label:"0.00181" title:"X-2-1" width:9}
+edge: { source:"X-2" target:"X-2-1" anchor:1}
+node: {  label:"0.34617" title:"X-3" width:1730}
+edge: { source:"X" target:"X-3" anchor:1}
+node: {  label:"0.00135" title:"X-3-0" width:6}
+edge: { source:"X-3" target:"X-3-0" anchor:1}
+node: {  label:"0.01023" title:"X-3-1" width:51}
+edge: { source:"X-3" target:"X-3-1" anchor:1}
+node: {  label:"0.00135" title:"X-3-2" width:6}
+edge: { source:"X-3" target:"X-3-2" anchor:1}
+node: {  label:"0.00118" title:"X-3-3" width:5}
+edge: { source:"X-3" target:"X-3-3" anchor:1}
+node: {  label:"0.00030" title:"X-3-4" width:5}
+edge: { source:"X-3" target:"X-3-4" anchor:1}
+node: {  label:"0.00038" title:"X-3-5" width:5}
+edge: { source:"X-3" target:"X-3-5" anchor:1}
+node: {  label:"0.01330" title:"X-4" width:66}
+edge: { source:"X" target:"X-4" anchor:1}
+node: {  label:"0.00473" title:"X-5" width:23}
+edge: { source:"X" target:"X-5" anchor:1}
+node: {  label:"0.00409" title:"X-6" width:20}
+edge: { source:"X" target:"X-6" anchor:1}
 }
