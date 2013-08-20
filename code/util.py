@@ -33,6 +33,10 @@ def exp_gammapdfln(y, a, b):
     return a*numpy.log(b) - gammaln(a) + a*y - b*numpy.exp(y)
 
 def betapdfln(x, a, b):
+    if x == 0.0 or x == 1.0:
+        return float('-inf')
+    if x< 0.0 or x >1.0:
+        print x  
     return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + \
       (b-1.0)*numpy.log(1.0-x) 
 

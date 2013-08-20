@@ -1,3 +1,0 @@
-graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           equalydist:       no                                            layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      25 
-node: { label:"0.56265" title:"X" width:2813}
-}

@@ -78,7 +78,7 @@ def log_binomial_coefficient(n, x):
     return log_factorial(n) - log_factorial(x) - log_factorial(n - x)
 
 def log_binomial_pdf(x, n, p):
-    if p == 0:
+    if p == 0.0:
         return float('-inf')
     
     if p == 1.0:
@@ -124,6 +124,8 @@ def log_pyclone(data, params):
                                                     mu_r,
                                                     mu_v,
                                                     params)
+            if isnan(temp):
+                return "params ", params
             ll.append(temp)
         return log_sum_exp(ll)
 
@@ -211,7 +213,7 @@ class PyClone_test(Node):
            self._drift  = drift
            self._balpha = balpha*ones((1))
            self._bbeta  = bbeta*ones((1))
-           self.params  = boundbeta(balpha, bbeta)*self.init_mean*ones((1))
+           self.params  = 0.99*self.init_mean*ones((1))
             
         else:
             self.dims   = parent.dims
@@ -245,7 +247,62 @@ class PyClone_test(Node):
         drifts     = self.drift()
         balphas    = self.balpha()
         bbetas     = self.bbeta()
+
+
+        def get_constraint():
+            if self.parent() is None:
+                upper = float('inf')*ones(self.dims)
+            else:
+                upper = self.parent().params
+
+            if  len(self.children()) < 1:
+                lower = float('-inf')*ones((self.dims))
+            else:
+                child_params = zeros((len(self.children()), self.dims))
+                for index, child in enumerate(self.children()):
+                    child_params[index,:] = child.params;
+                lower = child_params.max(0);
+
+            return lower, upper
+
+        lower, upper = get_constraint()
+        ## print lower,upper
+
+        def logpost_trans(params):
+
+            orig_params = sigmoid_trans(params, 'orig_x')
+
+            if any(orig_params < lower) or any(orig_params > upper):
+                return float('-inf')
+
+            if self.parent() is None:
+                llh = betapdfln(orig_params/self.init_mean, balphas, bbetas)
+            else:
+                llh = betapdfln(orig_params/self.parent().params, \
+                                balphas, bbetas)
+
+            ll = 0
+            for dd in data:
+                ll += ( log_pyclone(dd, orig_params) )
+                
+            llh = llh + ll
+
+            for child in self.children():
+                llh = llh + betapdfln(child.params/orig_params, balphas, bbetas)
+
+            det_jacob = sigmoid_trans(orig_params, 'det_jacob')
+
+            llh = llh + det_jacob
+
+            return llh
+
+
+        trans_params = sigmoid_trans(self.params, 'tran_x')
+        temp = slice_sample(trans_params, logpost_trans,
+                            step_out=True, compwise=True)
+        self.params = sigmoid_trans(temp, 'orig_x')
         
+                                
         def logpost(params):
             if self.parent() is None:
                 llh = betapdfln(params/self.init_mean, balphas, bbetas)
@@ -261,7 +318,10 @@ class PyClone_test(Node):
             llh = llh + ll
         
             for child in self.children():
-                llh = llh + betapdfln(child.params/params, balphas, bbetas)                
+                llh = llh + betapdfln(child.params/params, balphas, bbetas)
+
+            det_jacobln = sigmoid_trans(params, 'det_jacob')
+                
             return llh
 
         def logpost_grad(params):
@@ -279,27 +339,27 @@ class PyClone_test(Node):
                 
             grad = grad + g
 
-            
+                        
             for child in self.children():
                 grad = grad + (1.0-balphas) / params + (bbetas - 1.0) * \
                   child.params / (params *(params - child.params))
                ## print child.params
             return grad
 
-        func   = logpost(self.params)
-        eps    = 1e-4
-        mygrad = logpost_grad(self.params)
-        fdgrad = zeros(self.params.shape)
-        for d in range(len(self.params)):
-            mask      = zeros(self.params.shape)
-            mask[d]   = 1
-            fdgrad[d] = (logpost(self.params + eps*mask) - \
-                         logpost(self.params - eps*mask))/(2*eps)
-        print "MYGRAD: ", mygrad
-        print "FDGRAD: ", fdgrad
-        print "ERROR: ", norm(mygrad-fdgrad)/norm(mygrad+fdgrad)
-        print "PARAMS: ", self.params
-        print "DATA: ", data.shape
+        ## func   = logpost(self.params)
+        ## eps    = 1e-4
+        ## mygrad = logpost_grad(self.params)
+        ## fdgrad = zeros(self.params.shape)
+        ## for d in range(len(self.params)):
+        ##     mask      = zeros(self.params.shape)
+        ##     mask[d]   = 1
+        ##     fdgrad[d] = (logpost(self.params + eps*mask) - \
+        ##                  logpost(self.params - eps*mask))/(2*eps)
+        ## print "MYGRAD: ", mygrad
+        ## print "FDGRAD: ", fdgrad
+        ## print "ERROR: ", norm(mygrad-fdgrad)/norm(mygrad+fdgrad)
+        ## print "PARAMS: ", self.params
+        ## print "DATA: ", data.shape
 
         ## tran_param = sigmoid_trans( self.params, 'tran_x')
         ## eps    = 1e-4
@@ -320,7 +380,7 @@ class PyClone_test(Node):
         ## print "DATA: ", data.shape
         ##print "FUNC: ", func
         ## if rand() < 0.1:
-        ##   self.params = slice_sample(self.params, logpost, step_out=True, compwise=True)
+        ##     temp = slice_sample(self.params, logpost, step_out=True, compwise=True)
         ## else:
         ##   self.params, accepted = hmc(self.params, logpost,
         ##                               logpost_grad, 25,
@@ -382,7 +442,7 @@ class PyClone_test(Node):
     def logprob(self, x):
         ll = 0
         for dd in x:
-            ll += log_pyclone(dd, self.params)        
+            ll += log_pyclone(dd, self.params)
         return ll
 
 
