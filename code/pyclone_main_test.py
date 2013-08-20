@@ -3,12 +3,14 @@ import sys
 import time
 import cPickle
 import csv
-import ipdb
+import pdb
 import yaml
 
-from collections import namedtuple
+##from collections import namedtuple
 
-from ordereddict import OrderedDict
+from collections import namedtuple, OrderedDict
+
+##from ordereddict import OrderedDict
 
 from numpy         import *
 from numpy.random  import *
@@ -21,8 +23,8 @@ from config        import *
 error_rate    = 0.001
 rand_seed     = 1234
 max_data      = 100
-burnin        = 0
-num_samples   = 1
+burnin        = 1000
+num_samples   = 10000
 checkpoint    = 50000
 dp_alpha      = 1e-1
 dp_gamma      = 1e-1
@@ -79,7 +81,7 @@ def load_sample_data(file_name, error_rate):
     return data
 
 
-file_name = '/home/yuan03/Dropbox/dp/pyclone-data/SRR385941.yaml'
+file_name = 'data/pyclone/SRR385941.yaml'
 
 data = load_sample_data(file_name, error_rate)
 data = data.values()
@@ -107,24 +109,24 @@ for iter in range(-burnin,num_samples):
 
     times = [time.time()]
 
-   ## tssb.resample_assignments()
+    tssb.resample_assignments()
     times.append(time.time())
 
     ##ipdb.set_trace()
-   ## tssb.cull_tree()
+    tssb.cull_tree()
     times.append(time.time())
 
-    ipdb.set_trace()
+    ##pdb.set_trace()
     tssb.resample_node_params()
     times.append(time.time())
 
-  ##  root.resample_hypers()
+    root.resample_hypers()
     times.append(time.time())
 
-   ## tssb.resample_sticks()
+    tssb.resample_sticks()
     times.append(time.time())
 
-   ##  tssb.resample_stick_orders()
+    tssb.resample_stick_orders()
     times.append(time.time())
 
    
@@ -152,7 +154,7 @@ for iter in range(-burnin,num_samples):
         fh.close()
 
   
-    if mod(iter, 1) == 0:
+    if mod(iter, 50) == 0:
         (weights, nodes) = tssb.get_mixture()
         print codename, iter, len(nodes), cd_llh_traces[iter], \
            mean(root._drift), tssb.dp_alpha, tssb.dp_gamma, \
@@ -187,10 +189,10 @@ for iter in range(-burnin,num_samples):
 
 
 
-nodes_tabular = itemfreq(nodes_traces)
-best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+## nodes_tabular = itemfreq(nodes_traces)
+## best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
+## best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
+## best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 
 ## (weights_best, nodes_best) = best_node_fit.get_mixture()
