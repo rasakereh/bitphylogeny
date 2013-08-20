@@ -38,23 +38,38 @@ def digamma(x):
     return scipy.special.psi(x)
 
     
-## def log_sum_exp(log_X):
-##     '''
-##     Given a list of values in log space, log_X. Compute exp(log_X[0] + log_X[1] + ... log_X[n])
+def log_sum_exp(log_X):
+    '''
+    Given a list of values in log space, log_X. Compute exp(log_X[0] + log_X[1] + ... log_X[n])
     
-##     Numerically safer than naive method.
-##     '''
-##     max_exp = max(log_X)
+    Numerically safer than naive method.
+    '''
+    max_exp = max(log_X)
     
-##     if isinf(max_exp):
-##         return max_exp
+    if isinf(max_exp):
+        return max_exp
     
-##     total = 0
+    total = 0
 
-##     for x in log_X:
-##         total += exp(x - max_exp)
+    for x in log_X:
+        total += exp(x - max_exp)
     
-##     return log(total) + max_exp
+    return log(total) + max_exp
+
+def log_sum_exp_prod(log_X, Y):
+
+    max_exp = max(log_X)
+
+    if isinf(max_exp):
+        return max_exp
+
+    total = 0
+
+    for x, y in zip(log_X, Y):
+        total += exp(x - max_exp) * y
+
+    return total * exp( max_exp )
+    
 
 def log_factorial(n):
     return gammaln(n + 1.0)
@@ -92,7 +107,7 @@ def log_binomial_likelihood(b, d, cn_n, cn_r, cn_v,
 
 
 def log_pyclone(data, params):
-        ll = 0       
+        ll = []       
         for cn_n, cn_r, cn_v, mu_n, mu_r, mu_v, log_pi  in zip(data[2],
                                                                data[3],
                                                                data[4],
@@ -100,7 +115,7 @@ def log_pyclone(data, params):
                                                                data[6],
                                                                data[7],
                                                                data[8]):
-            ll+= log_pi + log_binomial_likelihood(data[0],
+            temp = log_pi + log_binomial_likelihood(data[0],
                                                     data[1],
                                                     cn_n,
                                                     cn_r,
@@ -109,11 +124,12 @@ def log_pyclone(data, params):
                                                     mu_r,
                                                     mu_v,
                                                     params)
-        
-        return sum(ll)
+            ll.append(temp)
+        return log_sum_exp(ll)
 
 
 def log_binomial_grad(b,d,cn_n,cn_r,cn_v,mu_n,mu_r,mu_v,params):
+
     f = params
     t = 1
     
@@ -146,7 +162,13 @@ def log_binomial_grad(b,d,cn_n,cn_r,cn_v,mu_n,mu_r,mu_v,params):
     return grad
 
 def log_pyclone_grad(data, params):
-    grad = 0
+
+    norm_const = log_pyclone(data, params)
+    
+    temp1 = []
+    temp2 = []
+    temp3 = []
+
     for cn_n, cn_r, cn_v, mu_n, mu_r, mu_v, log_pi  in zip(data[2],
                                                            data[3],
                                                            data[4],
@@ -154,9 +176,16 @@ def log_pyclone_grad(data, params):
                                                            data[6],
                                                            data[7],
                                                            data[8]):
-        grad += log_binomial_grad(data[0],data[1],cn_n,cn_r,
-                                  cn_v,mu_n,mu_r,mu_v,params);
-
+        t1 = log_binomial_likelihood(data[0],data[1],
+                                        cn_n,cn_r,cn_v,mu_n,
+                                        mu_r,mu_v,params) + log_pi
+        temp1.append(t1)
+        t2 = log_binomial_grad(data[0],data[1],cn_n,cn_r,
+                                  cn_v,mu_n,mu_r,mu_v,params)
+        temp2.append(t2);
+        
+    temp = log_sum_exp_prod(temp1,temp2)
+    grad = exp( temp - norm_const ) 
     return grad
 
 
@@ -173,7 +202,8 @@ class PyClone_test(Node):
     hmc_accepts  = 1
     hmc_rejects  = 1
 
-    def __init__(self, parent=None, dims=1, tssb=None, drift=0.1, balpha = 0.5, bbeta = 0.5):
+    def __init__(self, parent=None, dims=1, tssb=None, drift=0.1,
+                 balpha = 0.5, bbeta = 0.5):
         super(PyClone_test, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
@@ -256,15 +286,20 @@ class PyClone_test(Node):
                ## print child.params
             return grad
 
-        ## func   = logpost(self.params)
-        ## eps    = 1e-4
-        ## mygrad = logpost_grad(self.params)
-        ## fdgrad = zeros(self.params.shape)
-        ## for d in range(len(self.params)):
-        ##     mask      = zeros(self.params.shape)
-        ##     mask[d]   = 1
-        ##     fdgrad[d] = (logpost(self.params + eps*mask) - \
-        ##                  logpost(self.params - eps*mask))/(2*eps)
+        func   = logpost(self.params)
+        eps    = 1e-4
+        mygrad = logpost_grad(self.params)
+        fdgrad = zeros(self.params.shape)
+        for d in range(len(self.params)):
+            mask      = zeros(self.params.shape)
+            mask[d]   = 1
+            fdgrad[d] = (logpost(self.params + eps*mask) - \
+                         logpost(self.params - eps*mask))/(2*eps)
+        print "MYGRAD: ", mygrad
+        print "FDGRAD: ", fdgrad
+        print "ERROR: ", norm(mygrad-fdgrad)/norm(mygrad+fdgrad)
+        print "PARAMS: ", self.params
+        print "DATA: ", data.shape
 
         ## tran_param = sigmoid_trans( self.params, 'tran_x')
         ## eps    = 1e-4
@@ -293,11 +328,11 @@ class PyClone_test(Node):
         ## Binomial_test.hmc_rejects += 1 - accepted
         ## Binomial_test.hmc_accepts += accepted
 
-        self.params, accepted = hmc_trans(self.params, logpost,
-                                          logpost_grad, sigmoid_trans,
-                                          25, exponential(0.005))
-        PyClone_test.hmc_rejects += 1 - accepted
-        PyClone_test.hmc_accepts += accepted
+        ## self.params, accepted = hmc_trans(self.params, logpost,
+        ##                                   logpost_grad, sigmoid_trans,
+        ##                                   25, exponential(0.005))
+        ## PyClone_test.hmc_rejects += 1 - accepted
+        ## PyClone_test.hmc_accepts += accepted
 
 
     def resample_hypers(self):
