@@ -1,15 +1,11 @@
 graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      25                                            yspace:            20           				                xspace:            5 
-node: { label:"33 ~ Norm(0.998170,0.000003)" title:"X" width:200}
-node: {  label:"39 ~ Norm(0.714483,0.000860)" title:"X-0" width:200}
+node: { label:"33 ~ Norm(0.997136,0.000009)" title:"X" width:200}
+node: {  label:"41 ~ Norm(0.709360,0.001028)" title:"X-0" width:200}
 edge: { source:"X" target:"X-0" anchor:1}
-node: {  label:"42 ~ Norm(0.353634,0.001203)" title:"X-0-0" width:200}
+node: {  label:"42 ~ Norm(0.347223,0.001186)" title:"X-0-0" width:200}
 edge: { source:"X-0" target:"X-0-0" anchor:1}
-node: {  label:"32 ~ Norm(0.175889,0.000932)" title:"X-0-1" width:200}
+node: {  label:"32 ~ Norm(0.179412,0.000691)" title:"X-0-1" width:200}
 edge: { source:"X-0" target:"X-0-1" anchor:1}
-node: {  label:"52 ~ Norm(0.049106,0.000217)" title:"X-0-1-0" width:200}
-edge: { source:"X-0-1" target:"X-0-1-0" anchor:1}
-node: {  label:"0 ~ Norm(0.058569,0.000800)" title:"X-1" width:200}
+node: {  label:"52 ~ Norm(0.050772,0.000202)" title:"X-1" width:200}
 edge: { source:"X" target:"X-1" anchor:1}
-node: {  label:"2 ~ Norm(0.639671,0.000010)" title:"X-2" width:200}
-edge: { source:"X" target:"X-2" anchor:1}
 }

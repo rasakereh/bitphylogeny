@@ -107,24 +107,24 @@ for iter in range(-burnin,num_samples):
 
     times = [time.time()]
 
-    tssb.resample_assignments()
+   ## tssb.resample_assignments()
+    times.append(time.time())
+
+    ##ipdb.set_trace()
+   ## tssb.cull_tree()
     times.append(time.time())
 
     ipdb.set_trace()
-    tssb.cull_tree()
-    times.append(time.time())
-
-    
     tssb.resample_node_params()
     times.append(time.time())
 
-    root.resample_hypers()
+  ##  root.resample_hypers()
     times.append(time.time())
 
-    tssb.resample_sticks()
+   ## tssb.resample_sticks()
     times.append(time.time())
 
-    tssb.resample_stick_orders()
+   ##  tssb.resample_stick_orders()
     times.append(time.time())
 
    
@@ -220,12 +220,12 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 ## fh2.close()
 
 
-cell_freq_traces = zeros((num_samples, data.shape[0]))
+## cell_freq_traces = zeros((num_samples, data.shape[0]))
 
-for ii in range(num_samples):
-    tmp_tssb = cPickle.loads(tssb_traces[ii][0])
-    assignments = tmp_tssb.assignments
-    for jj in range(data.shape[0]):
-        cell_freq_traces[ii,jj] = assignments[jj].params
+## for ii in range(num_samples):
+##     tmp_tssb = cPickle.loads(tssb_traces[ii][0])
+##     assignments = tmp_tssb.assignments
+##     for jj in range(data.shape[0]):
+##         cell_freq_traces[ii,jj] = assignments[jj].params
 
 ## numpy.savetxt("pyclone_cell_freq.csv", cell_freq_traces, delimiter=",")
