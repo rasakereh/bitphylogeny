@@ -3,6 +3,7 @@ import sys
 import time
 import cPickle
 import csv
+import ipdb
 
 from numpy         import *
 from numpy.random  import *
@@ -12,11 +13,10 @@ from util          import *
 from scipy.stats   import itemfreq
 import numpy
 
-
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 100
+num_samples   = 1000
 checkpoint    = 50000
 dp_alpha      = 0.5
 dp_gamma      = 0.5
@@ -27,16 +27,14 @@ alpha_decay   = 0.1
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
 
-seed(rand_seed)
-#data = concatenate([0.5 + 0.2*randn(70,1), -0.8 + 0.1*randn(35,1), -1.5+0.1*randn(35,1)])
-#data = sigmoid(data)
+##seed(rand_seed)
 
 reader = csv.DictReader(open('./data/syn_mutmat_2000_20.csv'),
                         delimiter=',')
-
 data = []
 dataid = []
 max_snvpos = 1
+
 for row in reader:
     data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4'])])
     max_snvpos = max( max_snvpos, int(row['V1']), int(row['V2']) )
@@ -57,14 +55,14 @@ for index, snv in enumerate(freq):
         clonal[index] = 1.5
 
 
-root = SNVLogistic( dims=dims, drift=init_drift, galpha=init_galpha, gbeta=init_gbeta, initial_snvs=clonal )
+root = SNVLogistic( dims=dims, drift=init_drift, \
+                    galpha=init_galpha, gbeta=init_gbeta, initial_snvs=clonal )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
 dp_alpha_traces    = zeros((num_samples, 1))
 dp_gamma_traces    = zeros((num_samples, 1))
 alpha_decay_traces = zeros((num_samples, 1))
-#drift_traces       = zeros((num_samples, dims))
 galpha_traces      = zeros((num_samples, dims))
 gbeta_traces       = zeros((num_samples, dims))
 cd_llh_traces      = zeros((num_samples, 1))
@@ -76,10 +74,12 @@ print "Starting MCMC run..."
 for iter in range(-burnin,num_samples):
 
     times = [ time.time() ]
+    ##ipdb.set_trace()
     tssb.resample_assignments()
     times.append(time.time())
     tssb.cull_tree()
     times.append(time.time())
+    
     tssb.resample_node_params()
     times.append(time.time())
     root.resample_hypers()
@@ -94,10 +94,7 @@ for iter in range(-burnin,num_samples):
     times.append(time.time())
  
 
-    intervals = intervals + diff(array(times))
-
-
-   
+    intervals = intervals + diff(array(times))   
     
     if iter >= 0:
         tssb_traces[iter]        = cPickle.dumps(tssb)  
@@ -116,7 +113,6 @@ for iter in range(-burnin,num_samples):
     ##     fh = open(filename, 'w')
     ##     cPickle.dump(tssb, fh)
     ##     fh.close()
-
   
     if mod(iter, 1) == 0:
         (weights, nodes) = tssb.get_mixture()
@@ -164,7 +160,7 @@ best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
 best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
 best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
-## (weights_best, nodes_best) = best_node_fit.get_mixture()
+(weights_best, nodes_best) = best_node_fit.get_mixture()
 ## yy = linspace(0,1,1000)
 ## pp = zeros(yy.shape) 
 
@@ -174,8 +170,8 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 fig1 = plt.figure(1)
 plt.plot(cd_llh_traces)
-plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
-clf()
+## plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
+## clf()
 
 filename_best = "bests/PairLogistic1_test.pkl" 
 fh = open(filename_best, 'w')
@@ -195,19 +191,14 @@ fh.close()
 ## plt.savefig('figures/PairLogistic1_39.pdf', format='pdf')
 ## clf()
 
+subplot(1,3,1)
+plot(nodes_best[0].params)
+subplot(1,3,2)
+plot(nodes_best[1].params)
+subplot(1,3,3)
+plot(nodes_best[2].params)
 
 filename = 'treescripts/testgraph_PairLogistic1.gdl'
 fh2 = open(filename,'w')
 best_node_fit.print_graph(fh2)
 fh2.close()
-
-
-
-
-
-
-
-
-
-
-

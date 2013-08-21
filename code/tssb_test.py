@@ -8,12 +8,12 @@ from util         import *
 
 class TSSB_test(object):
 
-    min_dp_alpha    = 1.0
-    max_dp_alpha    = 5.0
-    min_dp_gamma    = 1.0
-    max_dp_gamma    = 10.0
+    min_dp_alpha    = 1e-4
+    max_dp_alpha    = 1e-3
+    min_dp_gamma    = 1e-4
+    max_dp_gamma    = 1e-3
     min_alpha_decay = 0.05
-    max_alpha_decay = 0.80
+    max_alpha_decay = 0.50
     
     def __init__(self, dp_alpha=1.0, dp_gamma=1.0, root_node=None, data=None,
                  min_depth=0, max_depth=15, alpha_decay=1.0):

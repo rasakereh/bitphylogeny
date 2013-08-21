@@ -33,7 +33,8 @@ def exp_gammapdfln(y, a, b):
     return a*numpy.log(b) - gammaln(a) + a*y - b*numpy.exp(y)
 
 def betapdfln(x, a, b):
-    return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + (b-1.0)*numpy.log(1.0-x) 
+    return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + \
+      (b-1.0)*numpy.log(1.0-x) 
 
 def boundbeta(a,b):
     return (1.0-numpy.finfo(numpy.float64).eps)*(numpy.random.beta(a,b)-0.5) + 0.5
@@ -216,7 +217,48 @@ def hmc(init_x, logprob, logprob_grad, num_steps, step_size):
     else:
         return init_x, False
 
+def bounded_hmc(init_x, logprob, logprob_grad, lower, upper, num_steps, step_size):
+    energy      = lambda x: -logprob(x)
+    energy_grad = lambda x: -logprob_grad(x)
 
+    g = energy_grad(init_x)
+    E = energy(init_x)
+    p = numpy.random.randn(init_x.shape[0])
+    H = numpy.sum(p**2)/2.0 + E
+
+    new_x = init_x
+    new_g = g
+    
+    for step in range(num_steps):
+        
+        p     = p - step_size * new_g / 2.0
+        new_x = new_x + step_size * p
+
+        reflections = 0
+        for k in range(init_x.shape[0]):
+            if new_x[k] < lower[k]:
+                new_x[k] = lower[k] + (lower[k] - new_x[k])
+                p[k] = -p[k]
+                reflections = reflections + 1
+
+            if new_x[k] > upper[k]:
+                new_x[k] = upper[k] - (new_x[k] - upper[k])
+                p[k] = -p[k]
+                reflections = - reflections + 1
+
+        new_g = energy_grad(new_x)
+        p     = p - step_size * new_g / 2.0;
+
+    new_E = energy(new_x)
+    new_H = sum(p**2)/2.0 + new_E
+
+    if numpy.log(numpy.random.rand()) < (H - new_H):
+        return new_x, True
+    else:
+        return init_x, False
+        
+
+    
 
     
 def hmc_trans(init_x, logprob, logprob_grad, trans, num_steps, step_size):
@@ -224,7 +266,7 @@ def hmc_trans(init_x, logprob, logprob_grad, trans, num_steps, step_size):
     energy_grad = lambda x: -logprob_grad(x)
     transformer = lambda x,y: trans(x,y)
     
-    g = energy_grad(init_x) * transformer(init_x,'tran_grad') - \
+    g = energy_grad(init_x)*transformer(init_x,'tran_grad') - \
        transformer(init_x,'jacob_grad')
     E = energy(init_x) - transformer(init_x,'det_jacob')
     p = numpy.random.randn(init_x.shape[0])
@@ -253,6 +295,8 @@ def hmc_trans(init_x, logprob, logprob_grad, trans, num_steps, step_size):
         return init_x, False
 
 
+
+    
 
     
 import os
