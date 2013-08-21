@@ -6,15 +6,19 @@ import csv
 import pdb
 import yaml
 
-##from collections import namedtuple
 
-from collections import namedtuple, OrderedDict
+## for python 2.6
+from collections import namedtuple
+from ordereddict import OrderedDict
 
-##from ordereddict import OrderedDict
+## for python 2.7
+#from collections import namedtuple, OrderedDict
+
+
 
 from numpy         import *
 from numpy.random  import *
-from tssb          import *
+from tssb_ke       import *
 from pyclone_test  import *
 from util          import *
 from scipy.stats   import itemfreq
@@ -23,7 +27,7 @@ from config        import *
 error_rate    = 0.001
 rand_seed     = 1234
 max_data      = 100
-burnin        = 1000
+burnin        = 0
 num_samples   = 10000
 checkpoint    = 50000
 dp_alpha      = 1e-1
@@ -100,6 +104,8 @@ drift_traces       = zeros((num_samples, dims))
 cd_llh_traces      = zeros((num_samples, 1))
 nodes_traces       = zeros((num_samples, 1))
 tssb_traces        = empty((num_samples, 1),dtype = object)
+balpha_traces      = zeros((num_samples, dims))
+bbeta_traces       = zeros((num_samples, dims))
 
 
 intervals = zeros((7))
@@ -141,7 +147,8 @@ for iter in range(-burnin,num_samples):
         dp_alpha_traces[iter]    = tssb.dp_alpha
         dp_gamma_traces[iter]    = tssb.dp_gamma
         alpha_decay_traces[iter] = tssb.alpha_decay
-        drift_traces[iter]       = root.drift()
+        balpha_traces[iter]      = root.balpha()
+        bbeta_traces[iter]       = root.bbeta()
         cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
         (weights, nodes)         = tssb.get_mixture()
         nodes_traces[iter]       = len(nodes)
@@ -154,14 +161,13 @@ for iter in range(-burnin,num_samples):
         fh.close()
 
   
-    if mod(iter, 50) == 0:
+    if mod(iter, 100) == 0:
         (weights, nodes) = tssb.get_mixture()
         print codename, iter, len(nodes), cd_llh_traces[iter], \
-           mean(root._drift), tssb.dp_alpha, tssb.dp_gamma, \
+           tssb.dp_alpha, tssb.dp_gamma, \
            tssb.alpha_decay, \
-           " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
-           float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
-           root.hmc_accepts, root.hmc_rejects
+           " ".join(map(lambda x: "%0.2f" % x, intervals.tolist()))
+           
         intervals = zeros((7))
         
 
