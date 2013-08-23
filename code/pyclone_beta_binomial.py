@@ -151,6 +151,7 @@ class PyClone_Beta_Binomial(Node):
            self.dims    = dims
            self._balpha = balpha*ones((1))
            self._bbeta  = bbeta*ones((1))
+           self._precision = precision*ones((1))
            self.params  = 0.99*self.init_mean*ones((1))
             
         else:
@@ -168,7 +169,14 @@ class PyClone_Beta_Binomial(Node):
         if self.parent() is None:
             return self._bbeta
         else:
-            return self.parent().bbeta()    
+            return self.parent().bbeta()
+        
+    def preci(self):
+        if self.parent() is None:
+            return self._precision
+        else:
+            return self.parent().preci()
+        
         
     ## def sample(self, args):
     ##     num_data = args['num_data'] if args.has_key('num_data') else 1
@@ -179,6 +187,7 @@ class PyClone_Beta_Binomial(Node):
         num_data   = len(data)
         balphas    = self.balpha()
         bbetas     = self.bbeta()
+        precision  = self.preci()
 
         def get_constraint():
             if self.parent() is None:
@@ -213,7 +222,7 @@ class PyClone_Beta_Binomial(Node):
 
             ll = 0
             for dd in data:
-                ll += ( log_pyclone(dd, orig_params) )
+                ll += ( log_pyclone(dd, orig_params, precision) )
                 
             llh = llh + ll
 
@@ -369,6 +378,34 @@ class PyClone_Beta_Binomial(Node):
                                    step_out=True,
                                    compwise=True)
 
+        def logpost_bbeta(bbetas):
+            if any(bbetas < self.min_balpha) or any(bbetas > self.max_balpha):
+                return -inf
+            def loglh(root):
+                llh = 0.0
+                for child in root.children():
+                    llh = llh + betapdfln(child.params/root.params, \
+                                          root.balpha(), \
+                                          bbetas)
+                    llh = llh + loglh(child)
+                return llh
+            return loglh(self) + normpdfln(self.params/self.init_mean, \
+                                           self.balpha(), \
+                                           bbetas)
+
+        self._bbeta = slice_sample(self._bbeta,
+                                   logpost_bbeta,
+                                   step_out=True,
+                                   compwise=True)
+
+        def logpost_precision(precision):
+            
+            if any(bbetas < self.min_balpha) or any(bbetas > self.max_balpha):
+                return float('-inf')
+
+            
+
+            
     def logprob(self, x):
         ll = 0
         for dd in x:
