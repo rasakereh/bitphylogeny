@@ -5,21 +5,22 @@ import cPickle
 import csv
 import pdb
 import yaml
+##import ipdb
 
 
 ## for python 2.6
-from collections import namedtuple
-from ordereddict import OrderedDict
+#from collections import namedtuple
+#from ordereddict import OrderedDict
 
 ## for python 2.7
-#from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict
 
 
 
 from numpy         import *
 from numpy.random  import *
 from tssb_ke       import *
-from pyclone_test  import *
+from pyclone_beta_binomial  import *
 from util          import *
 from scipy.stats   import itemfreq
 from config        import *
@@ -28,19 +29,19 @@ error_rate    = 0.001
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 10000
+num_samples   = 20000
 checkpoint    = 50000
-dp_alpha      = 1e-1
-dp_gamma      = 1e-1
+dp_alpha      = 1.0
+dp_gamma      = 1.0
 init_drift    = 0.1
-alpha_decay   = 0.5
+alpha_decay   = 0.1
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
+seed(rand_seed)
 
-## seed(rand_seed)
-
-PyCloneBinomialData = namedtuple('PyCloneBinomialData',
-                                 ['b', 'd', 'cn_n', 'cn_r', 'cn_v', 'mu_n', 'mu_r', 'mu_v', 'log_pi'])
+PyCloneBetaBinomialData = namedtuple('PyCloneBetaBinomialData',
+                                 ['b', 'd', 'cn_n', 'cn_r', 'cn_v',
+                                  'mu_n', 'mu_r', 'mu_v', 'log_pi'])
 
 def get_log_pi(weights):
     pi = [x / sum(weights) for x in weights]    
@@ -64,7 +65,7 @@ def get_pyclone_data(mutation, error_rate):
 
     log_pi = get_log_pi(prior_weights)
 
-    return PyCloneBinomialData(b, d, cn_n, cn_r, cn_v, mu_n, mu_r, mu_v, log_pi)
+    return PyCloneBetaBinomialData(b, d, cn_n, cn_r, cn_v, mu_n, mu_r, mu_v, log_pi)
 
 def load_sample_data(file_name, error_rate):
     '''
@@ -85,7 +86,7 @@ def load_sample_data(file_name, error_rate):
     return data
 
 
-file_name = 'data/pyclone/SRR385941.yaml'
+file_name = '../pyclone-data/SRR385941.yaml'
 
 data = load_sample_data(file_name, error_rate)
 data = data.values()
@@ -93,7 +94,7 @@ data = array(data, dtype=tuple)
 data = delete(data,139,0)
 
 dims = 1
-root = PyClone_test( dims=dims, drift=init_drift )
+root = PyClone_Beta_Binomial( dims=dims )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
@@ -102,15 +103,18 @@ dp_gamma_traces    = zeros((num_samples, 1))
 alpha_decay_traces = zeros((num_samples, 1))
 drift_traces       = zeros((num_samples, dims))
 cd_llh_traces      = zeros((num_samples, 1))
+cd_mllh_traces     = zeros((num_samples, 1))
 nodes_traces       = zeros((num_samples, 1))
 tssb_traces        = empty((num_samples, 1),dtype = object)
 balpha_traces      = zeros((num_samples, dims))
 bbeta_traces       = zeros((num_samples, dims))
-
+preci_traces       = zeros((num_samples, dims))
 
 intervals = zeros((7))
 print "Starting MCMC run..."
 ## ipdb.set_trace()
+
+start_time = time.time()
 for iter in range(-burnin,num_samples):
 
     times = [time.time()]
@@ -118,7 +122,7 @@ for iter in range(-burnin,num_samples):
     tssb.resample_assignments()
     times.append(time.time())
 
-    ##ipdb.set_trace()
+    
     tssb.cull_tree()
     times.append(time.time())
 
@@ -126,6 +130,7 @@ for iter in range(-burnin,num_samples):
     tssb.resample_node_params()
     times.append(time.time())
 
+    ##ipdb.set_trace()
     root.resample_hypers()
     times.append(time.time())
 
@@ -135,9 +140,7 @@ for iter in range(-burnin,num_samples):
     tssb.resample_stick_orders()
     times.append(time.time())
 
-   
-    if iter > 0:
-         tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+    tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
     times.append(time.time())
  
     intervals = intervals + diff(array(times))
@@ -150,7 +153,9 @@ for iter in range(-burnin,num_samples):
         balpha_traces[iter]      = root.balpha()
         bbeta_traces[iter]       = root.bbeta()
         cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
+        ##cd_mllh_traces[iter]     = tssb.complete_data_log_marginal_likelihood()
         (weights, nodes)         = tssb.get_mixture()
+        preci_traces[iter]       = root.preci()
         nodes_traces[iter]       = len(nodes)
         
 
@@ -181,7 +186,7 @@ for iter in range(-burnin,num_samples):
         ## fh.close()
 
 
-
+elapsed_time = time.time() - start_time
 ## filename = "checkpoints/norm1d-test-%s-final.pkl" % (codename)
 ## fh = open(filename, 'w')
 ## cPickle.dump({ 'tssb'               : tssb,
@@ -195,10 +200,10 @@ for iter in range(-burnin,num_samples):
 
 
 
-## nodes_tabular = itemfreq(nodes_traces)
-## best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-## best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-## best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+nodes_tabular = itemfreq(nodes_traces)
+best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
+best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
+best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 
 ## (weights_best, nodes_best) = best_node_fit.get_mixture()
@@ -221,19 +226,35 @@ for iter in range(-burnin,num_samples):
 ## plt.savefig('figures/test_40.pdf', format='pdf')
 ## clf()
 
+best_node_fit.remove_empty_nodes()
 
-## filename = 'testgraph_pyclone.gdl'
-## fh2 = open(filename,'w')
-## best_node_fit.print_graph_binomial(fh2)
-## fh2.close()
+filename = 'tree_pyclone_beta_binomial_0.gdl'
+fh2 = open(filename,'w')
+best_node_fit.print_graph_binomial(fh2)
+fh2.close()
+
+best = loads(best_fit)
+best.remove_empty_nodes()
+
+filename = 'tree_pyclone_beta_binomial_1.gdl'
+fh2 = open(filename,'w')
+best.print_graph_binomial(fh2)
+fh2.close()
 
 
-## cell_freq_traces = zeros((num_samples, data.shape[0]))
+cell_freq_traces = zeros((num_samples, data.shape[0]))
 
-## for ii in range(num_samples):
-##     tmp_tssb = cPickle.loads(tssb_traces[ii][0])
-##     assignments = tmp_tssb.assignments
-##     for jj in range(data.shape[0]):
-##         cell_freq_traces[ii,jj] = assignments[jj].params
+for ii in range(num_samples):
+    tmp_tssb = cPickle.loads(tssb_traces[ii][0])
+    assignments = tmp_tssb.assignments
+    for jj in range(data.shape[0]):
+        cell_freq_traces[ii,jj] = assignments[jj].params
 
-## numpy.savetxt("pyclone_cell_freq.csv", cell_freq_traces, delimiter=",")
+
+
+traces = hstack([dp_alpha_traces, dp_gamma_traces, \
+                alpha_decay_traces, cd_llh_traces, \
+                bbeta_traces, preci_traces]) 
+numpy.savetxt("pyclone_beta_binomial_cell_freq.csv", cell_freq_traces, delimiter=",")
+numpy.savetxt('pyclone_beta_binomial_traces.csv', traces, delimiter = ',',
+              header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,bbeta_traces,prei_traces", comments='')

@@ -37,40 +37,6 @@ def sigmoid_trans(x, opt):
 def digamma(x):
     return scipy.special.psi(x)
 
-    
-def log_sum_exp(log_X):
-    '''
-    Given a list of values in log space, log_X. Compute exp(log_X[0] + log_X[1] + ... log_X[n])
-    
-    Numerically safer than naive method.
-    '''
-    max_exp = max(log_X)
-    
-    if isinf(max_exp):
-        return max_exp
-    
-    total = 0
-
-    for x in log_X:
-        total += exp(x - max_exp)
-    
-    return log(total) + max_exp
-
-def log_sum_exp_prod(log_X, Y):
-
-    max_exp = max(log_X)
-
-    if isinf(max_exp):
-        return max_exp
-
-    total = 0
-
-    for x, y in zip(log_X, Y):
-        total += exp(x - max_exp) * y
-
-    return total * exp( max_exp )
-    
-
 def log_factorial(n):
     return gammaln(n + 1.0)
 
@@ -130,65 +96,65 @@ def log_pyclone(data, params):
         return log_sum_exp(ll)
 
 
-def log_binomial_grad(b,d,cn_n,cn_r,cn_v,mu_n,mu_r,mu_v,params):
+## def log_binomial_grad(b,d,cn_n,cn_r,cn_v,mu_n,mu_r,mu_v,params):
 
-    f = params
-    t = 1
+##     f = params
+##     t = 1
     
-    p_n = (1 - t) * cn_n
-    p_r = t * (1 - f) * cn_r
-    p_v = t * f * cn_v
+##     p_n = (1 - t) * cn_n
+##     p_r = t * (1 - f) * cn_r
+##     p_v = t * f * cn_v
 
-    norm_const = p_n + p_r + p_v
+##     norm_const = p_n + p_r + p_v
 
-    g1 = -t * cn_r + t * cn_v
-    g2 = -t * cn_r
-    g3 = t * cn_v
+##     g1 = -t * cn_r + t * cn_v
+##     g2 = -t * cn_r
+##     g3 = t * cn_v
 
-    G1 = - p_n / norm_const**2 * g1
-    G2 = 1 / norm_const * g2 - p_r / norm_const**2 * g1
-    G3 = 1 / norm_const * g3 - p_v / norm_const**2 * g1
+##     G1 = - p_n / norm_const**2 * g1
+##     G2 = 1 / norm_const * g2 - p_r / norm_const**2 * g1
+##     G3 = 1 / norm_const * g3 - p_v / norm_const**2 * g1
 
-    gg = G1 * mu_n + G2 * mu_r + G3 * mu_v
+##     gg = G1 * mu_n + G2 * mu_r + G3 * mu_v
 
-    P_n = p_n / norm_const
-    P_r = p_r / norm_const
-    P_v = p_v / norm_const
+##     P_n = p_n / norm_const
+##     P_r = p_r / norm_const
+##     P_v = p_v / norm_const
         
-    mu = P_n * mu_n + P_r * mu_r + P_v * mu_v
+##     mu = P_n * mu_n + P_r * mu_r + P_v * mu_v
 
-    grad = b / mu - (d - b) / (1 - mu)
+##     grad = b / mu - (d - b) / (1 - mu)
 
-    grad = grad * gg
+##     grad = grad * gg
     
-    return grad
+##     return grad
 
-def log_pyclone_grad(data, params):
+## def log_pyclone_grad(data, params):
 
-    norm_const = log_pyclone(data, params)
+##     norm_const = log_pyclone(data, params)
     
-    temp1 = []
-    temp2 = []
-    temp3 = []
+##     temp1 = []
+##     temp2 = []
+##     temp3 = []
 
-    for cn_n, cn_r, cn_v, mu_n, mu_r, mu_v, log_pi  in zip(data[2],
-                                                           data[3],
-                                                           data[4],
-                                                           data[5],
-                                                           data[6],
-                                                           data[7],
-                                                           data[8]):
-        t1 = log_binomial_likelihood(data[0],data[1],
-                                        cn_n,cn_r,cn_v,mu_n,
-                                        mu_r,mu_v,params) + log_pi
-        temp1.append(t1)
-        t2 = log_binomial_grad(data[0],data[1],cn_n,cn_r,
-                                  cn_v,mu_n,mu_r,mu_v,params)
-        temp2.append(t2);
+##     for cn_n, cn_r, cn_v, mu_n, mu_r, mu_v, log_pi  in zip(data[2],
+##                                                            data[3],
+##                                                            data[4],
+##                                                            data[5],
+##                                                            data[6],
+##                                                            data[7],
+##                                                            data[8]):
+##         t1 = log_binomial_likelihood(data[0],data[1],
+##                                         cn_n,cn_r,cn_v,mu_n,
+##                                         mu_r,mu_v,params) + log_pi
+##         temp1.append(t1)
+##         t2 = log_binomial_grad(data[0],data[1],cn_n,cn_r,
+##                                   cn_v,mu_n,mu_r,mu_v,params)
+##         temp2.append(t2);
         
-    temp = log_sum_exp_prod(temp1,temp2)
-    grad = exp( temp - norm_const ) 
-    return grad
+##     temp = log_sum_exp_prod(temp1,temp2)
+##     grad = exp( temp - norm_const ) 
+##     return grad
 
 
 
@@ -205,12 +171,11 @@ class PyClone_test(Node):
     hmc_rejects  = 1
 
     def __init__(self, parent=None, dims=1, tssb=None, drift=0.1,
-                 balpha = 0.5, bbeta = 0.5):
+                 balpha = 1.0, bbeta = 0.5):
         super(PyClone_test, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
            self.dims    = dims
-           self._drift  = drift
            self._balpha = balpha*ones((1))
            self._bbeta  = bbeta*ones((1))
            self.params  = 0.99*self.init_mean*ones((1))
@@ -218,12 +183,6 @@ class PyClone_test(Node):
         else:
             self.dims   = parent.dims
             self.params = parent.params * boundbeta(balpha, bbeta)
-
-    def drift(self):
-        if self.parent() is None:
-            return self._drift
-        else:
-            return self.parent().drift()
 
     def balpha(self):
         if self.parent() is None:
@@ -244,7 +203,6 @@ class PyClone_test(Node):
     def resample_params(self):
         data       = self.get_data()
         num_data   = len(data)
-        drifts     = self.drift()
         balphas    = self.balpha()
         bbetas     = self.bbeta()
 
@@ -303,48 +261,48 @@ class PyClone_test(Node):
         self.params = sigmoid_trans(temp, 'orig_x')
         
                                 
-        def logpost(params):
-            if self.parent() is None:
-                llh = betapdfln(params/self.init_mean, balphas, bbetas)
-            else:
-                llh = betapdfln(params/self.parent().params, \
-                                balphas, bbetas) 
-            ## pyclone node
+        ## def logpost(params):
+        ##     if self.parent() is None:
+        ##         llh = betapdfln(params/self.init_mean, balphas, bbetas)
+        ##     else:
+        ##         llh = betapdfln(params/self.parent().params, \
+        ##                         balphas, bbetas) 
+        ##     ## pyclone node
 
-            ll = 0
-            for dd in data:
-                ll += ( log_pyclone(dd,params) )
+        ##     ll = 0
+        ##     for dd in data:
+        ##         ll += ( log_pyclone(dd,params) )
                 
-            llh = llh + ll
+        ##     llh = llh + ll
         
-            for child in self.children():
-                llh = llh + betapdfln(child.params/params, balphas, bbetas)
+        ##     for child in self.children():
+        ##         llh = llh + betapdfln(child.params/params, balphas, bbetas)
 
-            det_jacobln = sigmoid_trans(params, 'det_jacob')
+        ##     det_jacobln = sigmoid_trans(params, 'det_jacob')
                 
-            return llh
+        ##     return llh
 
-        def logpost_grad(params):
+        ## def logpost_grad(params):
             
-            if self.parent() is None:
-                grad = (balphas-1.0) / params - (bbetas - 1.0) /\
-                      (self.init_mean - params)
-            else:
-                grad = (balphas-1.0) / params - (bbetas - 1.0) /\
-                      (self.parent().params - params)
+        ##     if self.parent() is None:
+        ##         grad = (balphas-1.0) / params - (bbetas - 1.0) /\
+        ##               (self.init_mean - params)
+        ##     else:
+        ##         grad = (balphas-1.0) / params - (bbetas - 1.0) /\
+        ##               (self.parent().params - params)
 
-            g = 0
-            for dd in data:
-                g += log_pyclone_grad(dd, params)
+        ##     g = 0
+        ##     for dd in data:
+        ##         g += log_pyclone_grad(dd, params)
                 
-            grad = grad + g
+        ##     grad = grad + g
 
                         
-            for child in self.children():
-                grad = grad + (1.0-balphas) / params + (bbetas - 1.0) * \
-                  child.params / (params *(params - child.params))
-               ## print child.params
-            return grad
+        ##     for child in self.children():
+        ##         grad = grad + (1.0-balphas) / params + (bbetas - 1.0) * \
+        ##           child.params / (params *(params - child.params))
+        ##        ## print child.params
+        ##     return grad
 
         ## func   = logpost(self.params)
         ## eps    = 1e-4
@@ -399,25 +357,25 @@ class PyClone_test(Node):
         if self.parent() is not None:
             raise Exception("Can only update hypers from root!")
 
-        def logpost_balpha(balphas):
-            if any(balphas < self.min_balpha) or any(balphas > self.max_balpha):
-                return -inf
-            def loglh(root):
-                llh = 0.0
-                for child in root.children():
-                    llh = llh + betapdfln(child.params/root.params, \
-                                          balphas, \
-                                          root.bbeta())
-                    llh = llh + loglh(child)
-                return llh
-            return loglh(self) + normpdfln(self.params/self.init_mean, \
-                                           balphas, \
-                                           self.bbeta())
+        ## def logpost_balpha(balphas):
+        ##     if any(balphas < self.min_balpha) or any(balphas > self.max_balpha):
+        ##         return -inf
+        ##     def loglh(root):
+        ##         llh = 0.0
+        ##         for child in root.children():
+        ##             llh = llh + betapdfln(child.params/root.params, \
+        ##                                   balphas, \
+        ##                                   root.bbeta())
+        ##             llh = llh + loglh(child)
+        ##         return llh
+        ##     return loglh(self) + normpdfln(self.params/self.init_mean, \
+        ##                                    balphas, \
+        ##                                    self.bbeta())
 
-        self._balpha = slice_sample(self._balpha,
-                                   logpost_balpha,
-                                   step_out=True,
-                                   compwise=True)
+        ## self._balpha = slice_sample(self._balpha,
+        ##                            logpost_balpha,
+        ##                            step_out=True,
+        ##                            compwise=True)
 
         def logpost_bbeta(bbetas):
             if any(bbetas < self.min_balpha) or any(bbetas > self.max_balpha):
@@ -430,9 +388,8 @@ class PyClone_test(Node):
                                           bbetas)
                     llh = llh + loglh(child)
                 return llh
-            return loglh(self) + normpdfln(self.params/self.init_mean, \
-                                           self.balpha(), \
-                                           bbetas)
+            return loglh(self) + betapdfln(self.params/self.init_mean, \
+                                           self.balpha(), bbetas)
 
         self._bbeta = slice_sample(self._bbeta,
                                    logpost_bbeta,

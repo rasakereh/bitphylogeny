@@ -8,11 +8,11 @@ import yaml
 
 
 ## for python 2.6
-from collections import namedtuple
-from ordereddict import OrderedDict
+#from collections import namedtuple
+#from ordereddict import OrderedDict
 
 ## for python 2.7
-#from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict
 
 
 
@@ -28,7 +28,7 @@ error_rate    = 0.001
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 10000
+num_samples   = 2000
 checkpoint    = 50000
 dp_alpha      = 1e-1
 dp_gamma      = 1e-1
@@ -85,7 +85,7 @@ def load_sample_data(file_name, error_rate):
     return data
 
 
-file_name = 'data/pyclone/SRR385941.yaml'
+file_name = '../pyclone-data/SRR385941.yaml'
 
 data = load_sample_data(file_name, error_rate)
 data = data.values()
@@ -111,6 +111,9 @@ bbeta_traces       = zeros((num_samples, dims))
 intervals = zeros((7))
 print "Starting MCMC run..."
 ## ipdb.set_trace()
+
+start_time = time.time()
+
 for iter in range(-burnin,num_samples):
 
     times = [time.time()]
@@ -180,7 +183,7 @@ for iter in range(-burnin,num_samples):
         ## cPickle.dump(tssb, fh)
         ## fh.close()
 
-
+elapsed_time = time.time() - start_time
 
 ## filename = "checkpoints/norm1d-test-%s-final.pkl" % (codename)
 ## fh = open(filename, 'w')
@@ -195,10 +198,10 @@ for iter in range(-burnin,num_samples):
 
 
 
-## nodes_tabular = itemfreq(nodes_traces)
-## best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-## best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-## best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+nodes_tabular = itemfreq(nodes_traces)
+best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
+best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
+best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 
 ## (weights_best, nodes_best) = best_node_fit.get_mixture()
@@ -221,19 +224,24 @@ for iter in range(-burnin,num_samples):
 ## plt.savefig('figures/test_40.pdf', format='pdf')
 ## clf()
 
+filename = 'testgraph_pyclone.gdl'
+fh2 = open(filename,'w')
+best_node_fit.print_graph_binomial(fh2)
+fh2.close()
 
-## filename = 'testgraph_pyclone.gdl'
-## fh2 = open(filename,'w')
-## best_node_fit.print_graph_binomial(fh2)
-## fh2.close()
 
+cell_freq_traces = zeros((num_samples, data.shape[0]))
 
-## cell_freq_traces = zeros((num_samples, data.shape[0]))
+for ii in range(num_samples):
+    tmp_tssb = cPickle.loads(tssb_traces[ii][0])
+    assignments = tmp_tssb.assignments
+    for jj in range(data.shape[0]):
+        cell_freq_traces[ii,jj] = assignments[jj].params
 
-## for ii in range(num_samples):
-##     tmp_tssb = cPickle.loads(tssb_traces[ii][0])
-##     assignments = tmp_tssb.assignments
-##     for jj in range(data.shape[0]):
-##         cell_freq_traces[ii,jj] = assignments[jj].params
+traces = hstack([dp_alpha_traces, dp_gamma_traces, \
+                      alpha_decay_traces, cd_llh_traces, \
+                      bbeta_traces]) 
 
 ## numpy.savetxt("pyclone_cell_freq.csv", cell_freq_traces, delimiter=",")
+numpy.savetxt('pyclone_binomial_traces.csv', traces, delimiter = ',', \
+              header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,bbeta_traces", comments='')

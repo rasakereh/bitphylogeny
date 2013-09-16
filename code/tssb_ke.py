@@ -7,28 +7,33 @@ from numpy.random import *
 from util         import *
 
 class TSSB(object):
-
-    min_dp_alpha    = 1e-3
-    max_dp_alpha    = 1.0
-    min_dp_gamma    = 1e-3
-    max_dp_gamma    = 1.0
-    min_alpha_decay = 0.01
-    max_alpha_decay = 0.80
     
-    def __init__(self, dp_alpha=1.0, dp_gamma=1.0, root_node=None, data=None,
-                 min_depth=0, max_depth=15, alpha_decay=1.0):
+    def __init__(self, dp_alpha=1.0, dp_gamma=1.0, alpha_decay=1.0,
+                 min_dp_alpha = 1e-3, max_dp_alpha = 1,
+                 min_dp_gamma = 1e-3, max_dp_gamma = 1,
+                 min_alpha_decay = 0.05, max_alpha_decay = 0.80,
+                 root_node=None, data=None, 
+                 min_depth=0, max_depth=15):
         if root_node is None:
             raise Exception("Root node must be specified.")
-        
+
+        self.min_dp_alpha = min_dp_alpha
+        self.max_dp_alpha = max_dp_alpha
+        self.min_dp_gamma = min_dp_gamma
+        self.max_dp_gamma = max_dp_gamma
+        self.min_alpha_decay = min_alpha_decay
+        self.max_alpha_decay = max_alpha_decay
         self.min_depth   = min_depth
         self.max_depth   = max_depth
+
         self.dp_alpha    = dp_alpha
         self.dp_gamma    = dp_gamma
         self.alpha_decay = alpha_decay
         self.data        = data
         self.num_data    = 0 if data is None else data.shape[0]
         self.root        = { 'node'     : root_node,
-                             'main'     : boundbeta(1.0, dp_alpha) if self.min_depth == 0 else 0.0,
+                             'main'     : boundbeta(1.0, dp_alpha) \
+                                          if self.min_depth == 0 else 0.0,
                              'sticks'   : empty((0,1)),
                              'children' : [] }
         root_node.tssb = self
@@ -167,11 +172,60 @@ class TSSB(object):
             data_here    = root['node'].num_local_data()
             post_alpha   = 1.0 + data_here
             post_beta    = (self.alpha_decay**depth)*self.dp_alpha + data_down
-            root['main'] = boundbeta( post_alpha, post_beta ) if self.min_depth <= depth else 0.0
+            root['main'] = boundbeta( post_alpha, post_beta ) if self.min_depth <= depth else 0.0 
 
             return data_here + data_down
 
         descend(self.root)
+
+
+    def remove_empty_nodes(self):
+
+        def descend(root):
+
+            if len(root['children']) == 0:
+                return
+
+            while True:
+                
+                empty_nodes = filter(lambda i:
+                                  len(root['children'][i]['node'].data) == 0, 
+                                  range(len(root['children'])))
+
+                if len(empty_nodes)==0:
+                    break
+
+                index = empty_nodes[0]
+                
+                cache_children = root['children'][index]['children']
+
+                ## root['children'][index]['node'].kill()
+
+                del root['children'][index]
+
+                if len(cache_children) == 0:
+                    continue
+                else:
+
+                    temp1 = root['children'][:index]
+
+                    temp2 = root['children'][index:]
+
+                    root['children'] = temp1 + cache_children + temp2
+
+                    ## for child in cache_children:
+                    ##     root['node'].add_child(child['node'])
+
+                    
+            for child in root['children']:
+                descend(child)
+                
+        descend(self.root)
+
+
+                            
+            
+            
 
     def resample_stick_orders(self):
         def descend(root, depth=0):
@@ -188,18 +242,22 @@ class TSSB(object):
 
                 u = rand()
                 while True:
-                    sub_indices = filter(lambda i: i not in new_order, range(root['sticks'].shape[0]))
-                    sub_weights = hstack([all_weights[sub_indices], 1.0 - sum(all_weights)])
+                    sub_indices = filter(lambda i: i not in new_order,
+                                         range(root['sticks'].shape[0]))
+                    sub_weights = hstack([all_weights[sub_indices],
+                                          1.0 - sum(all_weights)])
                     sub_weights = sub_weights / sum(sub_weights)
                     index       = sum(u > cumsum(sub_weights))
 
                     if index == len(sub_indices):
-                        root['sticks'] = vstack([ root['sticks'], boundbeta(1, self.dp_gamma) ])
+                        root['sticks'] = vstack([ root['sticks'],
+                                                  boundbeta(1, self.dp_gamma) ])
                         root['children'].append({ 'node'     : root['node'].spawn(), 
                                                   'main'     : boundbeta(1.0, (self.alpha_decay**(depth+1))*self.dp_alpha) if self.min_depth <= (depth+1) else 0.0,
                                                   'sticks'   : empty((0,1)),
                                                   'children' : [] })
-                        all_weights = diff(hstack([0.0, sticks_to_edges(root['sticks'])]))
+                        all_weights = diff(hstack([0.0,
+                                                   sticks_to_edges(root['sticks'])]))
                     else:
                         index = sub_indices[index]
                         break
@@ -231,7 +289,7 @@ class TSSB(object):
                 for child in root['children']:
                     llh += descend(dp_alpha, child, depth+1)
                 return llh            
-            return descend(dp_alpha, self.root)
+            return descend(dp_alpha, self.root) + gammapdfln(dp_alpha, 0.001,1/0.001)
 
         if dp_alpha:
             upper = self.max_dp_alpha
@@ -274,7 +332,7 @@ class TSSB(object):
                     llh += betapdfln(root['sticks'][i], 1.0, dp_gamma)
                     llh += descend(dp_gamma, child)
                 return llh
-            return descend(dp_gamma, self.root)
+            return descend(dp_gamma, self.root)+ gammapdfln(dp_alpha, 0.001,1/0.001)
 
         if dp_gamma:
             upper = self.max_dp_gamma
@@ -365,8 +423,28 @@ class TSSB(object):
         llhs = []
         for i, node in enumerate(nodes):
             if node.num_local_data():
-                llhs.append(node.num_local_data()*log(weights[i]) + node.data_log_likelihood())
+                llhs.append(node.num_local_data()*log(weights[i]) + \
+                            node.data_log_likelihood())
+        return sum(array(llhs))#+self.root['node'].log_params_prior()
+
+    def complete_data_log_marginal_likelihood(self):
+        weights, nodes = self.get_mixture();
+        llhs = []
+        w = []
+        for i, node in enumerate(nodes):
+            if node.num_local_data():
+                llhs.append(node.data_log_likelihood())
+                w.append(weights[i])
+        return log_sum_exp_prod(llhs,w)
+
+    def complete_data_log_likelihood_global_params(self, global_params):
+        weights, nodes = self.get_mixture();
+        llhs = []
+        for i, node in enumerate(nodes):
+            if node.num_local_data():
+                llhs.append(node.data_log_likelihood_global_params(global_params))
         return sum(array(llhs))
+        
 
     def print_graph(self, fh, base_width=5000, min_width=5):
         print >>fh, """graph: { title:            "TSSB Graph"  \
@@ -426,8 +504,6 @@ class TSSB(object):
         descend(self.root, 'X', 1)
         print >>fh, """}"""
 
-
-        
     def print_graph_binomial(self, fh, base_width=5, min_width=200):
         print >>fh, """graph: { title:            "TSSB Graph"  \
                                 portsharing:      no            \
@@ -441,18 +517,15 @@ class TSSB(object):
 				xspace:            5 """
         print >>fh, """node: { label:"%d ~ Freq(%f)" title:"%s" width:%d}""" \
           %(len(self.root['node'].get_data()),self.root['node'].params, "X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
+        def descend(root, name):
             for i, child in enumerate(root['children']):
                 child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
+                ## child_mass = mass * weights[i] * child['main']
                 print >>fh, """node: {  label:"%d ~ Freq(%f)" title:"%s" width:%d}""" \
                        % (len(child['node'].get_data()), child['node'].params, child_name, min_width)
                 print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1)
+                descend(child, child_name)
+
+        descend(self.root, 'X')
         print >>fh, """}"""
 

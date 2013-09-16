@@ -21,12 +21,16 @@ def normpdfln(x, m, std):
 
 def logit(x):
     return log(x) - log(1.0-x);
+
+def bound_sigmoid(x):
+    return (1.0-numpy.finfo(numpy.float64).eps)*\
+           (sigmoid(x)-0.5) + 0.5
     
 def sigmoid_trans(x, opt):
     if opt == 'tran_x':
         return logit(x);
     if opt == 'orig_x':
-        return sigmoid(x);
+        return bound_sigmoid(x);
     if opt == 'det_jacob':
         return log(x)+ log(1.0-x);
     if opt == 'tran_grad':
@@ -78,7 +82,7 @@ def log_binomial_coefficient(n, x):
     return log_factorial(n) - log_factorial(x) - log_factorial(n - x)
 
 def log_beta(a, b):
-    return log_gamma(a) + log_gamma(b) - log_gamma(a + b)
+    return gammaln(a) + gammaln(b) - gammaln(a + b)
 
 def log_beta_binomial_pdf(x, n, a, b):
     return log_binomial_coefficient(n, x) + log_beta(a + x, b + n - x) - log_beta(a, b)
@@ -127,24 +131,24 @@ def log_pyclone(data, params, precision):
                                                     params, precision)
             ## if isnan(temp):
             ##     return "params ", params
-            ## ll.append(temp)
+            ll.append(temp)
         return log_sum_exp(ll)
 
 
 class PyClone_Beta_Binomial(Node):
 
     init_mean    = 1.0
-    min_drift    = 0.01
-    max_drift    = 1.0
     min_balpha   = 0.1
-    max_balpha   = 5
+    max_balpha   = 5.0
     min_bbeta    = 0.1
-    max_bbeta    = 5
+    max_bbeta    = 5.0
+    min_precision = 1e2
+    max_precision = 1e3
     hmc_accepts  = 1
     hmc_rejects  = 1
 
-    def __init__(self, parent=None, dims=1, tssb=None, precision = 1.0
-                 balpha = 0.5, bbeta = 0.5):
+    def __init__(self, parent=None, dims=1, tssb=None, precision = 500,
+                 balpha = 1.0, bbeta = 0.5):
         super(PyClone_Beta_Binomial, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
@@ -219,7 +223,6 @@ class PyClone_Beta_Binomial(Node):
             else:
                 llh = betapdfln(orig_params/self.parent().params, \
                                 balphas, bbetas)
-
             ll = 0
             for dd in data:
                 ll += ( log_pyclone(dd, orig_params, precision) )
@@ -242,48 +245,48 @@ class PyClone_Beta_Binomial(Node):
         self.params = sigmoid_trans(temp, 'orig_x')
         
                                 
-        def logpost(params):
-            if self.parent() is None:
-                llh = betapdfln(params/self.init_mean, balphas, bbetas)
-            else:
-                llh = betapdfln(params/self.parent().params, \
-                                balphas, bbetas) 
-            ## pyclone node
+        ## def logpost(params):
+        ##     if self.parent() is None:
+        ##         llh = betapdfln(params/self.init_mean, balphas, bbetas)
+        ##     else:
+        ##         llh = betapdfln(params/self.parent().params, \
+        ##                         balphas, bbetas) 
+        ##     ## pyclone node
 
-            ll = 0
-            for dd in data:
-                ll += ( log_pyclone(dd,params) )
+        ##     ll = 0
+        ##     for dd in data:
+        ##         ll += ( log_pyclone(dd,params) )
                 
-            llh = llh + ll
+        ##     llh = llh + ll
         
-            for child in self.children():
-                llh = llh + betapdfln(child.params/params, balphas, bbetas)
+        ##     for child in self.children():
+        ##         llh = llh + betapdfln(child.params/params, balphas, bbetas)
 
-            det_jacobln = sigmoid_trans(params, 'det_jacob')
+        ##     det_jacobln = sigmoid_trans(params, 'det_jacob')
                 
-            return llh
+        ##     return llh
 
-        def logpost_grad(params):
+        ## def logpost_grad(params):
             
-            if self.parent() is None:
-                grad = (balphas-1.0) / params - (bbetas - 1.0) /\
-                      (self.init_mean - params)
-            else:
-                grad = (balphas-1.0) / params - (bbetas - 1.0) /\
-                      (self.parent().params - params)
+        ##     if self.parent() is None:
+        ##         grad = (balphas-1.0) / params - (bbetas - 1.0) /\
+        ##               (self.init_mean - params)
+        ##     else:
+        ##         grad = (balphas-1.0) / params - (bbetas - 1.0) /\
+        ##               (self.parent().params - params)
 
-            g = 0
-            for dd in data:
-                g += log_pyclone_grad(dd, params)
+        ##     g = 0
+        ##     for dd in data:
+        ##         g += log_pyclone_grad(dd, params)
                 
-            grad = grad + g
+        ##     grad = grad + g
 
                         
-            for child in self.children():
-                grad = grad + (1.0-balphas) / params + (bbetas - 1.0) * \
-                  child.params / (params *(params - child.params))
-               ## print child.params
-            return grad
+        ##     for child in self.children():
+        ##         grad = grad + (1.0-balphas) / params + (bbetas - 1.0) * \
+        ##           child.params / (params *(params - child.params))
+        ##        ## print child.params
+        ##     return grad
 
         ## func   = logpost(self.params)
         ## eps    = 1e-4
@@ -338,82 +341,93 @@ class PyClone_Beta_Binomial(Node):
         if self.parent() is not None:
             raise Exception("Can only update hypers from root!")
 
-        def logpost_balpha(balphas):
-            if any(balphas < self.min_balpha) or any(balphas > self.max_balpha):
-                return -inf
-            def loglh(root):
-                llh = 0.0
-                for child in root.children():
-                    llh = llh + betapdfln(child.params/root.params, \
-                                          balphas, \
-                                          root.bbeta())
-                    llh = llh + loglh(child)
-                return llh
-            return loglh(self) + normpdfln(self.params/self.init_mean, \
-                                           balphas, \
-                                           self.bbeta())
+        ## def logpost_balpha(balphas):
+        ##     if any(balphas < self.min_balpha) or any(balphas > self.max_balpha):
+        ##         return -inf
+        ##     def loglh(root):
+        ##         llh = 0.0
+        ##         for child in root.children():
+        ##             llh = llh + betapdfln(child.params/root.params, \
+        ##                                   balphas, \
+        ##                                   root.bbeta())
+        ##             llh = llh + loglh(child)
+        ##         return llh
+        ##     return loglh(self) + normpdfln(self.params/self.init_mean, \
+        ##                                    balphas, \
+        ##                                    self.bbeta())
 
-        self._balpha = slice_sample(self._balpha,
-                                   logpost_balpha,
-                                   step_out=True,
-                                   compwise=True)
+        ## self._balpha = slice_sample(self._balpha,
+        ##                            logpost_balpha,
+        ##                            step_out=True,
+        ##                            compwise=True)
 
         def logpost_bbeta(bbetas):
-            if any(bbetas < self.min_balpha) or any(bbetas > self.max_balpha):
+            if any(bbetas < self.min_bbeta) or any(bbetas > self.max_bbeta):
                 return -inf
             def loglh(root):
                 llh = 0.0
                 for child in root.children():
                     llh = llh + betapdfln(child.params/root.params, \
-                                          root.balpha(), \
-                                          bbetas)
+                                          root.balpha(), bbetas)
                     llh = llh + loglh(child)
                 return llh
-            return loglh(self) + normpdfln(self.params/self.init_mean, \
-                                           self.balpha(), \
-                                           bbetas)
+            return loglh(self) + betapdfln(self.params/self.init_mean, \
+                                           self.balpha(), bbetas)
 
         self._bbeta = slice_sample(self._bbeta,
                                    logpost_bbeta,
                                    step_out=True,
                                    compwise=True)
 
-        def logpost_bbeta(bbetas):
-            if any(bbetas < self.min_balpha) or any(bbetas > self.max_balpha):
-                return -inf
-            def loglh(root):
-                llh = 0.0
-                for child in root.children():
-                    llh = llh + betapdfln(child.params/root.params, \
-                                          root.balpha(), \
-                                          bbetas)
-                    llh = llh + loglh(child)
-                return llh
-            return loglh(self) + normpdfln(self.params/self.init_mean, \
-                                           self.balpha(), \
-                                           bbetas)
+        ## def logpost_precision(tmp_params):
 
-        self._bbeta = slice_sample(self._bbeta,
-                                   logpost_bbeta,
-                                   step_out=True,
-                                   compwise=True)
-
-        def logpost_precision(precision):
+        ##     precision = exp(tmp_params)
             
-            if any(bbetas < self.min_balpha) or any(bbetas > self.max_balpha):
-                return float('-inf')
+        ##     if any(precision < self.min_precision) or \
+        ##       any(precision > self.max_precision):
+        ##         return float('-inf')
 
-            
+        ##     return self.tssb.complete_data_log_likelihood_global_params( precision )+\
+        ##       precision
+                                         
 
-            
+        ## trans_params = log(self._precision) 
+              
+        ## temp_params = slice_sample(trans_params,
+        ##                                logpost_precision,
+        ##                                step_out=True,
+        ##                                compwise=True)
+
+        ## self._precision = exp(temp_params)
+        
     def logprob(self, x):
         ll = 0
         for dd in x:
-            ll += log_pyclone(dd, self.params)
+            ll += log_pyclone(dd, self.params, self.preci())
         return ll
-
 
     def complete_logprob(self):
         return self.logprob(self.get_data())
+
+    def logprob_global_params(self, x, global_params):
+        ll = 0
+        for dd in x:
+            ll += log_pyclone(dd, self.params, global_params)
+        return ll
+
+    def complete_logprob_global_params(self, global_params):
+        return self.logprob_global_params(self.get_data(), global_params) + \
+               gammapdfln(global_params, 0.1, 1/0.0001)
+   
+    def log_params_prior(self):
+        def loglh(root):
+            llh = 0.0
+            for child in root.children():
+                llh = llh + betapdfln(child.params/root.params, \
+                                      root.balpha(), root.bbeta())
+                llh = llh + loglh(child)
+            return llh
+        return loglh(self) + betapdfln(self.params/self.init_mean, \
+                                       self.balpha(), self.bbeta())
         
 
