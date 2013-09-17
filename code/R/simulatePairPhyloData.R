@@ -4,9 +4,9 @@
 ###############################################################################
 
 
-P=20
+P=50
 
-N=2000
+N=5000
 
 mix<-c(0.3,0.1,0.3,0.07,0.14,0.05,0.04)
 
@@ -16,9 +16,9 @@ mutmat<-matrix(rep(0,4*N),nrow=N,byrow=T)
 
 snvprop<-c(0.2,0.2,0.2,0.1,0.14,0.1,0.06)
 
+#snvprop <- rdirichlet(1, rep(1, 7))
+
 print(sum(snvprop))
-
-
 
 construc_p <- function(P,mix){
 p1<-runif(P)<mix[1]
@@ -124,15 +124,20 @@ m <- rbind(mutmat[,c(1,3)],mutmat[,c(2,4)])
 
 freq <- matrix(rep(0,2*P),nrow=P)
 
+reads <- matrix(rep(0,3*P),nrow=P)
+
 for (i in 1:P){
   
   freq[i,] <- c(i, sum(m[which(m[,1]==i),2])/length(which(m[,1]==i)))
   
-  
+  reads[i,] <- c(i, sum(m[which(m[,1]==i),2]), length(which(m[,1]==i)))
 }
 
 
+hist(freq[,2],100)
 
-write.csv(mutmat, '../data/syn_mutmat_2000_20.csv', row.names = FALSE)
+write.csv(reads, 'syn_reads.csv', row.names = FALSE)
 
-write.csv(freq, '../data/syn_freq_2000_20.csv', row.names = FALSE)
+write.csv(mutmat, 'syn_mutmat.csv', row.names = FALSE)
+
+write.csv(freq, 'syn_freq.csv', row.names = FALSE)
