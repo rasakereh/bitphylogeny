@@ -9,7 +9,7 @@ from util         import *
 class TSSB(object):
     
     def __init__(self, dp_alpha=1.0, dp_gamma=1.0, alpha_decay=1.0,
-                 min_dp_alpha = 1e-3, max_dp_alpha = 1,
+                 min_dp_alpha = 1e-3, max_dp_alpha = 5,
                  min_dp_gamma = 1e-3, max_dp_gamma = 1,
                  min_alpha_decay = 0.05, max_alpha_decay = 0.80,
                  root_node=None, data=None, 
@@ -528,4 +528,17 @@ class TSSB(object):
 
         descend(self.root, 'X')
         print >>fh, """}"""
+
+
+
+
+
+
+
+
+
+
+
+
+
 

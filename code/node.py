@@ -35,7 +35,9 @@ class Node(object):
         return False
 
     def num_data(self):
-        return reduce(lambda x,y: x+y, map(lambda c: c.num_data(), self._children), len(self.data))
+        return reduce(lambda x,y: x+y, \
+                      map(lambda c: c.num_data(), \
+                          self._children), len(self.data))
 
     def num_local_data(self):
         return len(self.data)
@@ -66,6 +68,9 @@ class Node(object):
 
     def data_log_likelihood(self):
         return self.complete_logprob()
+
+    def data_log_likelihood_global_params(self, global_params):
+        return self.complete_logprob_global_params(global_params)
     
     def sample(self, num_data=1):
         return rand(num_data, 2)

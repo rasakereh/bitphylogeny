@@ -7,6 +7,37 @@ import scipy.special
 import scipy.stats
 import scipy.io
 
+def log_sum_exp(log_X):
+    '''
+    Given a list of values in log space, log_X. Compute exp(log_X[0] + log_X[1] + ... log_X[n])
+    
+    Numerically safer than naive method.
+    '''
+    max_exp = max(log_X)
+    
+    if numpy.isinf(max_exp):
+        return max_exp
+    
+    total = 0
+
+    for x in log_X:
+        total += numpy.exp(x - max_exp)
+    
+    return numpy.log(total) + max_exp
+
+def log_sum_exp_prod(log_X, Y):
+
+    max_exp = max(log_X)
+
+    if numpy.isinf(max_exp):
+        return max_exp
+
+    total = 0
+
+    for x, y in zip(log_X, Y):
+        total += numpy.exp(x - max_exp) * y
+
+    return numpy.log(total) + max_exp
 
 def bucket(edges, value):
     return numpy.sum(value > edges)
@@ -35,8 +66,8 @@ def exp_gammapdfln(y, a, b):
 def betapdfln(x, a, b):
     if x == 0.0 or x == 1.0:
         return float('-inf')
-    if x< 0.0 or x >1.0:
-        print x  
+    if x < 0.0 or x > 1.0:
+        print x
     return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + \
       (b-1.0)*numpy.log(1.0-x) 
 
@@ -260,10 +291,6 @@ def bounded_hmc(init_x, logprob, logprob_grad, lower, upper, num_steps, step_siz
         return new_x, True
     else:
         return init_x, False
-        
-
-    
-
     
 def hmc_trans(init_x, logprob, logprob_grad, trans, num_steps, step_size):
     energy      = lambda x: -logprob(x)
@@ -273,6 +300,10 @@ def hmc_trans(init_x, logprob, logprob_grad, trans, num_steps, step_size):
     g = energy_grad(init_x)*transformer(init_x,'tran_grad') - \
        transformer(init_x,'jacob_grad')
     E = energy(init_x) - transformer(init_x,'det_jacob')
+
+    if E == float('-inf'):
+        return init_x, False
+    
     p = numpy.random.randn(init_x.shape[0])
     H = numpy.sum(p**2)/2.0 + E
 
