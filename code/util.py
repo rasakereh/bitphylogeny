@@ -6,6 +6,7 @@ import numpy.random
 import scipy.special
 import scipy.stats
 import scipy.io
+from _abcoll import Iterable
 
 def log_sum_exp(log_X):
     '''
@@ -64,8 +65,10 @@ def exp_gammapdfln(y, a, b):
     return a*numpy.log(b) - gammaln(a) + a*y - b*numpy.exp(y)
 
 def betapdfln(x, a, b):
+    if not isinstance(x, Iterable):
+        x = numpy.array([x])
     if any(x == 0.0) or any(x == 1.0):
-        return float('-inf')
+            return float('-inf')
     if any(x < 0.0) or any(x > 1.0):
         print x
     return gammaln(a+b) - gammaln(a) - gammaln(b) + (a-1.0)*numpy.log(x) + \
