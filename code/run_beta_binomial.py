@@ -4,7 +4,7 @@ import time
 import cPickle
 import csv
 import pdb
-import yaml
+#import yaml
 ##import ipdb
 
 
@@ -24,6 +24,7 @@ from beta_binomial import *
 from util          import *
 from scipy.stats   import itemfreq
 from config        import *
+from ibus.serializable import deserialize_object
     
 error_rate    = 0.001
 rand_seed     = 1234
@@ -42,20 +43,23 @@ seed(rand_seed)
 file_name = './data/syn_reads.csv'
 reader = csv.DictReader(open(file_name),
                         delimiter=',')
-
+ids = []
 var_counts = []
 tot_counts = []
 data = []
 for row in reader:
+    ids.append(row['V1'])
     var_counts.append(row['V2'])
     tot_counts.append(row['V3'])
 
 var_counts = array(var_counts, dtype = 'float64')
 tot_counts = array(tot_counts, dtype = 'float64')
+ids = array(ids, dtype = 'float64')
 var_counts = var_counts[:,newaxis]
 tot_counts = tot_counts[:,newaxis]
+ids = ids[:,newaxis]
 error_rate = error_rate * ones((tot_counts.shape))
-data = hstack([var_counts,tot_counts, error_rate])
+data = hstack([var_counts,tot_counts, error_rate, ids])
 
 dims = 1
 root = Beta_Binomial( dims=dims )
@@ -73,6 +77,7 @@ tssb_traces        = empty((num_samples, 1),dtype = object)
 balpha_traces      = zeros((num_samples, dims))
 bbeta_traces       = zeros((num_samples, dims))
 preci_traces       = zeros((num_samples, dims))
+depth_traces       = zeros((num_samples, data.shape[0])) 
 
 intervals = zeros((7))
 print "Starting MCMC run..."
@@ -138,7 +143,17 @@ for iter in range(-burnin,num_samples):
            " ".join(map(lambda x: "%0.2f" % x, intervals.tolist()))
            
         intervals = zeros((7))
-        
+    
+    if iter > 0:     
+        snvs = root.get_data()[:,3]
+        def descend(node, depth):
+            snvs = node.get_data()[:,3]
+            for snv in snvs:
+                depth_traces[iter,int(snv)-1] = depth
+            for i, child in enumerate(node.children()):
+                descend(child, depth+1)    
+        descend(root, 1)
+
 
     if iter > 0 and argmax(cd_llh_traces[:iter+1]) == iter:
         print "\t%f is best per-data complete data likelihood so far." \
@@ -162,7 +177,7 @@ elapsed_time = time.time() - start_time
 ##                'nodes_traces'       : nodes_traces}, fh)
 ## fh.close()
 
-
+numpy.savetxt("test_beta_binomial_depth1.csv", depth_traces, delimiter=",")
 
 nodes_tabular = itemfreq(nodes_traces)
 best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
