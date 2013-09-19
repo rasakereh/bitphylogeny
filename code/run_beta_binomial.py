@@ -179,6 +179,12 @@ elapsed_time = time.time() - start_time
 
 numpy.savetxt("test_beta_binomial_depth1.csv", depth_traces, delimiter=",")
 
+filename = "test_beta_benomial_depth1.pkl"
+fh = open(filename, 'w')
+cPickle.dump(depth_traces, fh)
+fh.close()
+
+
 nodes_tabular = itemfreq(nodes_traces)
 best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
 best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()

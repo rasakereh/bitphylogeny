@@ -26,7 +26,7 @@ class SNVBernoulli(Node):
     hmc_accepts  = 1
     hmc_rejects  = 1
     
-    def __init__(self, parent=None, dims=1, tssb=None, initial_snvs=0, bbeta=0.6):
+    def __init__(self, parent=None, dims=1, tssb=None, initial_snvs=0, bbeta=0.6, prior_depth=None):
         super(SNVBernoulli, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
@@ -34,12 +34,19 @@ class SNVBernoulli(Node):
             self.init_mean = initial_snvs
             self._bbeta  = bbeta*ones(self.dims)
             self.params = truncbeta(self.alpha_base**((self.init_mean-self.bbeta())/abs(self.init_mean-self.bbeta())),self.beta_base**((self.init_mean-self.bbeta())/abs(self.init_mean-self.bbeta())))
+            self.prior_depth = prior_depth
+            self.depth = 1
             
         else:
             self.dims   = parent.dims
-            #self.params = self.drift()*randn(self.dims) + parent.params
+            self.prior_depth = parent.prior_depth
+
+            #frequency prior:
+            self.depth = parent.depth + 1
+            self.alpha_base = self.alpha_base * numpy.array(self.prior_depth <= self.depth, dtype='int') + self.beta_base * numpy.array(self.prior_depth > self.depth, dtype='int')
+            
             self.params = truncbeta(self.alpha_base**((parent.params-self.bbeta())/abs(parent.params-self.bbeta())), self.beta_base**((parent.params-self.bbeta())/abs(parent.params-self.bbeta())))
-                        
+            
         self._cache_ln()
     
     def _cache_ln(self):
@@ -113,7 +120,7 @@ class SNVBernoulli(Node):
         #print sum(abs(mygrad-fdgrad))
 
         #if rand() < 0.1:
-        for i in range(50):
+        for i in range(5):
             self.params = slice_sample(self.params, logpost, step_out=True, compwise=False)
         #else:
             #self.params, accepted = hmc(self.params, logpost, logpost_grad, 25, exponential(0.001))

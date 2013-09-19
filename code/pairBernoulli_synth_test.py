@@ -31,7 +31,6 @@ seed(rand_seed)
 
 reader = csv.DictReader(open('./data/syn_mutmat_5000_50.csv'),
                         delimiter=',')
-
 data = []
 dataid = []
 max_snvpos = 1
@@ -56,7 +55,15 @@ for index, snv in enumerate(freq):
         clonal[index] = 0.95
 
 
-root = SNVBernoulli( dims=dims, bbeta=init_bbeta, initial_snvs=clonal )
+filename = "test_beta_benomial_depth1.pkl"
+fh = open(filename, 'r')
+depth_traces = cPickle.load(fh)
+fh.close()
+
+median_depths = median(depth_traces,0)
+
+
+root = SNVBernoulli( dims=dims, bbeta=init_bbeta, initial_snvs=clonal, prior_depth=median_depths )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, max_depth=4, alpha_decay=alpha_decay,
              root_node=root, data=data )
 

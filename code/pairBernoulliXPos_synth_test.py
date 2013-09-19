@@ -16,7 +16,7 @@ import numpy
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 1
+num_samples   = 1000
 checkpoint    = 50000
 dp_alpha      = 1
 dp_gamma      = 1
