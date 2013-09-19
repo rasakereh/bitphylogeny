@@ -24,13 +24,12 @@ from beta_binomial import *
 from util          import *
 from scipy.stats   import itemfreq
 from config        import *
-from ibus.serializable import deserialize_object
     
 error_rate    = 0.001
 rand_seed     = 1234
 max_data      = 100
-burnin        = 0
-num_samples   = 20000
+burnin        = 1000
+num_samples   = 5000
 checkpoint    = 50000
 dp_alpha      = 1.0
 dp_gamma      = 5e-3
@@ -64,7 +63,9 @@ data = hstack([var_counts,tot_counts, error_rate, ids])
 dims = 1
 root = Beta_Binomial( dims=dims )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
-             root_node=root, data=data )
+             root_node=root, data=data,
+             min_dp_alpha = 1.0, max_dp_alpha = 5.0,
+             min_dp_gamma = 1e-2, max_dp_gamma = 5e-1)
 
 dp_alpha_traces    = zeros((num_samples, 1))
 dp_gamma_traces    = zeros((num_samples, 1))
@@ -91,7 +92,6 @@ for iter in range(-burnin,num_samples):
     tssb.resample_assignments()
     times.append(time.time())
 
-    
     tssb.cull_tree()
     times.append(time.time())
 
@@ -177,7 +177,7 @@ elapsed_time = time.time() - start_time
 ##                'nodes_traces'       : nodes_traces}, fh)
 ## fh.close()
 
-numpy.savetxt("test_beta_binomial_depth1.csv", depth_traces, delimiter=",")
+numpy.savetxt("./mcmc-traces/test_beta_binomial_depth1.csv", depth_traces, delimiter=",")
 
 filename = "test_beta_benomial_depth1.pkl"
 fh = open(filename, 'w')
@@ -185,10 +185,10 @@ cPickle.dump(depth_traces, fh)
 fh.close()
 
 
-nodes_tabular = itemfreq(nodes_traces)
-best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+## nodes_tabular = itemfreq(nodes_traces)
+## best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
+## best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
+## best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 
 ## (weights_best, nodes_best) = best_node_fit.get_mixture()
@@ -211,17 +211,17 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 ## plt.savefig('figures/test_40.pdf', format='pdf')
 ## clf()
 
-best_node_fit.remove_empty_nodes()
+## best_node_fit.remove_empty_nodes()
 
-filename = 'test_tree_beta_binomial_0.gdl'
-fh2 = open(filename,'w')
-best_node_fit.print_graph_binomial(fh2)
-fh2.close()
+## filename = 'test_tree_beta_binomial_0.gdl'
+## fh2 = open(filename,'w')
+## best_node_fit.print_graph_binomial(fh2)
+## fh2.close()
 
 best = loads(best_fit)
 best.remove_empty_nodes()
 
-filename = 'test_tree_beta_binomial_1.gdl'
+filename = './treescripts/test_tree_beta_binomial.gdl'
 fh2 = open(filename,'w')
 best.print_graph_binomial(fh2)
 fh2.close()
@@ -240,6 +240,7 @@ for ii in range(num_samples):
 traces = hstack([dp_alpha_traces, dp_gamma_traces, \
                 alpha_decay_traces, cd_llh_traces, \
                 bbeta_traces, preci_traces]) 
-numpy.savetxt("test_beta_binomial_cell_freq.csv", cell_freq_traces, delimiter=",")
-numpy.savetxt('test_beta_binomial_traces.csv', traces, delimiter = ',',
+numpy.savetxt("./mcmc-traces/test_beta_binomial_cell_freq.csv",
+              cell_freq_traces, delimiter=",")
+numpy.savetxt('./mcmc-traces/test_beta_binomial_traces.csv', traces, delimiter = ',',
               header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,bbeta_traces,prei_traces", comments='')
