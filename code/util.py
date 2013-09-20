@@ -40,6 +40,10 @@ def log_sum_exp_prod(log_X, Y):
 
     return numpy.log(total) + max_exp
 
+def sigmoid(x):
+    res = 1.0/(1.0+numpy.exp(-x))
+    return res
+
 def bucket(edges, value):
     return numpy.sum(value > edges)
 

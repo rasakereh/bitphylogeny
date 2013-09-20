@@ -16,10 +16,10 @@ import numpy
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 1000
+num_samples   = 20
 checkpoint    = 50000
-dp_alpha      = 0.5
-dp_gamma      = 0.5
+dp_alpha      = 1
+dp_gamma      = 3e-1
 init_drift    = 0.5
 init_galpha   = 1
 init_gbeta    = 0.5
@@ -29,7 +29,7 @@ print "Codename: ", codename
 
 ##seed(rand_seed)
 
-reader = csv.DictReader(open('./data/syn_mutmat_2000_20.csv'),
+reader = csv.DictReader(open('./data/syn_mutmat.csv'),
                         delimiter=',')
 data = []
 dataid = []
@@ -55,8 +55,16 @@ for index, snv in enumerate(freq):
         clonal[index] = 1.5
 
 
+filename = "test_beta_benomial_depth1.pkl"
+fh = open(filename, 'r')
+depth_traces = cPickle.load(fh)
+fh.close()
+
+median_depths = median(depth_traces,0)
+
 root = SNVLogistic( dims=dims, drift=init_drift, \
-                    galpha=init_galpha, gbeta=init_gbeta, initial_snvs=clonal )
+                    galpha=init_galpha, gbeta=init_gbeta,
+                    initial_snvs=clonal, prior_depth = median_depths )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
@@ -75,22 +83,27 @@ for iter in range(-burnin,num_samples):
 
     times = [ time.time() ]
     ##ipdb.set_trace()
+
     tssb.resample_assignments()
     times.append(time.time())
+
     tssb.cull_tree()
     times.append(time.time())
     
     tssb.resample_node_params()
     times.append(time.time())
-    root.resample_hypers()
+
+    ##root.resample_hypers()
     times.append(time.time())
+
     tssb.resample_sticks()
     times.append(time.time())
+
     tssb.resample_stick_orders()
     times.append(time.time())
    
-    if iter > 0:
-        tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+    ##if iter > 0:
+    ##    tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
     times.append(time.time())
  
 
@@ -102,8 +115,8 @@ for iter in range(-burnin,num_samples):
         dp_gamma_traces[iter]    = tssb.dp_gamma
         alpha_decay_traces[iter] = tssb.alpha_decay
         #drift_traces[iter]       = root.drift()
-        galpha_traces[iter]      = root.galpha()
-        gbeta_traces[iter]       = root.gbeta()
+        #galpha_traces[iter]      = root.galpha()
+        #gbeta_traces[iter]       = root.gbeta()
         cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
         (weights, nodes)         = tssb.get_mixture()
         nodes_traces[iter]       = len(nodes)
@@ -131,14 +144,14 @@ for iter in range(-burnin,num_samples):
     ##     for child in root._children:
     ##         print " ".join(map(lambda x: "%0.2f" %x, child.params))
     
-    ## if iter > 0 and argmax(cd_llh_traces[:iter+1]) == iter:
-    ##     print "\t%f is best per-data complete data likelihood so far." \
-    ##        % (cd_llh_traces[iter]/max_data)
-    ##     best_fit = cPickle.dumps(tssb)
-    ##     filename_best = "bests/pair-test-%s-best.pkl" % (codename)
-    ##     fh = open(filename_best, 'w')
-    ##     cPickle.dump(tssb, fh)
-    ##     fh.close()
+    if iter > 0 and argmax(cd_llh_traces[:iter+1]) == iter:
+        print "\t%f is best per-data complete data likelihood so far." \
+           % (cd_llh_traces[iter]/max_data)
+        best_fit = cPickle.dumps(tssb)
+        filename_best = "bests/pair-test-%s-best.pkl" % (codename)
+        fh = open(filename_best, 'w')
+        cPickle.dump(tssb, fh)
+        fh.close()
 
 
 
@@ -155,12 +168,12 @@ for iter in range(-burnin,num_samples):
 
 
 
-nodes_tabular = itemfreq(nodes_traces)
-best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+## nodes_tabular = itemfreq(nodes_traces)
+## best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
+## best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
+## best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
-(weights_best, nodes_best) = best_node_fit.get_mixture()
+## (weights_best, nodes_best) = best_node_fit.get_mixture()
 ## yy = linspace(0,1,1000)
 ## pp = zeros(yy.shape) 
 
@@ -168,20 +181,20 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 ##     pp = pp + weights_best[kk]*1/sqrt(2*pi*nodes_best[kk].params[1]**2) * \
 ##       exp(-0.5*(yy-nodes_best[kk].params[0])**2/ nodes_best[kk].params[1]**2)
 
-fig1 = plt.figure(1)
-plt.plot(cd_llh_traces)
-## plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
-## clf()
+## fig1 = plt.figure(1)
+## plt.plot(cd_llh_traces)
+## ## plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
+## ## clf()
 
-filename_best = "bests/PairLogistic1_test.pkl" 
-fh = open(filename_best, 'w')
-cPickle.dump(best_node_fit, fh)
-fh.close()
+## filename_best = "bests/PairLogistic1_test.pkl" 
+## fh = open(filename_best, 'w')
+## cPickle.dump(best_node_fit, fh)
+## fh.close()
 
-fn = "bests/PairLogistic1_test.pkl"
-fh = open(fn, 'r')
-best_node_fit = cPickle.load(fh)
-fh.close()
+## fn = "bests/PairLogistic1_test.pkl"
+## fh = open(fn, 'r')
+## best_node_fit = cPickle.load(fh)
+## fh.close()
 
 ## fig2 = plt.figure(2)
 ## plt.plot(yy,pp, color = 'b')
@@ -191,14 +204,23 @@ fh.close()
 ## plt.savefig('figures/PairLogistic1_39.pdf', format='pdf')
 ## clf()
 
-subplot(1,3,1)
-plot(nodes_best[0].params)
-subplot(1,3,2)
-plot(nodes_best[1].params)
-subplot(1,3,3)
-plot(nodes_best[2].params)
+## subplot(1,3,1)
+## plot(nodes_best[0].params)
+## subplot(1,3,2)
+## plot(nodes_best[1].params)
+## subplot(1,3,3)
+## plot(nodes_best[2].params)
 
-filename = 'treescripts/testgraph_PairLogistic1.gdl'
+
+best = loads(best_fit)
+best.remove_empty_nodes()
+
+filename = './treescripts/test_tree_pair_logistic.gdl'
 fh2 = open(filename,'w')
-best_node_fit.print_graph(fh2)
+best.print_graph_pairing_logistic(fh2)
 fh2.close()
+        
+## filename = 'treescripts/testgraph_PairLogistic1.gdl'
+## fh2 = open(filename,'w')
+## best_node_fit.print_graph(fh2)
+## fh2.close()

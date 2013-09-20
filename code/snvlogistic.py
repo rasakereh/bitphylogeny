@@ -14,6 +14,7 @@ def sigmoid(x):
             print x
         assert len(w) <> 1
     return res
+
 def invsigmoid(z):
     return log(z) - log(1.0-z)
 def sigmoidln(x):
@@ -57,9 +58,11 @@ class SNVLogistic(Node):
     max_param    = 5
     hmc_accepts  = 1
     hmc_rejects  = 1
+    aa = array([1.5,1])
+    bb = array([1/0.05,1/0.1])
     
     def __init__(self, parent=None, dims=1, tssb=None, drift=1.0, \
-                 galpha=1, gbeta=0.05, initial_snvs=0):
+                 galpha=1, gbeta=0.05, initial_snvs=0, prior_depth = None):
         super(SNVLogistic, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
@@ -67,6 +70,8 @@ class SNVLogistic(Node):
             ## self._drift = drift*ones((dims))
             self._galpha= galpha*ones((dims))
             self._gbeta = gbeta*ones((dims))
+            self.galpha = galpha*ones((dims))
+            self.gbeta = gbeta*ones((dims))
             #self.params = self._drift*randn(dims) + self.init_mean
             #self.params = zeros((self.dims))
             #inital values already centered at clonal SNVs:
@@ -75,13 +80,47 @@ class SNVLogistic(Node):
             if any(abs(self.params)>self.max_param):
                 for index, x in enumerate(self.params):
                     if abs(x)>self.max_param:
-                        self.params[index] = parent.params[index]*0.99999 
+                        self.params[index] = parent.params[index]*0.99999
+
+            self.prior_depth = prior_depth
+            self.depth = 1
             
             
         else:
             self.dims   = parent.dims
             #self.params = self.drift()*randn(self.dims) + parent.params
-            self.params = parent.params + gamma(galpha,gbeta)
+
+            self.prior_depth = parent.prior_depth
+            self.depth = parent.depth + 1
+
+
+            self.galpha = ones((self.dims))
+            self.gbeta = ones((self.dims))
+            for ii in range(self.dims):
+
+                if self.depth == self.prior_depth[ii]:                    
+                    self.galpha[ii] = self.aa[0]
+                    self.gbeta[ii] = self.bb[1]
+
+                elif self.depth == self.prior_depth[ii] + 1 or \
+                  self.depth == self.prior_depth[ii]:
+                    self.galpha[ii] = self.aa[0]
+                    self.gbeta[ii] = self.bb[0]
+
+                else:
+                    self.galpha[ii] = self.aa[1]
+                    self.gbeta[ii] = self.bb[0]
+
+                    
+            ## self.galpha = self.aa[0] * array(self.prior_depth <= self.depth, dtype = 'int') + \
+            ##   self.aa[1] * array(self.prior_depth > self.depth, dtype = 'int')
+              
+            ## self.gbeta =  self.bb[0] * array(self.prior_depth <= self.depth, dtype = 'int') + \
+            ##   self.bb[1] * array(self.prior_depth > self.depth, dtype = 'int')
+            
+            self.params = parent.params + gamma(self.galpha,self.gbeta)
+ 
+
             if any(abs(self.params)>self.max_param):
                 for index, x in enumerate(self.params):
                     if abs(x)>self.max_param:
@@ -121,13 +160,13 @@ class SNVLogistic(Node):
         counts     = sum(data[:,[2,3]], axis=0)
         num_data   = data.shape[0]
         #drifts     = self.drift()
-        galpha     = self.galpha()
-        gbeta      = self.gbeta()
+        #galpha     = self.galpha()
+        #gbeta      = self.gbeta()
 
         def get_constraint():
 
             if  self.parent() is None:
-                lower = -sys.maxint*ones(self.dims)
+                lower = float('-inf')*ones((self.dims))
             else:
                  lower = self.parent().params
 
@@ -147,45 +186,46 @@ class SNVLogistic(Node):
             xx = transpose(data)
             #dirty way of truncating the params space
 
-            if ( any( (params-lower) < 0.0 ) ) :
-               llh = -sys.maxint
-               return llh
+            if ( any( (params-lower) <= 0.0 ) ) :              
+               return float('-inf')
 
-            if ( any(upper - params) < 0.0 ):
-               llh = -sys.maxint
-               return llh
+            if ( any(upper - params) <= 0.0 ):
+               return float('-inf')
             
-            if( any(abs(params)>self.max_param ) ):
-                  llh = -sys.maxint
-                  return llh
+            ## if( any(abs(params)>self.max_param ) ):
+            ##       llh = -sys.maxint
+            ##       return llh
             if self.parent() is None:
                 #TODO: change here to proper root level prior                
                 #llh = sum(gammapdfln(params-self.init_mean, galpha, gbeta))
-                llh = normpdfln(params, self.init_mean, gbeta**2)
+                llh = normpdfln(params, self.init_mean, 0.05**2)
             else:
                 #llh = sum(mixgammapdfln(params-self.parent().params, galpha, gbeta))
-                llh = sum(gammapdfln(params-self.parent().params, galpha, gbeta))
-          
+                llh = sum(gammapdfln(params-self.parent().params,
+                                     self.parent().galpha,
+                                     self.parent().gbeta))
+
+
+              
             ll = sum( xx[2]*sigmoidln(params[xx[0]-1]) + \
                       (1-xx[2])*sigmoidln(-params[xx[0]-1]) + \
                       xx[3]*sigmoidln(params[xx[1]-1]) + \
-                      (1-xx[3])*sigmoidln(-params[xx[1]-1]) )
-            llh = llh + ll
+                      (1-xx[3])*sigmoidln(-params[xx[1]-1]) ) + \
+                      log(1/float(self.dims*(self.dims-1)))
+            llh = ll+llh
 
             for child in self.children():
                 #llh = llh + sum(mixgammapdfln( child.params - params, galpha, gbeta))
-                llh = llh + sum(gammapdfln( child.params - params, galpha, gbeta))
+                llh = llh + sum(gammapdfln( child.params - params, self.galpha, self.gbeta))
             return llh
 
         def logpost_grad(params):
 
             if ( any( (params-lower) < 0.0 ) ) :
-               grad = -sys.maxint*ones(self.dims)
-               return grad
+               return float('-inf')
     
             if ( any(upper-params) < 0.0 ):
-               grad = -sys.maxint*ones(self.dims)
-               return grad
+               return float('-inf')
             
             if( any(abs(params)>self.max_param ) ):
                  grad = -sys.maxint*ones(self.dims)
@@ -231,10 +271,10 @@ class SNVLogistic(Node):
         ## print "data", data
         
         ## if rand() < 0.1:
-        ##     self.params = slice_sample(self.params, \
-        ##                                logpost, \
-        ##                                step_out=True, \
-        ##                                compwise=True)
+            self.params = slice_sample(self.params, \
+                                       logpost, \
+                                       step_out=True, \
+                                       compwise=False)
         ## else:
 
 
@@ -242,12 +282,12 @@ class SNVLogistic(Node):
         ##                             logpost_grad, \
         ##                             25, exponential(0.0005))
 
-        self.params, accepted = bounded_hmc(self.params, logpost, \
-                                            logpost_grad, lower, upper, \
-                                            25, exponential(0.0005))
-        assert any(abs(self.params)<self.max_param)
-        SNVLogistic.hmc_rejects += 1 - accepted
-        SNVLogistic.hmc_accepts += accepted
+        ## self.params, accepted = bounded_hmc(self.params, logpost, \
+        ##                                     logpost_grad, lower, upper, \
+        ##                                     25, exponential(0.0005))
+        ## assert any(abs(self.params)<self.max_param)
+        ## SNVLogistic.hmc_rejects += 1 - accepted
+        ## SNVLogistic.hmc_accepts += accepted
         
         self._cache_sigmoidln()
 
@@ -313,17 +353,18 @@ class SNVLogistic(Node):
         
     def logprob(self, x):
         x = transpose(x)
-        llh = -x[2]*log(1.0+exp(-self.params[x[0]-1])) - \
-              (1 -x[2])*log(1.0+exp(self.params[x[0]-1])) - \
-              x[3]*log(1.0+exp(-self.params[x[1]-1])) - \
-              (1-x[3])*log(1.0+exp(self.params[x[1]-1])) 
-        assert all(llh<0)
+        ## llh = -x[2]*log(1.0+exp(-self.params[x[0]-1])) - \
+        ##       (1 -x[2])*log(1.0+exp(self.params[x[0]-1])) - \
+        ##       x[3]*log(1.0+exp(-self.params[x[1]-1])) - \
+        ##       (1-x[3])*log(1.0+exp(self.params[x[1]-1])) 
+        
 
-        ## llh = x[2]*self._sigln[:,x[0]-1] + (1.0 - x[2])*self._negsigln[:,x[0]-1] + \
-        ##       x[3]*self._sigln[:,x[1]-1] + (1.0 - x[3])*self._negsigln[:,x[1]-1] - \
-        ##       log(self.dims) - log(self.dims-1)
+        llh = x[2]*self._sigln[:,x[0]-1] + (1.0 - x[2])*self._negsigln[:,x[0]-1] + \
+              x[3]*self._sigln[:,x[1]-1] + (1.0 - x[3])*self._negsigln[:,x[1]-1] - \
+              log(self.dims) - log(self.dims-1)
 
         ## print "llh error: ", sum(res) - sum(llh)
+        assert all(llh<0)
         return sum(llh)
               
     def complete_logprob(self):
