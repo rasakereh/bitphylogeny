@@ -29,7 +29,7 @@ seed(rand_seed)
 #data = concatenate([0.5 + 0.2*randn(70,1), -0.8 + 0.1*randn(35,1), -1.5+0.1*randn(35,1)])
 #data = sigmoid(data)
 
-reader = csv.DictReader(open('./data/syn_mutmat_5000_50.csv'),
+reader = csv.DictReader(open('./data/syn_mutmat.csv'),
                         delimiter=',')
 data = []
 dataid = []
@@ -186,18 +186,18 @@ plt.plot(cd_llh_traces)
 plt.savefig('figures/pairBernoulli11_trace.pdf',format='pdf')
 clf()
 
-fig2 = plt.figure(2)
-plt.plot(yy,pp, color = 'b')
-plt.plot(data,-0.1*ones(data.shape), linestyle = 'none',
-         color = 'g', marker = 'x')
+#fig2 = plt.figure(2)
+#plt.plot(yy,pp, color = 'b')
+#plt.plot(data,-0.1*ones(data.shape), linestyle = 'none',
+#         color = 'g', marker = 'x')
 #plt.ylim((-0.2,0.8))
-plt.savefig('figures/pairBernoulli11.pdf', format='pdf')
-clf()
+#plt.savefig('figures/pairBernoulli11.pdf', format='pdf')
+#clf()
 
 
 filename = 'treescripts/testgraph_pairBernoulli11.gdl'
 fh2 = open(filename,'w')
-best_node_fit.print_graph(fh2)
+best_node_fit.print_graph_pairing(fh2)
 fh2.close()
 
 filename_best = "bests/pairBernoulli11_test.pkl" 

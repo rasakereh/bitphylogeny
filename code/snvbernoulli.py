@@ -86,6 +86,11 @@ class SNVBernoulli(Node):
             for child in self.children():
                 #llh = llh + normpdfln( child.params, params, drifts)
                 llh = llh + sum(betapdfln( child.params, self.alpha_base**((params-self.bbeta())/abs(params-self.bbeta())), self.beta_base**((params-self.bbeta())/abs(params-self.bbeta()))))
+                
+            #just for TESTING; penalization of parameters between 0.2 and 0.8:
+            x = sum(numpy.array([abs(params-0.5)<0.3]))
+            llh = llh - x*300  
+                
             return llh
 
         def logpost_grad(params):
