@@ -7,7 +7,7 @@ import csv
 from numpy         import *
 from numpy.random  import *
 from tssb          import *
-from snvbernoulli  import *
+from snvdiscreteepsilon  import *
 from util          import *
 from scipy.stats   import itemfreq
 import numpy
@@ -20,7 +20,7 @@ num_samples   = 1000
 checkpoint    = 50000
 dp_alpha      = 5
 dp_gamma      = 0.2
-init_mutcut    = 0.6
+init_epsilon  = 0.05
 alpha_decay   = 0.2
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
@@ -63,14 +63,14 @@ fh.close()
 median_depths = median(depth_traces,0)
 
 
-root = SNVBernoulli( dims=dims, mutcut=init_mutcut, initial_snvs=clonal, prior_depth=median_depths )
+root = SNVDiscreteEpsilon( dims=dims, epsilon=init_epsilon, initial_snvs=clonal, prior_depth=median_depths )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, max_depth=4, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
 dp_alpha_traces    = zeros((num_samples, 1))
 dp_gamma_traces    = zeros((num_samples, 1))
 alpha_decay_traces = zeros((num_samples, 1))
-mutcut_traces       = zeros((num_samples, dims))
+epsilon_traces       = zeros((num_samples, dims))
 cd_llh_traces      = zeros((num_samples, 1))
 nodes_traces       = zeros((num_samples, 1))
 tssb_traces        = empty((num_samples, 1),dtype = object)
@@ -102,7 +102,7 @@ for iter in range(-burnin,num_samples):
     times.append(time.time())
     print tssb.complete_data_log_likelihood()
     
-    filename = 'treescripts/testgraph_pairBernoulli1_groundt_nop_.gdl'
+    filename = 'treescripts/testgraph_pairDiscrete2_groundt_nop_.gdl'
     fh2 = open(filename,'w')
     tssb.print_graph_pairing(fh2)
     fh2.close()
@@ -122,7 +122,7 @@ for iter in range(-burnin,num_samples):
         dp_gamma_traces[iter]    = tssb.dp_gamma
         alpha_decay_traces[iter] = tssb.alpha_decay
         #drift_traces[iter]       = root.drift()
-        mutcut_traces[iter]       = root.mutcut()
+        epsilon_traces[iter]     = root.epsilon()
         cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
         (weights, nodes)         = tssb.get_mixture()
         nodes_traces[iter]       = len(nodes)
@@ -137,7 +137,7 @@ for iter in range(-burnin,num_samples):
     if mod(iter, 1) == 0:
         (weights, nodes) = tssb.get_mixture()
         print codename, iter, len(nodes), cd_llh_traces[iter], \
-           mean(root._mutcut), tssb.dp_alpha, tssb.dp_gamma, \
+           mean(root._epsilon), tssb.dp_alpha, tssb.dp_gamma, \
            tssb.alpha_decay, \
            " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
            float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
@@ -155,7 +155,7 @@ for iter in range(-burnin,num_samples):
         print "\t%f is best per-data complete data likelihood so far." \
            % (cd_llh_traces[iter]/max_data)
         best_fit = cPickle.dumps(tssb)
-        filename_best = "bests/pairBernoulli-test16-%s-best.pkl" % (codename)
+        filename_best = "bests/pairDiscrete-test2-%s-best.pkl" % (codename)
         fh = open(filename_best, 'w')
         cPickle.dump(tssb, fh)
         fh.close()
@@ -184,13 +184,13 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 yy = linspace(0,1,1000)
 pp = zeros(yy.shape) 
 
-for kk in range(len(weights_best)):
-    pp = pp + weights_best[kk]*1/sqrt(2*pi*nodes_best[kk].params[1]**2) * \
-      exp(-0.5*(yy-nodes_best[kk].params[0])**2/ nodes_best[kk].params[1]**2)
+#for kk in range(len(weights_best)):
+#    pp = pp + weights_best[kk]*1/sqrt(2*pi*nodes_best[kk].params[1]**2) * \
+#      exp(-0.5*(yy-nodes_best[kk].params[0])**2/ nodes_best[kk].params[1]**2)
 
 fig1 = plt.figure(1)
 plt.plot(cd_llh_traces)
-plt.savefig('figures/pairBernoulli16_trace.pdf',format='pdf')
+plt.savefig('figures/pairDiscrete2_trace.pdf',format='pdf')
 clf()
 
 #fig2 = plt.figure(2)
@@ -198,21 +198,21 @@ clf()
 #plt.plot(data,-0.1*ones(data.shape), linestyle = 'none',
 #         color = 'g', marker = 'x')
 #plt.ylim((-0.2,0.8))
-#plt.savefig('figures/pairBernoulli11.pdf', format='pdf')
+#plt.savefig('figures/pairDiscrete11.pdf', format='pdf')
 #clf()
 
 
-filename = 'treescripts/testgraph_pairBernoulli16.gdl'
+filename = 'treescripts/testgraph_pairDiscrete2.gdl'
 fh2 = open(filename,'w')
 best_node_fit.print_graph_pairing(fh2)
 fh2.close()
 
-filename_best = "bests/pairBernoulli16_test.pkl" 
+filename_best = "bests/pairDiscrete2_test.pkl" 
 fh = open(filename_best, 'w')
 cPickle.dump(best_node_fit, fh)
 fh.close()
 
-fn = "bests/pairBernoulli16_test.pkl"
+fn = "bests/pairDiscrete2_test.pkl"
 fh = open(fn, 'r')
 best_node_fit = cPickle.load(fh)
 fh.close()

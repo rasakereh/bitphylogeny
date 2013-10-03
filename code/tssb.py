@@ -373,6 +373,17 @@ class TSSB(object):
                 llhs.append(node.num_local_data()*log(weights[i]) + node.data_log_likelihood())
         return sum(array(llhs))
     
+    def complete_data_log_likelihood_nomix(self):
+        weights, nodes = self.get_mixture();
+        llhs = []
+        lln = []
+        for i, node in enumerate(nodes):
+            if node.num_local_data():
+                llhs.append(node.data_log_likelihood())
+                lln.append(node.num_local_data()*log(weights[i]))
+                #lln.append(weights[i])
+        return (sum(array(lln)),sum(array(llhs)))
+    
     def print_graph(self, fh, base_width=5000, min_width=5):
         print >>fh, """graph: { title:            "TSSB Graph"  \
                                 portsharing:      no            \
@@ -461,6 +472,9 @@ class TSSB(object):
         print >>fh, """}"""
         
     def print_graph_pairing(self, fh, base_width=5, min_width=300):
+        edges   = sticks_to_edges(self.root['sticks'])
+        weights = diff(hstack([0.0, edges]))
+        root_mass = weights[0] * self.root['main']
         print >>fh, """graph: { title:            "TSSB Graph"  \
                                 portsharing:      no            \
                                 smanhattanedges:  yes           \
@@ -485,6 +499,8 @@ class TSSB(object):
             " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(37,45)])), \
             "\n", \
             " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(45,50)])), \
+            "\n", \
+            "mass: %0.3f" % (root_mass), \
             """" title:"%s" width:%d}""" \
           %("X", min_width)
         def descend(root, name, mass):
@@ -508,12 +524,14 @@ class TSSB(object):
                 " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(37,45)])), \
                 "\n", \
                 " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(45,50)])), \
+                "\n", \
+                "mass: %0.3f" % (child_mass), \
                 """" title:"%s" width:%d}""" \
                     %(child_name, min_width)
                 print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
                 total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
             return total
-        descend(self.root, 'X', 1)
+        descend(self.root, 'X', 1-root_mass)
         print >>fh, """}"""
 
 
@@ -572,6 +590,47 @@ class TSSB(object):
             return total
         descend(self.root, 'X', 1)
         print >>fh, """}"""
+        
+    def print_graph_full_logistic(self, fh, base_width=5, min_width=300):
+        print >>fh, """graph: { title:            "TSSB Graph"  \
+                                portsharing:      no            \
+                                smanhattanedges:  yes           \
+                                splines:          yes           \
+                                equalydist:       yes           \
+                                layout_algorithm: tree          \
+                                node.fontname:    "helvR8"      \
+                                node.height:      200            \
+                                yspace:            20           \
+                                xspace:            5 """
+        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
+            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(5)]))), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(5,13)]))), \
+            "\n", \
+            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(13,16)]))), \
+            """" title:"%s" width:%d}""" \
+          %("X", min_width)
+        def descend(root, name, mass):
+            total   = 0.0
+            edges   = sticks_to_edges(root['sticks'])
+            weights = diff(hstack([0.0, edges]))
+            for i, child in enumerate(root['children']):
+                child_name = "%s-%d" % (name, i)
+                child_mass = mass * weights[i] * child['main']
+                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
+                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(5)]))), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(5,13)]))), \
+                "\n", \
+                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(13,16)]))), \
+                """" title:"%s" width:%d}""" \
+                    %(child_name, min_width)
+                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
+                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
+            return total
+        descend(self.root, 'X', 1)
+        print >>fh, """}"""
+
 
 
     def remove_empty_nodes(self):
