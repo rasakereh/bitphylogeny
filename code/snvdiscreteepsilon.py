@@ -12,10 +12,13 @@ from scipy.stats.distributions import bernoulli
 
 class SNVDiscreteEpsilon(Node):
 
-    mutprob      = 0.1
-    backmutprob  = 0.01
+    mutprob      = 1e-2
+    backmutprob  = 1e-3
+    rootmutprob  = 1e-4
     hmc_accepts  = 1
     hmc_rejects  = 1
+    min_epsilon  = 0.01
+    max_epsilon  = 0.1
     
     def __init__(self, parent=None, dims=1, tssb=None, initial_snvs=0, epsilon=0.01, prior_depth=0):
         super(SNVDiscreteEpsilon, self).__init__(parent=parent, tssb=tssb)
@@ -26,7 +29,7 @@ class SNVDiscreteEpsilon(Node):
             self._epsilon  = epsilon
             
             self.params = self.init_mean
-            self.params = self.params + numpy.array(self.params==0,dtype='int') * bernoulli.rvs(self.mutprob,size=self.dims) - numpy.array(self.params==1,dtype='int') * bernoulli.rvs(self.backmutprob,size=self.dims) 
+            self.params = self.params #+ numpy.array(self.params==0,dtype='int') * bernoulli.rvs(self.rootmutprob,size=self.dims) - numpy.array(self.params==1,dtype='int') * bernoulli.rvs(self.backmutprob,size=self.dims) 
             
             self.prior_depth = prior_depth
             self.depth = 1
@@ -64,15 +67,17 @@ class SNVDiscreteEpsilon(Node):
         
         def logpost(params):
             if self.parent() is None:
-                llh = log(binom.pmf(sum(numpy.array(self.params-self.init_mean == 1, dtype='int')),self.dims-sum(self.init_mean),self.mutprob)) + log(binom.pmf(sum(numpy.array(self.params-self.init_mean == -1, dtype='int')),sum(self.init_mean),self.backmutprob))
+                llh = log(binom.pmf(sum(numpy.array(self.params-self.init_mean == 1, dtype='int')),self.dims-sum(self.init_mean),self.rootmutprob)) + log(binom.pmf(sum(numpy.array(self.params-self.init_mean == -1, dtype='int')),sum(self.init_mean),self.backmutprob))
             else:
                 llh = log(binom.pmf(sum(numpy.array(self.params-self.parent().params == 1, dtype='int')),self.dims-sum(self.parent().params),self.mutprob)) + log(binom.pmf(sum(numpy.array(self.params-self.parent().params == -1, dtype='int')),sum(self.parent().params),self.backmutprob))
-            for i in range(num_data):
-                llh = llh + log(((1-abs(data[i][2]-params[data[i][0]-1]))*(1-self.epsilon())+abs(data[i][2]-params[data[i][0]-1])*self.epsilon()) * ((1-abs(data[i][3]-params[data[i][1]-1]))*(1-self.epsilon()) + abs(data[i][3]-params[data[i][1]-1])*self.epsilon()))
+            #for i in range(num_data):
+                #llh = llh + log(((1-abs(data[i][2]-params[data[i][0]-1]))*(1-self.epsilon())+abs(data[i][2]-params[data[i][0]-1])*self.epsilon()) * ((1-abs(data[i][3]-params[data[i][1]-1]))*(1-self.epsilon()) + abs(data[i][3]-params[data[i][1]-1])*self.epsilon()))
+            llh = llh + sum(log((1-self.epsilon())**(1-abs(data-self.params)))+log(self.epsilon()**abs(data-self.params)))
             for child in self.children():
                 llh = llh + log(binom.pmf(sum(numpy.array(child.params-params == 1, dtype='int')),self.dims-sum(params),self.mutprob)) + log(binom.pmf(sum(numpy.array(child.params-params == -1, dtype='int')),sum(params),self.backmutprob))
             return llh
         
+        #if self.parent() is not None:
         for i in range(self.dims):
             llh_s = logpost(self.params) + log(numpy.random.rand()) 
             self.params[i] = int( not (bool(self.params[i])))
@@ -84,22 +89,24 @@ class SNVDiscreteEpsilon(Node):
         if self.parent() is not None:
             raise Exception("Can only update hypers from root!")
 
-        def logpostepsilon(epsilons):
-            if any(epsilons < self.min_epsilon) or any(epsilons > self.max_epsilon):
+        def logpostepsilon(epsilon):
+            if any(epsilon < self.min_epsilon) or any(epsilon > self.max_epsilon):
                 return -inf
             def loglh(root):
                 llh = 0.0
                 for child in root.children():
                     #llh = llh + sum(mixbetapdfln(child.params, self.alpha_base, self.beta_base, root.params, epsilons, self.mix))
+                    llh = llh + sum(log((1-epsilon)**(1-abs(root.get_data()-self.params)))+log(epsilon**abs(root.get_data()-self.params)))
                     llh = llh + loglh(child)
                 return llh
             return loglh(self) #+ sum(mixbetapdfln(self.params, self.alpha_base, self.beta_base, self.init_mean, epsilons, self.mix))
         
-        self._epsilon  = slice_sample(self._epsilon, logpostcut, step_out=True, compwise=True)
+        self._epsilon  = slice_sample(array([self._epsilon]), logpostepsilon, step_out=True, compwise=True)
 
     def logprob(self, x):
-        x = transpose(x)
-        res = log(((1-abs(x[2]-self.params[x[0]-1]))*(1-self.epsilon())+abs(x[2]-self.params[x[0]-1])*self.epsilon()) * ((1-abs(x[3]-self.params[x[1]-1]))*(1-self.epsilon()) + abs(x[3]-self.params[x[1]-1])*self.epsilon()))
+        #x = transpose(x)
+        #res = log(((1-abs(x[2]-self.params[x[0]-1]))*(1-self.epsilon())+abs(x[2]-self.params[x[0]-1])*self.epsilon()) * ((1-abs(x[3]-self.params[x[1]-1]))*(1-self.epsilon()) + abs(x[3]-self.params[x[1]-1])*self.epsilon()))
+        res = log((1-self.epsilon())**(1-abs(x-self.params)))+log(self.epsilon()**abs(x-self.params))
         assert all(res<0)
         return sum(res)
 

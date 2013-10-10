@@ -134,10 +134,22 @@ for (i in 1:P){
 }
 
 
-hist(freq[,2],100)
+#hist(freq[,2],100)
 
-write.csv(reads, 'syn_reads.csv', row.names = FALSE)
+write.csv(reads, 'groundtsyn_reads.csv', row.names = FALSE)
 
-write.csv(mutmat, 'syn_mutmat.csv', row.names = FALSE)
+write.csv(mutmat, 'groundtsyn_mutmat.csv', row.names = FALSE)
 
-write.csv(freq, 'syn_freq.csv', row.names = FALSE)
+write.csv(freq, 'groundtsyn_freq.csv', row.names = FALSE)
+
+
+
+write.csv(p, 'groundtsyn_genotypes.csv', row.names = FALSE)
+
+write.csv(mutmat[1:floor(N*mix[1]),], 'groundtsyn_mutmat1.csv', row.names = FALSE)
+write.csv(mutmat[(floor(N*mix[1])+1):floor(N*sum(mix[1:2])),], 'groundtsyn_mutmat2.csv', row.names = FALSE)
+write.csv(mutmat[(floor(N*sum(mix[1:2]))+1):floor(N*sum(mix[1:3])),], 'groundtsyn_mutmat3.csv', row.names = FALSE)
+write.csv(mutmat[(floor(N*sum(mix[1:3]))+1):floor(N*sum(mix[1:4])),], 'groundtsyn_mutmat4.csv', row.names = FALSE)
+write.csv(mutmat[(floor(N*sum(mix[1:4]))+1):floor(N*sum(mix[1:5])),], 'groundtsyn_mutmat5.csv', row.names = FALSE)
+write.csv(mutmat[(floor(N*sum(mix[1:5]))+1):floor(N*sum(mix[1:6])),], 'groundtsyn_mutmat6.csv', row.names = FALSE)
+write.csv(mutmat[(floor(N*sum(mix[1:6]))+1):N,], 'groundtsyn_mutmat7.csv', row.names = FALSE)

@@ -4,21 +4,21 @@
 ###############################################################################
 
 
-P=16
+P=8
 
-N=5000
+N=2000
 
 mix<-c(0.3,0.1,0.3,0.07,0.14,0.05,0.04)
 
-print(sum(mix))
+#print(sum(mix))
 
-mutmat<-matrix(rep(0,16*N),nrow=N,byrow=T)
+mutmat<-matrix(rep(0,P*N),nrow=N,byrow=T)
 
 snvprop<-c(0.2,0.2,0.2,0.1,0.14,0.1,0.06)
 
 #snvprop <- rdirichlet(1, rep(1, 7))
 
-print(sum(snvprop))
+#print(sum(snvprop))
 
 construc_p <- function(P,mix){
 p1<-runif(P)<mix[1]
@@ -42,7 +42,7 @@ index <- intersect(which(p3 == 0), which(p4 == 0) )
 
 p5[ index ] <- runif(length(index)) < mix[5]/(1-sum(mix[1:4]))
 
-print(index)
+#print(index)
 
 p6 <- p3
 
@@ -58,7 +58,7 @@ index <- intersect(index, which(p6 == 0))
 
 p7[index] <- 1
 
-print(index)
+#print(index)
 
 p <- cbind(p1,p2,p3,p4,p5,p6,p7)
 
@@ -67,7 +67,7 @@ return (p)
 
 p = construc_p(P,snvprop)
 
-summary(p)
+print(p)
 
 for(i in 1:N) {
 
@@ -123,7 +123,7 @@ for(i in 1:N) {
 
 #write.csv(reads, 'groundtsyn_reads.csv', row.names = FALSE)
 
-write.csv(mutmat, 'fullsyn_mutmat.csv', row.names = FALSE)
+write.csv(mutmat, 'fullsyn8_2000_mutmat.csv', row.names = FALSE)
 
 #write.csv(freq, 'groundtsyn_freq.csv', row.names = FALSE)
 

@@ -8,7 +8,7 @@ import csv
 from numpy         import *
 from numpy.random  import *
 from tssb          import *
-from logistic   import *
+from root1logistic   import *
 from util          import *
 from scipy.stats   import itemfreq
 import numpy
@@ -18,27 +18,36 @@ max_data      = 100
 burnin        = 0
 num_samples   = 2000
 checkpoint    = 50000
-dp_alpha      = 1
-dp_gamma      = 3e-1
+dp_alpha      = 5
+dp_gamma      = 0.2
 init_drift    = 0.5
 init_galpha   = 1
 init_gbeta    = 0.5
-alpha_decay   = 0.1
+alpha_decay   = 0.2
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
 
 ##seed(rand_seed)
 
-reader = csv.DictReader(open('./data/fullsyn_mutmat.csv'),
+#reader = csv.DictReader(open('./data/fullsyn_mutmat.csv'),
+#                        delimiter=',')
+
+reader = csv.DictReader(open('./data/fullsyn8_mutmat.csv'),
                         delimiter=',')
+
 data = []
 dataid = []
 max_snvpos = 1
 
+#for row in reader:
+#    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16'])])
+#data = numpy.array(data)
+#dims = 16
+
 for row in reader:
-    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16'])])
+    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
 data = numpy.array(data)
-dims = 16
+dims = 8
 
 #freq = numpy.zeros([max_snvpos,2])
 #for read in data:
@@ -52,6 +61,8 @@ dims = 16
 #    if snv[0]/snv[1] > 0.9:
 #        clonal[index] = 1.5\
 
+clonal = numpy.array(sum(data,axis=0)==data.shape[0],dtype='int')
+
 
 #filename = "test_beta_benomial_depth1.pkl"
 #fh = open(filename, 'r')
@@ -60,7 +71,7 @@ dims = 16
 
 #median_depths = median(depth_traces,0)
 
-root = Logistic( dims=dims, drift=init_drift )
+root = Root1Logistic( dims=dims, drift=init_drift, initial_snvs=clonal )
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
@@ -76,6 +87,8 @@ tssb_traces        = empty((num_samples, 1),dtype = object)
 intervals = zeros((7))
 print "Starting MCMC run..."
 for iter in range(-burnin,num_samples):
+    
+    print "nomix: ",tssb.complete_data_log_likelihood_nomix()
 
     times = [ time.time() ]
     ##ipdb.set_trace()
@@ -122,6 +135,12 @@ for iter in range(-burnin,num_samples):
     ##     fh = open(filename, 'w')
     ##     cPickle.dump(tssb, fh)
     ##     fh.close()
+  
+    if mod(iter, 10) == 0:
+        filename = './treescripts/test_tree_full_logistic_running.gdl'
+        fh2 = open(filename,'w')
+        tssb.print_graph_full_logistic(fh2)
+        fh2.close()
   
     if mod(iter, 1) == 0:
         (weights, nodes) = tssb.get_mixture()
