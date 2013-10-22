@@ -91,4 +91,7 @@ class Node(object):
             ancestors = self._parent.get_ancestors()
             ancestors.append(self)
             return ancestors
+        
+    def parameter_log_prior(self):
+        return 0
 

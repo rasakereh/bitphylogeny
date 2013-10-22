@@ -145,6 +145,7 @@ class SNVBernoulliFull(Node):
         self._bbeta  = slice_sample(self._bbeta, logpostb, step_out=True, compwise=True)
 
     def logprob(self, x):
+        self._cache_ln()
         #x = transpose(x)
         res = 0
         res = x*self._ln + (1.0-x)*self._negln
@@ -155,3 +156,10 @@ class SNVBernoulliFull(Node):
 
     def complete_logprob(self):
         return self.logprob(self.get_data())
+    
+    def parameter_log_prior(self):
+        if self.parent() is None:
+            lp = sum(betapdfln(self.params, self.alpha_base**((self.init_mean-self.bbeta())/abs(self.init_mean-self.bbeta())), self.beta_base**((self.init_mean-self.bbeta())/abs(self.init_mean-self.bbeta()))))
+        else:
+            lp = sum(betapdfln(self.params, self.alpha_base**((self.parent().params-self.bbeta())/abs(self.parent().params-self.bbeta())), self.beta_base**((self.parent().params-self.bbeta())/abs(self.parent().params-self.bbeta()))))
+        return lp    

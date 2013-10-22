@@ -1,5 +1,6 @@
 import sys
 import scipy.stats
+import copy
 
 from time         import *
 from numpy        import *
@@ -383,6 +384,91 @@ class TSSB(object):
                 lln.append(node.num_local_data()*log(weights[i]))
                 #lln.append(weights[i])
         return (sum(array(lln)),sum(array(llhs)))
+    
+    def unnormalized_postertior(self):
+        weights, nodes = self.get_mixture();
+        llhs = []
+        for i, node in enumerate(nodes):
+            if node.num_local_data():
+                llhs.append(node.num_local_data()*log(weights[i]) + node.data_log_likelihood() + node.parameter_log_prior() ) 
+        llh = sum(array(llhs))
+        
+        def alpha_descend(root, depth=0):
+            llh = betapdfln(root['main'], 1.0, (self.alpha_decay**depth)*self.dp_alpha) if self.min_depth <= depth else 0.0
+            for child in root['children']:
+                llh += alpha_descend(child, depth+1)
+            return llh            
+        weights_log_prob = alpha_descend(self.root)
+        
+        def gamma_descend(root):
+            llh = 0
+            for i, child in enumerate(root['children']):
+                llh += betapdfln(root['sticks'][i], 1.0, self.dp_gamma)
+                llh += gamma_descend(child)
+            return llh
+        sticks_log_prob =  gamma_descend(self.root)
+        
+        return llh + weights_log_prob + sticks_log_prob
+    
+    def resample_tree_topology(self):
+        #x = self.complete_data_log_likelihood_nomix()
+        post = log(rand()) + self.unnormalized_postertior()
+        weights, nodes = self.get_mixture();
+        if len(nodes)>1:
+            nodeAnum = randint(0,len(nodes))
+            nodeBnum = randint(0,len(nodes))
+            
+            while nodeAnum == nodeBnum:
+                nodeBnum = randint(0, len(nodes))
+            
+            def swap_nodes(nodeAnum, nodeBnum):
+                def findNodes(root, nodeNum, nodeA=False, nodeB=False):
+                    node = root
+                    if nodeNum == nodeAnum:
+                        nodeA = node
+                    if nodeNum == nodeBnum:
+                        nodeB = node
+                    for i, child in enumerate(root['children']):
+                        nodeNum = nodeNum + 1
+                        (nodeA, nodeB, nodeNum) = findNodes(child, nodeNum, nodeA, nodeB)
+                    return (nodeA, nodeB, nodeNum)
+                
+                (nodeA,nodeB,nodeNum) = findNodes(self.root, nodeNum=0)
+                
+                paramsA = nodeA['node'].params
+                dataA = set(nodeA['node'].data)
+                mainA = nodeA['main']
+            
+                nodeA['node'].params = nodeB['node'].params
+                
+                for dataid in list(dataA):
+                    nodeA['node'].remove_datum(dataid)
+                for dataid in nodeB['node'].data:
+                    nodeA['node'].add_datum(dataid)
+                    self.assignments[dataid] = nodeA['node']
+                nodeA['main']=nodeB['main']
+                
+                nodeB['node'].params = paramsA
+                dataB = set(nodeB['node'].data)
+                
+                for dataid in dataB:
+                    nodeB['node'].remove_datum(dataid)
+                for dataid in dataA:
+                    nodeB['node'].add_datum(dataid)
+                    self.assignments[dataid] = nodeB['node']
+                nodeB['main']=mainA
+                
+            
+            swap_nodes(nodeAnum,nodeBnum)
+            self.resample_sticks()
+            post_new = self.unnormalized_postertior()
+            #xn = self.complete_data_log_likelihood_nomix()
+            if(post_new < post):
+                swap_nodes(nodeAnum,nodeBnum)
+                self.resample_sticks()
+            else:
+                print "successful swap!!!"
+        
     
     def print_graph(self, fh, base_width=5000, min_width=5):
         print >>fh, """graph: { title:            "TSSB Graph"  \

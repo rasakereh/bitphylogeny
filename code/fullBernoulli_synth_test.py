@@ -13,10 +13,10 @@ from scipy.stats   import itemfreq
 import numpy
 
 
-rand_seed     = 1234
+rand_seed     = 1238
 max_data      = 100
-burnin        = 0
-num_samples   = 3000
+burnin        = 500
+num_samples   = 1000
 checkpoint    = 50000
 dp_alpha      = 5
 dp_gamma      = 0.2
@@ -32,31 +32,31 @@ seed(rand_seed)
 #reader = csv.DictReader(open('./data/fullsyn16_2000_mutmat.csv'),
 #                        delimiter=',')
 
-reader = csv.DictReader(open('./data/fullsyn_mutmat.csv'),
-                        delimiter=',')
-
-
-#reader = csv.DictReader(open('./data/fullsyn8_2000_mutmat.csv'),
+#reader = csv.DictReader(open('./data/fullsyn_mutmat.csv'),
 #                        delimiter=',')
+
+
+reader = csv.DictReader(open('./data/fullsyn8_2000_mutmat.csv'),
+                        delimiter=',')
 
 data = []
 dataid = []
 max_snvpos = 1
 
-for row in reader:
-    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16'])])
-data = numpy.array(data)
-dims = 16
+#for row in reader:
+#    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16'])])
+#data = numpy.array(data)
+#dims = 16
 
 #i = 0
-#for row in reader:
+for row in reader:
     #if not mod(i,20)==0:
     #    reader.next()
-#    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
+    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
     #i = i + 1
     
-#data = numpy.array(data)
-#dims = 8
+data = numpy.array(data)
+dims = 8
 
 #freq = numpy.zeros([max_snvpos,dim])
 #for read in data:
@@ -81,13 +81,16 @@ alpha_decay_traces = zeros((num_samples, 1))
 bbeta_traces       = zeros((num_samples, dims))
 cd_llh_traces      = zeros((num_samples, 1))
 nodes_traces       = zeros((num_samples, 1))
+bignodes_traces       = zeros((num_samples, 1))
 tssb_traces        = empty((num_samples, 1),dtype = object)
+
 
 intervals = zeros((7))
 print "Starting MCMC run..."
 for iter in range(-burnin,num_samples):
     
-    print "nomix: ",tssb.complete_data_log_likelihood_nomix()
+    print iter, "nomix: ",tssb.complete_data_log_likelihood_nomix()
+    print iter, "posterior:", tssb.unnormalized_postertior()
 
     times = [ time.time() ]
     #print tssb.complete_data_log_likelihood()
@@ -99,6 +102,7 @@ for iter in range(-burnin,num_samples):
     #print tssb.complete_data_log_likelihood()
     tssb.resample_node_params()
     times.append(time.time())
+    
     #print tssb.complete_data_log_likelihood()
     #root.resample_hypers()
     times.append(time.time())
@@ -109,14 +113,18 @@ for iter in range(-burnin,num_samples):
     tssb.resample_stick_orders()
     times.append(time.time())
     #print tssb.complete_data_log_likelihood()
+    
+    print "pre-treesamp:", tssb.unnormalized_postertior()
+    tssb.resample_tree_topology()
+    print "post-treesamp:", tssb.unnormalized_postertior()
 
-    filename = 'treescripts/testgraph_fullBernoulli1.gdl'
+    filename = 'treescripts/testgraph_fullBernoulli2.gdl'
     fh2 = open(filename,'w')
     tssb.print_graph_full(fh2)
     fh2.close()
    
-    #if iter > 0:
-        #tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+    if iter > 0:
+        tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
     times.append(time.time())
  
 
@@ -133,6 +141,8 @@ for iter in range(-burnin,num_samples):
         cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
         (weights, nodes)         = tssb.get_mixture()
         nodes_traces[iter]       = len(nodes)
+        bignodes_traces[iter]    = sum(numpy.array(weights)>0.01)
+        
 
     ## if iter > 0 and mod(iter, checkpoint) == 0:
     ##     filename = "checkpoints/norm1d-test-%s-%06d.pkl" % (codename, iter)
@@ -141,31 +151,32 @@ for iter in range(-burnin,num_samples):
     ##     fh.close()
 
   
-    if mod(iter, 1) == 0:
-        (weights, nodes) = tssb.get_mixture()
-        print codename, iter, len(nodes), cd_llh_traces[iter], \
-           mean(root._bbeta), tssb.dp_alpha, tssb.dp_gamma, \
-           tssb.alpha_decay, \
-           " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
-           float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
-           root.hmc_accepts, root.hmc_rejects, time.strftime('%X %x %Z')
-        intervals = zeros((7))
-
-    if mod(iter, 10) == 0:
-        print "root:"
-        print " ".join(map(lambda x: "%0.2f" %x, root.params))
-        print "children:"
-        for child in root._children:
-            print " ".join(map(lambda x: "%0.2f" %x, child.params))
+    if iter >= 0:
+        if mod(iter, 1) == 0:
+            (weights, nodes) = tssb.get_mixture()
+            print codename, iter, len(nodes), cd_llh_traces[iter], \
+               mean(root._bbeta), tssb.dp_alpha, tssb.dp_gamma, \
+               tssb.alpha_decay, \
+               " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
+               float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
+               root.hmc_accepts, root.hmc_rejects, time.strftime('%X %x %Z')
+            intervals = zeros((7))
     
-    if iter > 0 and argmax(cd_llh_traces[:iter+1]) == iter:
-        print "\t%f is best per-data complete data likelihood so far." \
-           % (cd_llh_traces[iter]/max_data)
-        best_fit = cPickle.dumps(tssb)
-        filename_best = "bests/pairBernoulli-test11-%s-best.pkl" % (codename)
-        fh = open(filename_best, 'w')
-        cPickle.dump(tssb, fh)
-        fh.close()
+        #if mod(iter, 10) == 0:
+        #    print "root:"
+        #    print " ".join(map(lambda x: "%0.2f" %x, root.params))
+        #    print "children:"
+        #    for child in root._children:
+        #        print " ".join(map(lambda x: "%0.2f" %x, child.params))
+        
+        if iter > 0 and argmax(cd_llh_traces[:iter+1]) == iter:
+            print "\t%f is best per-data complete data likelihood so far." \
+               % (cd_llh_traces[iter]/max_data)
+            best_fit = cPickle.dumps(tssb)
+            filename_best = "bests/pairBernoulli-test11-%s-best.pkl" % (codename)
+            fh = open(filename_best, 'w')
+            cPickle.dump(tssb, fh)
+            fh.close()
 
 
 
@@ -197,7 +208,7 @@ pp = zeros(yy.shape)
 
 fig1 = plt.figure(1)
 plt.plot(cd_llh_traces)
-plt.savefig('figures/pairBernoulli11_trace.pdf',format='pdf')
+plt.savefig('figures/pairBernoulli2_trace.pdf',format='pdf')
 clf()
 
 #fig2 = plt.figure(2)
@@ -209,17 +220,21 @@ clf()
 #clf()
 
 
-filename = 'treescripts/testgraph_pairBernoulli11.gdl'
+filename = 'treescripts/testgraph_pairBernoulli2.gdl'
 fh2 = open(filename,'w')
 best_node_fit.print_graph_full(fh2)
 fh2.close()
 
-filename_best = "bests/pairBernoulli11_test.pkl" 
+filename_best = "bests/pairBernoulli2_test.pkl" 
 fh = open(filename_best, 'w')
 cPickle.dump(best_node_fit, fh)
 fh.close()
 
-fn = "bests/pairBernoulli11_test.pkl"
+fn = "bests/pairBernoulli2_test.pkl"
 fh = open(fn, 'r')
 best_node_fit = cPickle.load(fh)
 fh.close()
+
+
+numpy.savetxt("mcmc-traces/num_nodes %s.csv" % (rand_seed), numpy.hstack([nodes_traces,bignodes_traces,cd_llh_traces]), fmt=['%g, ','%g, ','%0.4f'])
+
