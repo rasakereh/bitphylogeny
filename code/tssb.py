@@ -417,6 +417,8 @@ class TSSB(object):
         if len(nodes)>1:
             nodeAnum = randint(0,len(nodes))
             nodeBnum = randint(0,len(nodes))
+            if nodeAnum == nodeBnum:
+                print 'same node selected'
             
             while nodeAnum == nodeBnum:
                 nodeBnum = randint(0, len(nodes))
@@ -468,6 +470,84 @@ class TSSB(object):
                 self.resample_sticks()
             else:
                 print "successful swap!!!"
+
+
+    def resample_tree_topology_root(self):
+        #x = self.complete_data_log_likelihood_nomix()
+        post = log(rand()) + self.unnormalized_postertior()
+        weights, nodes = self.get_mixture();
+
+        empty_root = False
+        if len(nodes)>1:
+            if len(nodes[0].data) == 0:
+                empty_root = True
+                nodeAnum = 0
+                nodeBnum = randint(1, len(nodes))
+            else:
+                nodeAnum = randint(0,len(nodes))
+                candnum  = range(len(nodes))
+                candnum  = candnum[:nodeAnum] + candnum[nodeAnum+1:]
+                tempidx  = randint(0,len(nodes)-1)
+                nodeBnum = candnum[tempidx]
+                
+                
+            while nodeAnum == nodeBnum:
+                nodeBnum = randint(0, len(nodes))
+            
+            def swap_nodes(nodeAnum, nodeBnum):
+                def findNodes(root, nodeNum, nodeA=False, nodeB=False):
+                    node = root
+                    if nodeNum == nodeAnum:
+                        nodeA = node
+                    if nodeNum == nodeBnum:
+                        nodeB = node
+                    for i, child in enumerate(root['children']):
+                        nodeNum = nodeNum + 1
+                        (nodeA, nodeB, nodeNum) = findNodes(child, nodeNum, nodeA, nodeB)
+                    return (nodeA, nodeB, nodeNum)
+                
+                (nodeA,nodeB,nodeNum) = findNodes(self.root, nodeNum=0)
+                
+                paramsA = nodeA['node'].params
+                dataA = set(nodeA['node'].data)
+                mainA = nodeA['main']
+            
+                nodeA['node'].params = nodeB['node'].params
+                
+                for dataid in list(dataA):
+                    nodeA['node'].remove_datum(dataid)
+                for dataid in nodeB['node'].data:
+                    nodeA['node'].add_datum(dataid)
+                    self.assignments[dataid] = nodeA['node']
+                nodeA['main']=nodeB['main']
+                
+                nodeB['node'].params = paramsA
+                dataB = set(nodeB['node'].data)
+                
+                for dataid in dataB:
+                    nodeB['node'].remove_datum(dataid)
+                for dataid in dataA:
+                    nodeB['node'].add_datum(dataid)
+                    self.assignments[dataid] = nodeB['node']
+                nodeB['main']=mainA
+                
+            
+            swap_nodes(nodeAnum,nodeBnum)
+            self.resample_sticks()
+            post_new = self.unnormalized_postertior()
+            #xn = self.complete_data_log_likelihood_nomix()
+
+            if empty_root:
+                print 'root swapped'
+                self.resample_node_params()
+                self.resample_sticks()
+                self.resample_stick_orders()
+            elif(post_new < post):
+                swap_nodes(nodeAnum,nodeBnum)
+                self.resample_sticks()
+            else:
+                print "successful swap!!!"
+                self.resample_stick_orders()
         
     
     def print_graph(self, fh, base_width=5000, min_width=5):
