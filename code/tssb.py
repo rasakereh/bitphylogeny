@@ -390,11 +390,14 @@ class TSSB(object):
         llhs = []
         for i, node in enumerate(nodes):
             if node.num_local_data():
-                llhs.append(node.num_local_data()*log(weights[i]) + node.data_log_likelihood() + node.parameter_log_prior() ) 
+                llhs.append(node.num_local_data()*log(weights[i]) +
+                            node.data_log_likelihood() +
+                            node.parameter_log_prior() ) 
         llh = sum(array(llhs))
         
         def alpha_descend(root, depth=0):
-            llh = betapdfln(root['main'], 1.0, (self.alpha_decay**depth)*self.dp_alpha) if self.min_depth <= depth else 0.0
+            llh = betapdfln(root['main'], 1.0,
+                            (self.alpha_decay**depth)*self.dp_alpha) if self.min_depth <= depth else 0.0
             for child in root['children']:
                 llh += alpha_descend(child, depth+1)
             return llh            
@@ -417,8 +420,6 @@ class TSSB(object):
         if len(nodes)>1:
             nodeAnum = randint(0,len(nodes))
             nodeBnum = randint(0,len(nodes))
-            if nodeAnum == nodeBnum:
-                print 'same node selected'
             
             while nodeAnum == nodeBnum:
                 nodeBnum = randint(0, len(nodes))
@@ -480,9 +481,9 @@ class TSSB(object):
         empty_root = False
         if len(nodes)>1:
             if len(nodes[0].data) == 0:
+                print 'swapping root'
                 empty_root = True
                 nodeAnum = 0
-                nodeBnum = randint(1, len(nodes))
             else:
                 nodeAnum = randint(0,len(nodes))
                 candnum  = range(len(nodes))
@@ -490,10 +491,6 @@ class TSSB(object):
                 tempidx  = randint(0,len(nodes)-1)
                 nodeBnum = candnum[tempidx]
                 
-                
-            while nodeAnum == nodeBnum:
-                nodeBnum = randint(0, len(nodes))
-            
             def swap_nodes(nodeAnum, nodeBnum):
                 def findNodes(root, nodeNum, nodeA=False, nodeB=False):
                     node = root
@@ -530,24 +527,47 @@ class TSSB(object):
                     nodeB['node'].add_datum(dataid)
                     self.assignments[dataid] = nodeB['node']
                 nodeB['main']=mainA
-                
-            
-            swap_nodes(nodeAnum,nodeBnum)
-            self.resample_sticks()
-            post_new = self.unnormalized_postertior()
-            #xn = self.complete_data_log_likelihood_nomix()
 
             if empty_root:
-                print 'root swapped'
-                self.resample_node_params()
-                self.resample_sticks()
-                self.resample_stick_orders()
-            elif(post_new < post):
+                print 'checking alternative root'
+                nodenum = range(len(nodes))
+                nodenum = nodenum[1:]
+                post_temp = zeros(len(nodes)-1)
+                for idx, nodeBnum in enumerate(nodenum):
+                    print 'nodeBnum', nodeBnum
+                    print 'nodeAnum', nodeAnum
+                    swap_nodes(nodeAnum, nodeBnum)
+                    self.resample_sticks()
+                    post_new = self.unnormalized_postertior()
+                    post_temp[idx] = post_new
+                    
+                    if (post_new < post):
+                        swap_nodes(nodeAnum,nodeBnum)
+                        self.resample_sticks()
+                        if nodeBnum == len(nodes)-1:
+                            print 'forced swapping'
+                            nodeBnum = post_temp.argmax() + 1
+                            swap_nodes(nodeAnum,nodeBnum)
+                            self.resample_sticks()
+                            self.resample_node_params()
+                            self.resample_stick_orders()
+                    else:
+                        print "successful swap!!!"
+                        self.resample_node_params()
+                        self.resample_stick_orders()
+                        break
+            else:   
                 swap_nodes(nodeAnum,nodeBnum)
                 self.resample_sticks()
-            else:
-                print "successful swap!!!"
-                self.resample_stick_orders()
+                post_new = self.unnormalized_postertior()
+      
+                if (post_new < post):
+                    swap_nodes(nodeAnum,nodeBnum)
+                    self.resample_sticks()
+                else:
+                    print "successful swap!!!"
+                    self.resample_node_params()
+                    self.resample_stick_orders()
         
     
     def print_graph(self, fh, base_width=5000, min_width=5):
@@ -896,7 +916,7 @@ class TSSB(object):
                 
                 cache_children = root['children'][index]['children']
 
-                ## root['children'][index]['node'].kill()
+                root['children'][index]['node'].kill()
 
                 del root['children'][index]
 
@@ -909,12 +929,11 @@ class TSSB(object):
                     temp2 = root['children'][index:]
 
                     root['children'] = temp1 + cache_children + temp2
-
-                    ## for child in cache_children:
-                    ##     root['node'].add_child(child['node'])
-
+                    root['sticks']   = zeros((len(root['children']),1))
                     
             for child in root['children']:
                 descend(child)
+            
                 
         descend(self.root)
+        self.resample_sticks()

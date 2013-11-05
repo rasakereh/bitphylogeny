@@ -169,6 +169,10 @@ for iter in range(-burnin,num_samples):
 ##                'nodes_traces'       : nodes_traces}, fh)
 ## fh.close()
 
+## filename = 'mcmc-traces/tssb_traces_%s' % (codename)
+## fh = open(filename,'w')
+## cPickle.dump(tssb_traces, fh)
+## fh.close()
 
 
 nodes_tabular = itemfreq(nodes_traces)
@@ -216,7 +220,7 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 
 
 #best = loads(best_fit)
-#best_node_fit.remove_empty_nodes()
+best_node_fit.remove_empty_nodes()
 
 filename = './treescripts/test_tree_full_logistic_mix_laplace.gdl'
 fh2 = open(filename,'w')
