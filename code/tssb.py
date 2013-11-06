@@ -916,7 +916,7 @@ class TSSB(object):
                 
                 cache_children = root['children'][index]['children']
 
-                root['children'][index]['node'].kill()
+                #root['children'][index]['node'].kill()
 
                 del root['children'][index]
 
