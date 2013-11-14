@@ -84,7 +84,7 @@ mix<-c(0.3,0.1,0.3,0.07,0.14,0.05,0.04)
 
 snvprop<-c(0.2,0.2,0.2,0.1,0.14,0.1,0.06)
 
-epslist <- c(1e-2,2e-2,5e-2)
+epslist <- c(0,1e-2,2e-2,5e-2)
 
 clone = construct_genotype(num_snvs,snvprop)
 while((ncol(t(unique(t(clone))))<7) || (sum(clone[,1])<1) ) {
