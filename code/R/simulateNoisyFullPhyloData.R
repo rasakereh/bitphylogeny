@@ -114,5 +114,5 @@ for(epsilon in epslist) {
 }
 
 write.csv(clone, paste('noisy_fullsyn_', num_snvs, '_',
-                       num_reads, '_', epsilon, '_genotype.csv', sep = ''),
+                       num_reads, '_genotype.csv', sep = ''),
           row.names = FALSE)
