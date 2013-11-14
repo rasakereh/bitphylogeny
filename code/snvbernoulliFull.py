@@ -21,7 +21,7 @@ class SNVBernoulliFull(Node):
     #bbeta        = 0.1
     min_bbeta    = 0.1
     max_bbeta    = 0.9
-    alpha_base   = 5 #
+    alpha_base   = 20 #
     beta_base    = 1.1
     hmc_accepts  = 1
     hmc_rejects  = 1

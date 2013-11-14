@@ -94,6 +94,8 @@ while((ncol(t(unique(t(clone))))<7) || (sum(clone[,1])<1) ) {
 
 reads_in_clone <- rmultinom(1, num_reads, mix)   
 
+
+
 for(epsilon in epslist) {
 	# sample reads for each clone
 	reads <- sapply(1:length(mix), 
@@ -108,7 +110,7 @@ for(epsilon in epslist) {
 	
 	
 	
-	write.csv(mutmat, paste('noisy_fullsyn_', num_snvs, '_', 
+	write.csv(cbind(mutmat,rep(1:7,reads_in_clone)), paste('noisy_fullsyn_', num_snvs, '_', 
 	                        num_reads, '_', epsilon, '_mutmat.csv', sep=""), 
 	          row.names = FALSE)
 

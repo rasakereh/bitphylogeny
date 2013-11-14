@@ -13,21 +13,20 @@ from scipy.stats   import itemfreq
 import numpy
 
 
-rand_seed     = 1238
+rand_seed     = 1235
 max_data      = 100
-burnin        = 500
-num_samples   = 1000
+burnin        = 0
+num_samples   = 5000
 checkpoint    = 50000
-dp_alpha      = 5
+dp_alpha      = 0.3
 dp_gamma      = 0.2
 init_bbeta    = 0.6
 alpha_decay   = 0.2
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
+runname       = "data3_nohypersampling_transkernelalpha20_alpha0.3"+codename+str(rand_seed)
 
 seed(rand_seed)
-#data = concatenate([0.5 + 0.2*randn(70,1), -0.8 + 0.1*randn(35,1), -1.5+0.1*randn(35,1)])
-#data = sigmoid(data)
 
 #reader = csv.DictReader(open('./data/fullsyn16_2000_mutmat.csv'),
 #                        delimiter=',')
@@ -35,13 +34,20 @@ seed(rand_seed)
 #reader = csv.DictReader(open('./data/fullsyn_mutmat.csv'),
 #                        delimiter=',')
 
+#reader = csv.DictReader(open('./data/fullsyn8_2000_mutmat.csv'),
+#                        delimiter=',')
 
-reader = csv.DictReader(open('./data/fullsyn8_2000_mutmat.csv'),
+#reader = csv.DictReader(open('./data/cpgmethyl/output.dat'),
+#                        delimiter=',')
+
+reader = csv.DictReader(open('./data/noisy_fullsyn_8_2000_0.01_mutmat.csv'),
                         delimiter=',')
 
 data = []
 dataid = []
 max_snvpos = 1
+
+clusters = []
 
 #for row in reader:
 #    data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16'])])
@@ -53,6 +59,7 @@ for row in reader:
     #if not mod(i,20)==0:
     #    reader.next()
     data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
+    clusters.append(int(row['V9']))
     #i = i + 1
     
 data = numpy.array(data)
@@ -72,7 +79,7 @@ dims = 8
 clonal = numpy.array(sum(data,axis=0)==data.shape[0],dtype='int')
 
 root = SNVBernoulliFull( dims=dims, bbeta=init_bbeta, initial_snvs=clonal)
-tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, max_depth=4, alpha_decay=alpha_decay,
+tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, max_depth=5, alpha_decay=alpha_decay,
              root_node=root, data=data )
 
 dp_alpha_traces    = zeros((num_samples, 1))
@@ -118,13 +125,17 @@ for iter in range(-burnin,num_samples):
     tssb.resample_tree_topology()
     print "post-treesamp:", tssb.unnormalized_postertior()
 
-    filename = 'treescripts/testgraph_fullBernoulli2.gdl'
-    fh2 = open(filename,'w')
-    tssb.print_graph_full(fh2)
-    fh2.close()
-   
-    if iter > 0:
-        tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+    
+    try:
+        filename = 'treescripts/fullBernoulli1_%s.gdl' % (runname)
+        fh2 = open(filename,'w')
+        tssb.print_graph_full(fh2)
+        fh2.close()
+    except Exception, e:
+        print e
+    
+    #if iter > 2000:
+        #tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
     times.append(time.time())
  
 
@@ -173,12 +184,19 @@ for iter in range(-burnin,num_samples):
             print "\t%f is best per-data complete data likelihood so far." \
                % (cd_llh_traces[iter]/max_data)
             best_fit = cPickle.dumps(tssb)
-            filename_best = "bests/pairBernoulli-test11-%s-best.pkl" % (codename)
+            filename_best = "bests/fullBernoulli-%s-best.pkl" % (runname)
             fh = open(filename_best, 'w')
             cPickle.dump(tssb, fh)
             fh.close()
 
-
+        if iter > 0:
+            correctly_assigned = 0
+            for i in range(data.shape[0]-1):
+                for j in range(i+1,data.shape[0]):
+                    if (tssb.assignments[i] == tssb.assignments[j] and clusters[i] == clusters[j]) or (tssb.assignments[i] != tssb.assignments[j] and clusters[i] != clusters[j]):
+                        correctly_assigned = correctly_assigned + 1
+            v = float(correctly_assigned)/(data.shape[0]*(data.shape[0]-1)/2)
+            print v
 
 ## filename = "checkpoints/norm1d-test-%s-final.pkl" % (codename)
 ## fh = open(filename, 'w')
@@ -206,10 +224,10 @@ pp = zeros(yy.shape)
 #    pp = pp + weights_best[kk]*1/sqrt(2*pi*nodes_best[kk].params[1]**2) * \
 #      exp(-0.5*(yy-nodes_best[kk].params[0])**2/ nodes_best[kk].params[1]**2)
 
-fig1 = plt.figure(1)
-plt.plot(cd_llh_traces)
-plt.savefig('figures/pairBernoulli2_trace.pdf',format='pdf')
-clf()
+#fig1 = plt.figure(1)
+#plt.plot(cd_llh_traces)
+#plt.savefig('figures/fullBernoulli2_trace.pdf',format='pdf')
+#clf()
 
 #fig2 = plt.figure(2)
 #plt.plot(yy,pp, color = 'b')
@@ -220,21 +238,21 @@ clf()
 #clf()
 
 
-filename = 'treescripts/testgraph_pairBernoulli2.gdl'
+filename = 'treescripts/fullBernoulli_best%s.gdl' % (runname)
 fh2 = open(filename,'w')
 best_node_fit.print_graph_full(fh2)
 fh2.close()
 
-filename_best = "bests/pairBernoulli2_test.pkl" 
+filename_best = "bests/fullBernoulli2_%s.pkl" % (runname)
 fh = open(filename_best, 'w')
 cPickle.dump(best_node_fit, fh)
 fh.close()
 
-fn = "bests/pairBernoulli2_test.pkl"
+fn = "bests/fullBernoulli2_test.pkl"
 fh = open(fn, 'r')
 best_node_fit = cPickle.load(fh)
 fh.close()
 
 
-numpy.savetxt("mcmc-traces/num_nodes %s.csv" % (rand_seed), numpy.hstack([nodes_traces,bignodes_traces,cd_llh_traces]), fmt=['%g, ','%g, ','%0.4f'])
+numpy.savetxt("mcmc-traces/num_nodes_%s.csv"  % (runname), numpy.hstack([nodes_traces,bignodes_traces,cd_llh_traces]), fmt=['%g, ','%g, ','%0.4f'])
 
