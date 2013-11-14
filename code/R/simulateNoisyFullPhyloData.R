@@ -3,7 +3,6 @@
 # Author: warriour
 ###############################################################################
 
-
 construct_genotype <- function(num_snvs,mix){
   # Mannually construct the genotypes 7 clones phylogeny 
   # tree:
@@ -94,8 +93,6 @@ while((ncol(t(unique(t(clone))))<7) || (sum(clone[,1])<1) ) {
 
 reads_in_clone <- rmultinom(1, num_reads, mix)   
 
-
-
 for(epsilon in epslist) {
 	# sample reads for each clone
 	reads <- sapply(1:length(mix), 
@@ -115,3 +112,7 @@ for(epsilon in epslist) {
 	          row.names = FALSE)
 
 }
+
+write.csv(clone, paste('noisy_fullsyn_', num_snvs, '_',
+                       num_reads, '_', epsilon, '_genotype.csv', sep = ''),
+          row.names = FALSE)
