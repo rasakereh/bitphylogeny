@@ -85,25 +85,31 @@ mix<-c(0.3,0.1,0.3,0.07,0.14,0.05,0.04)
 
 snvprop<-c(0.2,0.2,0.2,0.1,0.14,0.1,0.06)
 
-epsilon <- 1e-2
+epslist <- c(1e-2,2e-2,5e-2)
 
 clone = construct_genotype(num_snvs,snvprop)
-reads_in_clone <- rmultinom(1, num_reads, mix)   
-
-# sample reads for each clone
-reads <- sapply(1:length(mix), 
-                function(ii) 
-                  sample_full_reads(reads_in_clone[ii], 
-                                    clone[,ii], epsilon) )
-
-mutmat <- vector()
-for ( ii in 1:length(mix) ){
-  mutmat <- rbind(mutmat, reads[[ii]])
+while((ncol(t(unique(t(clone))))<7) || (sum(clone[,1])<1) ) {
+	clone = construct_genotype(num_snvs,snvprop)
 }
 
+reads_in_clone <- rmultinom(1, num_reads, mix)   
 
+for(epsilon in epslist) {
+	# sample reads for each clone
+	reads <- sapply(1:length(mix), 
+	                function(ii) 
+	                  sample_full_reads(reads_in_clone[ii], 
+	                                    clone[,ii], epsilon) )
+	
+	mutmat <- vector()
+	for ( ii in 1:length(mix) ){
+	  mutmat <- rbind(mutmat, reads[[ii]])
+	}
+	
+	
+	
+	write.csv(mutmat, paste('noisy_fullsyn_', num_snvs, '_', 
+	                        num_reads, '_', epsilon, '_mutmat.csv', sep=""), 
+	          row.names = FALSE)
 
-write.csv(mutmat, paste('noisy_fullsyn_', num_snvs, '_', 
-                        num_reads, '_mutmat.csv'), 
-          row.names = FALSE)
-
+}
