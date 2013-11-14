@@ -10,6 +10,7 @@ from tssb          import *
 from snvbernoulliFull  import *
 from util          import *
 from scipy.stats   import itemfreq
+from sklearn       import metrics
 import numpy
 
 
@@ -40,7 +41,7 @@ seed(rand_seed)
 #reader = csv.DictReader(open('./data/cpgmethyl/output.dat'),
 #                        delimiter=',')
 
-reader = csv.DictReader(open('./data/noisy_fullsyn_8_2000_0.01_mutmat.csv'),
+reader = csv.DictReader(open('./data/noisy_fullsyn_8_2000_0.05_mutmat.csv'),
                         delimiter=',')
 
 data = []
@@ -189,14 +190,19 @@ for iter in range(-burnin,num_samples):
             cPickle.dump(tssb, fh)
             fh.close()
 
+        #if iter > 0:
+        #    correctly_assigned = 0
+        #    for i in range(data.shape[0]-1):
+        #        for j in range(i+1,data.shape[0]):
+        #            if (tssb.assignments[i] == tssb.assignments[j] and clusters[i] == clusters[j]) or (tssb.assignments[i] != tssb.assignments[j] and clusters[i] != clusters[j]):
+        #                correctly_assigned = correctly_assigned + 1
+        #    v = float(correctly_assigned)/(data.shape[0]*(data.shape[0]-1)/2)
+        #    print v
+            
         if iter > 0:
-            correctly_assigned = 0
-            for i in range(data.shape[0]-1):
-                for j in range(i+1,data.shape[0]):
-                    if (tssb.assignments[i] == tssb.assignments[j] and clusters[i] == clusters[j]) or (tssb.assignments[i] != tssb.assignments[j] and clusters[i] != clusters[j]):
-                        correctly_assigned = correctly_assigned + 1
-            v = float(correctly_assigned)/(data.shape[0]*(data.shape[0]-1)/2)
-            print v
+            labels_pred = np.array(array(tssb.assignments),dtype='str')
+            v = metrics.v_measure_score(clusters, labels_pred)
+            print v 
 
 ## filename = "checkpoints/norm1d-test-%s-final.pkl" % (codename)
 ## fh = open(filename, 'w')
