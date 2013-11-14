@@ -34,7 +34,7 @@ def laplacepdfln(x,m,std):
 
 def get_weights(parent_params, depth):
     mapper = (parent_params > ones(len(parent_params)))
-    m1 = 1.0
+    m1 = 0.99
     m2 = (depth + 1.0) / len( parent_params ) 
     return m1 * mapper + ~mapper*m2
 
@@ -42,7 +42,7 @@ def mixlaplaceprior(params, base_value, std, depth):
 
     weights = get_weights(params, depth)    
     mapper = ( rand(len(weights)) < weights )
-    m1 = laplace(base_value*ones(len(weights)), std*ones(len(weights))/10)
+    m1 = laplace(base_value*ones(len(weights)), std*ones(len(weights)))
     m2 = laplace(-base_value*ones(len(weights)), std*ones(len(weights)))
     
     return m1 * mapper + ~mapper*m2
@@ -53,9 +53,9 @@ def mixlaplacepdfln(x, m, std, parent_params, depth ):
 
     res = empty(len(x))
     for index , d in enumerate(x):
-        l1 = log( weights[index] ) + laplacepdfln(d, m[0], std/10)
+        l1 = log( weights[index] ) + laplacepdfln(d, m[0], std)
         if weights[index] == 1.0:
-            res[index] = sum(l1)
+            res[index] = l1
         else:
             l2 = log(1- weights[index]) + laplacepdfln(d, m[1], std)
             res[index] = logsumexp( (l1, l2) )
@@ -67,7 +67,7 @@ def rootprior(params, base_value, std):
 
     mapper = ( rand(len(weights)) < weights )
 
-    m1 = laplace(base_value*ones(len(weights)), std*ones(len(weights))/10)
+    m1 = laplace(base_value*ones(len(weights)), std*ones(len(weights)))
     m2 = laplace(-base_value*ones(len(weights)), std*ones(len(weights)))
 
     return m1 * mapper + ~mapper*m2
@@ -78,15 +78,15 @@ def rootpriorpdfln(x, m, std):
 
     res = empty(len(x))
     for index , d in enumerate(x):
-        l1 = log( weights[index] ) + laplacepdfln(d, m[0], std/10)  
+        l1 = log( weights[index] ) + laplacepdfln(d, m[0], std)  
         l2 = log(1- weights[index]) + laplacepdfln(d, m[1], std)
         res[index] = logsumexp( (l1, l2) )
     return sum(res)
 
 class Logistic(Node):
 
-    std          = 1e-3
-    base_value   = 6.0
+    std          = 1e-2
+    base_value   = 4.5
     init_mean    = -base_value-4.0
     min_drift    = 0.01
     max_drift    = 1.0
@@ -170,7 +170,7 @@ class Logistic(Node):
         
         def logpost(params):
 
-            if any(params>=self.max_param) or any(params<=-self.max_param):
+            if any(params >= self.max_param) or any(params <= -self.max_param):
                 llh = float('-inf')
 
             if self.parent() is None:

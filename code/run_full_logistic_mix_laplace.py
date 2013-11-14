@@ -7,11 +7,13 @@ import ipdb
 
 from numpy         import *
 from numpy.random  import *
-from tssb         import *
-from logistic_mixlaplace   import *
+from tssb          import *
+from logistic_mixlaplace  import *
 from util          import *
 from scipy.stats   import itemfreq
-import numpy
+from sklearn       import metrics
+
+
 
 rand_seed     = 1234
 max_data      = 100
@@ -29,14 +31,17 @@ print "Codename: ", codename
 
 seed(rand_seed)
 
-reader = csv.DictReader(open('./data/fullsyn8_2000_mutmat.csv'),
+reader = csv.DictReader(open(
+    './data/noisy_fullsyn_8_2000_0.01_mutmat.csv'),
                         delimiter=',')
 data = []
 dataid = []
 max_snvpos = 1
+clone = []
 
 for row in reader:
     data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
+    clone.append(int(row['V9']))
 data = numpy.array(data)
 dims = data.shape[1]
 
@@ -72,13 +77,13 @@ gbeta_traces       = zeros((num_samples, dims))
 cd_llh_traces      = zeros((num_samples, 1))
 nodes_traces       = zeros((num_samples, 1))
 tssb_traces        = empty((num_samples, 1),dtype = object)
+v_measure_traces   = zeros((num_samples, 3))
 
 intervals = zeros((7))
 print "Starting MCMC run..."
 for iter in range(-burnin,num_samples):
 
     times = [ time.time() ]
-    ##ipdb.set_trace()
 
     tssb.resample_assignments()
     times.append(time.time())
@@ -124,6 +129,10 @@ for iter in range(-burnin,num_samples):
         (weights, nodes)         = tssb.get_mixture()
         nodes_traces[iter]       = len(nodes)
 
+        data_assign = array(array(tssb.assignments),dtype='str')
+        v_measure_traces[iter] = metrics.homogeneity_completeness_v_measure(clone,data_assign)
+        
+
     ## if iter > 0 and mod(iter, checkpoint) == 0:
     ##     filename = "checkpoints/norm1d-test-%s-%06d.pkl" % (codename, iter)
     ##     fh = open(filename, 'w')
@@ -133,11 +142,12 @@ for iter in range(-burnin,num_samples):
     if mod(iter, 1) == 0:
         (weights, nodes) = tssb.get_mixture()
         print codename, iter, len(nodes), cd_llh_traces[iter], \
+           v_measure_traces[iter], \
            tssb.dp_alpha, tssb.dp_gamma, \
-           tssb.alpha_decay, \
-           " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
-           float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
-           root.hmc_accepts, root.hmc_rejects, time.strftime('%X %x %Z')
+           tssb.alpha_decay
+           ## " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
+           ## float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
+           ## root.hmc_accepts, root.hmc_rejects, time.strftime('%X %x %Z')
         intervals = zeros((7))
 
     ## if mod(iter, 1) == 0:
@@ -222,7 +232,7 @@ best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
 #best = loads(best_fit)
 best_node_fit.remove_empty_nodes()
 
-filename = './treescripts/test_tree_full_logistic_mix_laplace.gdl'
+filename = './treescripts/noisy_tree_full_logistic_mix_laplace.gdl'
 fh2 = open(filename,'w')
 best_node_fit.print_graph_full_logistic(fh2)
 fh2.close()
@@ -236,3 +246,42 @@ traces = hstack([dp_alpha_traces, dp_gamma_traces, \
                 nodes_traces])
 numpy.savetxt('./mcmc-traces/test_full_logistic_mix_laplacetraces.csv', traces, delimiter = ',',
               header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces", comments='')
+
+numpy.savetxt('./mcmc-traces/noisy_full_logistic_mix_laplace_v_measure_traces.csv',
+              v_measure_traces,delimiter=',', header = 'homogeneity,completeness,v-measure', comments = '')
+## fn = './mcmc-traces/tssb_traces_creepers.pkl'
+## fh = open(fn, 'r')
+## tssb_trace = cPickle.load(fh)
+## fh.close() 
+## for idx, tssb in enumerate(tssb_traces):
+##     tssb_temp = loads(tssb[0])
+##     tssb_temp.remove_empty_nodes()
+##     fn3 = './treescripts/creeper-trees/creeper_trees_full_logistic_mix_laplace_%i.gdl' % (idx)
+##     fh3 = open(fn3,'w')
+##     tssb_temp.print_graph_full_logistic(fh3)
+##     fh3.close()
+
+## num_samples = tssb_traces.shape[0]
+## dp_alpha_traces    = zeros((num_samples, 1))
+## dp_gamma_traces    = zeros((num_samples, 1))
+## alpha_decay_traces = zeros((num_samples, 1))
+## cd_llh_traces      = zeros((num_samples, 1))
+## nodes_traces       = zeros((num_samples, 1))
+
+## for idx, tssb in enumerate(tssb_traces):
+##     tssb_temp = loads(tssb[0])
+##     dp_alpha_traces[idx]    = tssb_temp.dp_alpha
+##     dp_gamma_traces[idx]    = tssb_temp.dp_gamma
+##     alpha_decay_traces[idx] = tssb_temp.alpha_decay
+##     cd_llh_traces[idx]      = tssb_temp.complete_data_log_likelihood()
+##     (weights, nodes)        = tssb_temp.get_mixture()
+##     nodes_traces[idx]       = len(nodes)
+ 
+## traces = hstack([dp_alpha_traces, dp_gamma_traces, \
+##                 alpha_decay_traces, cd_llh_traces, \
+##                 nodes_traces])
+## numpy.savetxt('./mcmc-traces/creeper_full_logistic_mix_laplace_traces.csv',
+##               traces, delimiter = ',',
+##               header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces", comments='')
+
+
