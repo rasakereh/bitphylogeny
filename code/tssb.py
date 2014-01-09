@@ -937,3 +937,15 @@ class TSSB(object):
                 
         descend(self.root)
         self.resample_sticks()
+    
+    def deepest_node_depth(self):
+        def descend(root, depth):
+            if len(root['children']) == 0:
+                return depth
+            deepest = depth
+            for i, child in enumerate(root['children']):
+                hdepth = descend(child, depth+1)
+                if deepest < hdepth:
+                    deepest = hdepth
+            return deepest 
+        return descend(self.root, 1)
