@@ -39,6 +39,9 @@ for row in reader:
     ## data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8']),int(row['V9']),int(row['V10']),int(row['V11']),int(row['V12']),int(row['V13']),int(row['V14']),int(row['V15']),int(row['V16'])])
     data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
 data = numpy.array(data)
+
+data = data[2:,:] # remove the first 2 reads
+
 dims = data.shape[1]
 
 #freq = numpy.zeros([max_snvpos,2])

@@ -21,7 +21,7 @@ def laplacepdfln(x,m,std):
     return -log(2*std) - abs(x - m)/std
 
 def get_weights(parent_params, depth, ratemat):
-    mapper = (parent_params > ones(len(parent_params)))
+    mapper = (parent_params > zeros(len(parent_params)))
     weights = expm2(ratemat*(depth+1.0) )
     m1 = weights[1,1]
     m2 = weights[0,1]
@@ -51,7 +51,8 @@ def mixlaplacepdfln(x, m, std, parent_params, depth, ratemat):
     return sum(res)
 
 def rootprior(params, base_value, std, ratemat):
-    weights = dot(array([1,0]),expm2(ratemat))[1] * ones(len(params))
+    #weights = dot(array([1,0]),expm2(ratemat))[1] * ones(len(params))
+    weights = expm2(ratemat)[0,1]* ones(len(params))
     mapper = ( rand(len(weights)) < weights )
     m1 = laplace(base_value*ones(len(weights)), std*ones(len(weights)))
     m2 = laplace(-base_value*ones(len(weights)), std*ones(len(weights)))
@@ -183,8 +184,9 @@ class Logistic(Node):
                 rate1 = 1.0/8.0
 
             rate2 = 1-rate1
-            #scalar = 1/(2*rate1*rate2)
-            ratemat = array([[-rate1,rate1],[rate2,-rate2]])
+            #scalar = 5.0/(2*rate1*rate2)
+            scalar = 1.0
+            ratemat = scalar*array([[-rate1,rate1],[rate2,-rate2]])
             
             return ratemat
 
