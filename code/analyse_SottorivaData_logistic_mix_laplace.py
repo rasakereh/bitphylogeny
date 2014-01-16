@@ -14,12 +14,12 @@ from sklearn       import metrics
 
 
 
-rand_seed     = 1234
+rand_seed     = 1235
 max_data      = 100
 burnin        = 0
-num_samples   = 2000
+num_samples   = 3000
 checkpoint    = 50000
-dp_alpha      = 1.0
+dp_alpha      = 2.0
 dp_gamma      = 3e-1
 init_drift    = 0.5
 init_galpha   = 1
@@ -31,13 +31,17 @@ print "Codename: ", codename
 seed(rand_seed)
 
 
-files = ['output_CT_1_R.dat', 'output_CT_4_R.dat', 'output_CT_5_R.dat', 'output_CT_6_R.dat']
+files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv', 'CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv', 'CT_IRX2P_L2.csv', 'CT_IRX2P_L3.csv', 'CT_IRX2P_L7.csv','CT_IRX2P_L8.csv']
+#files = ['../cpgmethyl/output_CT_1_R.dat']
 
 output_depth = zeros((num_samples, len(files)))
+output_nodenum = zeros((num_samples, len(files)))
+output_unnormpost = zeros((num_samples, len(files)))
+output_bignodes = zeros((num_samples, len(files)))
 
 sampno = 0
 for seqsamp in files:
-    reader = csv.DictReader(open('./data/cpgmethyl/'+seqsamp),delimiter=',')
+    reader = csv.DictReader(open('./data/Sottoriva/'+seqsamp),delimiter=',')
     data = []
     dataid = []
     max_snvpos = 1
@@ -48,7 +52,6 @@ for seqsamp in files:
     data = numpy.array(data)
     dims = data.shape[1]
 
-    #root = Logistic( dims=dims, drift=init_drift, galpha=1.0, gbeta=0.1 )
     root = Logistic( dims=dims, mu = 5.0,
                  ratemat= array([[-1.0/8.0,1.0/8.0],[1.0/8.0,-1.0/8.0]]))
     tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
@@ -60,7 +63,9 @@ for seqsamp in files:
     galpha_traces      = zeros((num_samples, dims))
     gbeta_traces       = zeros((num_samples, dims))
     cd_llh_traces      = zeros((num_samples, 1))
+    unnorm_post        = zeros((num_samples, 1))
     nodes_traces       = zeros((num_samples, 1))
+    bignodes_traces    = zeros((num_samples, 1))
     tssb_traces        = empty((num_samples, 1),dtype = object)
     
     intervals = zeros((7))
@@ -89,13 +94,13 @@ for seqsamp in files:
         times.append(time.time())
     
         if iter > 0:
-        ##print "pre-treesamp:", tssb.unnormalized_postertior()
-            tssb.resample_tree_topology_root()
-        ##print "post-treesamp:", tssb.unnormalized_postertior()
+            #print "pre-treesamp:", tssb.unnormalized_postertior()
+            tssb.resample_tree_topology()
+            #print "post-treesamp:", tssb.unnormalized_postertior()
     
         
-        ##if iter > 0:
-        tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+        if iter > 2000:
+            tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
         times.append(time.time())
      
     
@@ -107,15 +112,17 @@ for seqsamp in files:
             dp_gamma_traces[iter]    = tssb.dp_gamma
             alpha_decay_traces[iter] = tssb.alpha_decay
             cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
+            unnorm_post[iter]        = tssb.unnormalized_postertior()
             (weights, nodes)         = tssb.get_mixture()
             nodes_traces[iter]       = len(nodes)
+            bignodes_traces[iter]    = sum(numpy.array(weights)>0.01)
         
         
         if mod(iter, 1) == 0:
             (weights, nodes) = tssb.get_mixture()
             print codename, iter, len(nodes), cd_llh_traces[iter], \
                 tssb.dp_alpha, tssb.dp_gamma, \
-                tssb.alpha_decay
+                tssb.alpha_decay, unnorm_post[iter], 'big nodes:', int(bignodes_traces[iter])
                 ## " ".join(map(lambda x: "%0.2f" % x, intervals.tolist())), \
                 ## float(root.hmc_accepts)/(root.hmc_accepts+root.hmc_rejects), \
                 ## root.hmc_accepts, root.hmc_rejects, time.strftime('%X %x %Z')
@@ -125,13 +132,25 @@ for seqsamp in files:
             print "\t%f is best per-data complete data likelihood so far." \
                 % (cd_llh_traces[iter]/max_data)
         
-        
-        depth = tssb.deepest_node_depth()
-        print depth
-        output_depth[iter,sampno] = depth
+        if iter >= 0:        
+            depth = tssb.deepest_node_depth()
+            output_depth[iter,sampno] = depth
+            output_nodenum[iter,sampno] = nodes_traces[iter]
+            output_unnormpost[iter,sampno] = unnorm_post[iter]
+            output_bignodes[iter,sampno] = bignodes_traces[iter]
        
     sampno = sampno + 1
 
 
-numpy.savetxt('./mcmc-traces/output_depth_CT_R.csv',
-              output_depth,delimiter=',', header = str.join(files), comments = '')
+numpy.savetxt('./mcmc-traces/output_CT_depth'+str(rand_seed)+'_CT.csv',
+              output_depth,delimiter=',', header = "'CT_R1','CT_R4','CT_R5','CT_R6','CT_L2','CT_L3','CT_L7','CT_L8'", comments = '')
+
+numpy.savetxt('./mcmc-traces/output_CT_nodenum'+str(rand_seed)+'_CT.csv',
+              output_nodenum,delimiter=',', header = "'CT_R1','CT_R4','CT_R5','CT_R6','CT_L2','CT_L3','CT_L7','CT_L8'", comments = '')
+
+numpy.savetxt('./mcmc-traces/output_CT_unnormpost'+str(rand_seed)+'_CT.csv',
+              output_unnormpost,delimiter=',', header = "'CT_R1','CT_R4','CT_R5','CT_R6','CT_L2','CT_L3','CT_L7','CT_L8'", comments = '')
+
+numpy.savetxt('./mcmc-traces/output_CT_bignodes'+str(rand_seed)+'_CT.csv',
+              output_bignodes,delimiter=',', header = "'CT_R1','CT_R4','CT_R5','CT_R6','CT_L2','CT_L3','CT_L7','CT_L8'", comments = '')
+

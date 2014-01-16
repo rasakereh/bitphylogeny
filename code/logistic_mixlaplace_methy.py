@@ -21,7 +21,7 @@ def laplacepdfln(x,m,std):
     return -log(2*std) - abs(x - m)/std
 
 def get_weights(parent_params, depth, ratemat):
-    mapper = (parent_params > zeros(len(parent_params)))
+    mapper = (parent_params > ones(len(parent_params)))
     weights = expm2(ratemat*(depth+1.0) )
     m1 = weights[1,1]
     m2 = weights[0,1]
@@ -159,8 +159,8 @@ class Logistic(Node):
 
             return llh
 
-        
-        self.params = slice_sample(self.params, logpost,
+        for i in range(5):
+            self.params = slice_sample(self.params, logpost,
                                    sigma = 5.0, step_out=True, compwise=False)      
         self._cache_sigmoidln()
 
