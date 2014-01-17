@@ -1,0 +1,25 @@
+graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      60                                            yspace:            20                                           xspace:            5 
+node: { label:"141 ~ Genotype  0.99 1.00 0.00 0.91 0.25 1.00 0.86 0.00 
+ Branch Length: 0.78 Node Mass: 0.05 " title:"X" width:300}
+node: {  label:"1028 ~ Genotype  0.63 0.34 0.09 0.86 0.78 0.95 0.87 0.60 
+ Branch Length: 5.28 Node Mass: 0.58 " title:"X-0" width:300}
+edge: { source:"X" target:"X-0" anchor:1}
+node: {  label:"217 ~ Genotype  0.01 0.01 0.01 0.99 0.99 0.99 0.99 0.01 
+ Branch Length: 7.24 Node Mass: 0.14 " title:"X-1" width:300}
+edge: { source:"X" target:"X-1" anchor:1}
+node: {  label:"546 ~ Genotype  0.99 0.99 0.01 0.99 0.01 0.99 0.99 0.99 
+ Branch Length: 0.20 Node Mass: 0.28 " title:"X-2" width:300}
+edge: { source:"X" target:"X-2" anchor:1}
+node: {  label:"0 ~ Genotype  0.33 0.04 0.02 0.94 0.02 0.53 0.00 0.00 
+ Branch Length: 0.78 Node Mass: 0.00 " title:"X-3" width:300}
+edge: { source:"X" target:"X-3" anchor:1}
+node: {  label:"0 ~ Genotype  0.17 0.00 0.99 0.97 0.01 0.94 0.00 0.07 
+ Branch Length: 2.64 Node Mass: 0.00 " title:"X-4" width:300}
+edge: { source:"X" target:"X-4" anchor:1}
+node: {  label:"0 ~ Genotype  0.01 0.99 0.15 0.99 1.00 1.00 0.02 0.99 
+ Branch Length: 1.06 Node Mass: 0.00 " title:"X-5" width:300}
+edge: { source:"X" target:"X-5" anchor:1}
+node: {  label:"1 ~ Genotype  0.99 0.00 0.01 0.21 0.01 1.00 0.01 0.09 
+ Branch Length: 1.16 Node Mass: 0.00 " title:"X-6" width:300}
+edge: { source:"X" target:"X-6" anchor:1}
+}

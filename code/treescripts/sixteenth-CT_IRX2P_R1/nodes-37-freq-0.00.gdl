@@ -1,0 +1,112 @@
+graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      60                                            yspace:            20                                           xspace:            5 
+node: { label:"67 ~ Genotype  1.00 1.00 0.00 0.99 0.00 1.00 1.00 0.00 
+ Branch Length: 4.84 Node Mass: 0.01 " title:"X" width:300}
+node: {  label:"42 ~ Genotype  0.99 0.99 0.01 0.99 0.99 0.99 0.99 0.99 
+ Branch Length: 2.94 Node Mass: 0.02 " title:"X-0" width:300}
+edge: { source:"X" target:"X-0" anchor:1}
+node: {  label:"13 ~ Genotype  0.99 0.01 0.01 0.99 0.01 0.99 0.99 0.99 
+ Branch Length: 4.11 Node Mass: 0.01 " title:"X-0-0" width:300}
+edge: { source:"X-0" target:"X-0-0" anchor:1}
+node: {  label:"7 ~ Genotype  0.99 0.99 0.01 0.99 0.99 0.01 0.99 0.01 
+ Branch Length: 4.54 Node Mass: 0.00 " title:"X-0-0-0" width:300}
+edge: { source:"X-0-0" target:"X-0-0-0" anchor:1}
+node: {  label:"521 ~ Genotype  0.99 0.99 0.01 0.99 0.01 0.99 0.99 0.99 
+ Branch Length: 5.31 Node Mass: 0.28 " title:"X-0-0-0-0" width:300}
+edge: { source:"X-0-0-0" target:"X-0-0-0-0" anchor:1}
+node: {  label:"0 ~ Genotype  0.01 0.99 0.99 0.99 0.99 0.99 0.99 0.99 
+ Branch Length: 7.97 Node Mass: 0.00 " title:"X-0-0-0-1" width:300}
+edge: { source:"X-0-0-0" target:"X-0-0-0-1" anchor:1}
+node: {  label:"3 ~ Genotype  0.01 0.01 0.99 0.99 0.99 0.99 0.99 0.01 
+ Branch Length: 5.91 Node Mass: 0.00 " title:"X-0-0-0-1-0" width:300}
+edge: { source:"X-0-0-0-1" target:"X-0-0-0-1-0" anchor:1}
+node: {  label:"21 ~ Genotype  0.99 0.01 0.01 0.01 0.01 0.99 0.99 0.99 
+ Branch Length: 1.18 Node Mass: 0.01 " title:"X-0-1" width:300}
+edge: { source:"X-0" target:"X-0-1" anchor:1}
+node: {  label:"2 ~ Genotype  0.99 0.99 0.01 0.99 0.99 0.01 0.99 0.99 
+ Branch Length: 1.73 Node Mass: 0.00 " title:"X-0-1-0" width:300}
+edge: { source:"X-0-1" target:"X-0-1-0" anchor:1}
+node: {  label:"1 ~ Genotype  0.99 0.01 0.01 0.01 0.99 0.99 0.99 0.01 
+ Branch Length: 2.17 Node Mass: 0.00 " title:"X-0-1-0-0" width:300}
+edge: { source:"X-0-1-0" target:"X-0-1-0-0" anchor:1}
+node: {  label:"0 ~ Genotype  0.01 0.01 0.99 0.99 0.99 0.99 0.99 0.99 
+ Branch Length: 2.94 Node Mass: 0.00 " title:"X-0-2" width:300}
+edge: { source:"X-0" target:"X-0-2" anchor:1}
+node: {  label:"0 ~ Genotype  0.99 0.01 0.99 0.99 0.99 0.01 0.01 0.01 
+ Branch Length: 2.94 Node Mass: 0.00 " title:"X-0-3" width:300}
+edge: { source:"X-0" target:"X-0-3" anchor:1}
+node: {  label:"0 ~ Genotype  0.99 0.99 0.99 0.01 0.99 0.99 0.01 0.99 
+ Branch Length: 2.54 Node Mass: 0.00 " title:"X-0-4" width:300}
+edge: { source:"X-0" target:"X-0-4" anchor:1}
+node: {  label:"0 ~ Genotype  0.99 0.99 0.01 0.99 0.99 0.99 0.99 0.99 
+ Branch Length: 4.09 Node Mass: 0.00 " title:"X-0-4-0" width:300}
+edge: { source:"X-0-4" target:"X-0-4-0" anchor:1}
+node: {  label:"0 ~ Genotype  0.99 0.99 0.99 0.99 0.99 0.01 0.01 0.99 
+ Branch Length: 0.55 Node Mass: 0.00 " title:"X-0-4-1" width:300}
+edge: { source:"X-0-4" target:"X-0-4-1" anchor:1}
+node: {  label:"0 ~ Genotype  0.01 0.99 0.99 0.99 0.99 0.01 0.99 0.99 
+ Branch Length: 3.83 Node Mass: 0.00 " title:"X-0-4-2" width:300}
+edge: { source:"X-0-4" target:"X-0-4-2" anchor:1}
+node: {  label:"0 ~ Genotype  0.01 0.99 0.99 0.01 0.01 0.01 0.01 0.99 
+ Branch Length: 7.77 Node Mass: 0.00 " title:"X-0-4-2-0" width:300}
+edge: { source:"X-0-4-2" target:"X-0-4-2-0" anchor:1}
+node: {  label:"1 ~ Genotype  0.99 0.99 0.01 0.99 0.99 0.01 0.99 0.99 
+ Branch Length: 3.89 Node Mass: 0.00 " title:"X-0-4-2-1" width:300}
+edge: { source:"X-0-4-2" target:"X-0-4-2-1" anchor:1}
+node: {  label:"59 ~ Genotype  0.03 0.00 0.01 0.99 1.00 1.00 0.00 0.00 
+ Branch Length: 4.95 Node Mass: 0.03 " title:"X-1" width:300}
+edge: { source:"X" target:"X-1" anchor:1}
+node: {  label:"474 ~ Genotype  0.14 0.02 0.07 0.99 0.96 0.98 1.00 0.34 
+ Branch Length: 0.76 Node Mass: 0.25 " title:"X-1-0" width:300}
+edge: { source:"X-1" target:"X-1-0" anchor:1}
+node: {  label:"239 ~ Genotype  0.96 0.68 0.01 0.84 0.67 1.00 0.88 0.30 
+ Branch Length: 2.71 Node Mass: 0.12 " title:"X-1-0-0" width:300}
+edge: { source:"X-1-0" target:"X-1-0-0" anchor:1}
+node: {  label:"21 ~ Genotype  0.97 1.00 0.15 0.97 0.04 1.00 0.00 0.07 
+ Branch Length: 1.10 Node Mass: 0.01 " title:"X-1-0-0-0" width:300}
+edge: { source:"X-1-0-0" target:"X-1-0-0-0" anchor:1}
+node: {  label:"37 ~ Genotype  0.60 0.00 0.03 0.32 0.24 1.00 0.92 0.41 
+ Branch Length: 4.17 Node Mass: 0.02 " title:"X-1-0-0-0-0" width:300}
+edge: { source:"X-1-0-0-0" target:"X-1-0-0-0-0" anchor:1}
+node: {  label:"9 ~ Genotype  0.99 0.44 0.03 1.00 0.81 0.92 0.75 0.63 
+ Branch Length: 4.38 Node Mass: 0.01 " title:"X-1-0-0-0-1" width:300}
+edge: { source:"X-1-0-0-0" target:"X-1-0-0-0-1" anchor:1}
+node: {  label:"8 ~ Genotype  0.27 0.88 0.00 0.94 0.05 0.99 1.00 0.82 
+ Branch Length: 7.33 Node Mass: 0.01 " title:"X-1-0-0-0-2" width:300}
+edge: { source:"X-1-0-0-0" target:"X-1-0-0-0-2" anchor:1}
+node: {  label:"1 ~ Genotype  0.42 0.94 0.25 0.42 0.09 1.00 0.04 0.70 
+ Branch Length: 7.84 Node Mass: 0.00 " title:"X-1-0-1" width:300}
+edge: { source:"X-1-0" target:"X-1-0-1" anchor:1}
+node: {  label:"53 ~ Genotype  0.18 0.32 0.11 0.96 0.00 0.99 1.00 0.96 
+ Branch Length: 7.49 Node Mass: 0.02 " title:"X-1-1" width:300}
+edge: { source:"X-1" target:"X-1-1" anchor:1}
+node: {  label:"24 ~ Genotype  0.98 0.00 0.00 0.96 0.99 0.02 0.98 0.00 
+ Branch Length: 4.68 Node Mass: 0.01 " title:"X-1-1-0" width:300}
+edge: { source:"X-1-1" target:"X-1-1-0" anchor:1}
+node: {  label:"43 ~ Genotype  0.12 0.88 1.00 1.00 1.00 0.98 1.00 0.25 
+ Branch Length: 3.81 Node Mass: 0.02 " title:"X-1-2" width:300}
+edge: { source:"X-1" target:"X-1-2" anchor:1}
+node: {  label:"50 ~ Genotype  0.82 0.01 0.07 0.59 1.00 1.00 0.01 0.90 
+ Branch Length: 5.12 Node Mass: 0.03 " title:"X-1-2-0" width:300}
+edge: { source:"X-1-2" target:"X-1-2-0" anchor:1}
+node: {  label:"1 ~ Genotype  0.89 1.00 0.87 0.95 0.90 0.93 0.05 0.74 
+ Branch Length: 7.32 Node Mass: 0.00 " title:"X-1-2-0-0" width:300}
+edge: { source:"X-1-2-0" target:"X-1-2-0-0" anchor:1}
+node: {  label:"42 ~ Genotype  0.99 0.99 0.01 0.01 0.01 0.99 0.99 0.99 
+ Branch Length: 4.28 Node Mass: 0.02 " title:"X-2" width:300}
+edge: { source:"X" target:"X-2" anchor:1}
+node: {  label:"134 ~ Genotype  0.99 0.01 0.01 0.99 0.99 0.99 0.99 0.99 
+ Branch Length: 2.47 Node Mass: 0.07 " title:"X-2-0" width:300}
+edge: { source:"X-2" target:"X-2-0" anchor:1}
+node: {  label:"1 ~ Genotype  0.99 0.99 0.99 0.99 0.01 0.99 0.99 0.99 
+ Branch Length: 2.23 Node Mass: 0.00 " title:"X-2-0-0" width:300}
+edge: { source:"X-2-0" target:"X-2-0-0" anchor:1}
+node: {  label:"37 ~ Genotype  0.99 0.99 0.01 0.99 0.99 0.99 0.99 0.99 
+ Branch Length: 3.14 Node Mass: 0.02 " title:"X-2-0-0-0" width:300}
+edge: { source:"X-2-0-0" target:"X-2-0-0-0" anchor:1}
+node: {  label:"20 ~ Genotype  0.99 0.99 0.01 0.01 0.99 0.99 0.99 0.01 
+ Branch Length: 7.38 Node Mass: 0.01 " title:"X-2-0-0-1" width:300}
+edge: { source:"X-2-0-0" target:"X-2-0-0-1" anchor:1}
+node: {  label:"2 ~ Genotype  0.02 0.83 0.01 1.00 0.01 0.00 0.69 0.00 
+ Branch Length: 7.23 Node Mass: 0.00 " title:"X-3" width:300}
+edge: { source:"X" target:"X-3" anchor:1}
+}
