@@ -8,15 +8,16 @@ import ipdb
 from numpy         import *
 from numpy.random  import *
 from tssb          import *
-from logistic_mixlaplace_methy   import *
+from logistic_mixlaplace_methy_test   import *
 from util          import *
 from scipy.stats   import itemfreq
 from sklearn       import metrics 
 
-rand_seed     = 1234
+#rand_seed     = 1234
+rand_seed     = 1264
 max_data      = 100
 burnin        = 0
-num_samples   = 2000
+num_samples   = 20000
 checkpoint    = 50000
 dp_alpha      = 1
 dp_gamma      = 3e-1
@@ -40,7 +41,7 @@ for row in reader:
     data.append([int(row['V1']),int(row['V2']),int(row['V3']),int(row['V4']),int(row['V5']),int(row['V6']),int(row['V7']),int(row['V8'])])
 data = numpy.array(data)
 
-data = data[2:,:] # remove the first 2 reads
+#data = data[2:,:] # remove the first 2 reads
 
 dims = data.shape[1]
 
@@ -78,6 +79,7 @@ cd_llh_traces      = zeros((num_samples, 1))
 nodes_traces       = zeros((num_samples, 1))
 tssb_traces        = empty((num_samples, 1),dtype = object)
 silhouette_traces  = zeros((num_samples, 1))
+bignodes_traces    = zeros((num_samples, 1))
 
 intervals = zeros((7))
 print "Starting MCMC run..."
@@ -125,7 +127,8 @@ for iter in range(-burnin,num_samples):
         cd_llh_traces[iter]      = tssb.complete_data_log_likelihood()
         (weights, nodes)         = tssb.get_mixture()
         nodes_traces[iter]       = len(nodes)
-        data_assign = array(array(tssb.assignments),dtype='str')
+        bignodes_traces[iter]    = sum(numpy.array(weights)>0.01)
+        ##data_assign = array(array(tssb.assignments),dtype='str')
         ## silhouette_traces[iter] = metrics.silhouette_score(data,
         ##                                                    data_assign,
         ##                                                    metric='hamming')
@@ -140,7 +143,7 @@ for iter in range(-burnin,num_samples):
         (weights, nodes) = tssb.get_mixture()
         print codename, iter, len(nodes), cd_llh_traces[iter], \
            root.base_value, root.std, \
-           root.root_bias+root.base_value ,\
+           root.root_bias+root.base_value , 'big nodes:', int(bignodes_traces[iter]),\
            tssb.dp_alpha, tssb.dp_gamma, \
            tssb.alpha_decay
           
@@ -176,58 +179,32 @@ for iter in range(-burnin,num_samples):
 ## fh.close()
 
 nodes_tabular = itemfreq(nodes_traces)
-best_num_nodes = nodes_tabular[argmax(nodes_tabular[:,1]),0]
-best_num_nodes_llh = cd_llh_traces[nodes_traces==best_num_nodes].max()
-best_node_fit = cPickle.loads(tssb_traces[cd_llh_traces==best_num_nodes_llh][0])
+tree_folder = './treescripts/%s-CT_IRX2P_R1/' %(codename)
 
-## (weights_best, nodes_best) = best_node_fit.get_mixture()
-## yy = linspace(0,1,1000)
-## pp = zeros(yy.shape) 
-
-## for kk in range(len(weights_best)):
-##     pp = pp + weights_best[kk]*1/sqrt(2*pi*nodes_best[kk].params[1]**2) * \
-##       exp(-0.5*(yy-nodes_best[kk].params[0])**2/ nodes_best[kk].params[1]**2)
-
-## fig1 = plt.figure(1)
-## plt.plot(cd_llh_traces)
-## ## plt.savefig('figures/PairLogistic1_trace_39.pdf',format='pdf')
-## ## clf()
-
-## filename_best = "bests/PairLogistic1_test.pkl" 
-## fh = open(filename_best, 'w')
-## cPickle.dump(best_node_fit, fh)
-## fh.close()
-
-## fn = "bests/PairLogistic1_test.pkl"
-## fh = open(fn, 'r')
-## best_node_fit = cPickle.load(fh)
-## fh.close()
-
-## fig2 = plt.figure(2)
-## plt.plot(yy,pp, color = 'b')
-## plt.plot(data,-0.1*ones(data.shape), linestyle = 'none',
-##          color = 'g', marker = 'x')
-## #plt.ylim((-0.2,0.8))
-## plt.savefig('figures/PairLogistic1_39.pdf', format='pdf')
-## clf()
-
-## subplot(1,3,1)
-## plot(nodes_best[0].params)
-## subplot(1,3,2)
-## plot(nodes_best[1].params)
-## subplot(1,3,3)
-## plot(nodes_best[2].params)
+if not os.path.exists(tree_folder):
+    os.makedirs(tree_folder)
 
 
-best = loads(best_fit)
-best.remove_empty_nodes()
+for idx, nn in enumerate(nodes_tabular):
+    node_num = nn[0]
+    node_freq = nn[1]/num_samples 
+    node_num_best_llh = cd_llh_traces[nodes_traces==node_num].max()
+    node_fit = cPickle.loads(tssb_traces[cd_llh_traces==node_num_best_llh][0])
+    filename = 'nodes-%i-freq-%0.2f.gdl' % (node_num, node_freq)
+    fn2 = tree_folder + filename
+    fh2 = open(fn2,'w')
+    node_fit.print_graph_full_logistic(fh2)
+    fh2.close()
 
-filename = './treescripts/CT_IRX2P_R1.gdl'
-fh2 = open(filename,'w')
-best.print_graph_full_logistic(fh2)
-fh2.close()
-        
-## filename = 'treescripts/testgraph_PairLogistic1.gdl'
-## fh2 = open(filename,'w')
-## best_node_fit.print_graph(fh2)
-## fh2.close()
+traces = hstack([dp_alpha_traces, dp_gamma_traces, \
+                alpha_decay_traces, cd_llh_traces, \
+                nodes_traces])
+tracefile = './mcmc-traces/%s_CT_IRX2P_R1_traces.csv' % (codename)
+numpy.savetxt(tracefile, traces, delimiter = ',',
+              header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces", comments='')
+
+
+fn = '/home/yuan03/%s-20k-tssb-trace-CT-IRX2P-R1.pkl' % (codename)
+fh = open(fn,'w')
+cPickle.dump(tssb_traces,fh)
+fh.close()
