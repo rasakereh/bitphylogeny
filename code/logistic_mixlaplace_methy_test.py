@@ -268,7 +268,7 @@ class Logistic(Node):
                 llh = 0.0
                 for child in root.children():
                     llh = llh + mixlaplacepdfln(child.params, (mu, -mu), self.std, \
-                                          root.params, child.depth, self.ratemat  )
+                                          root.params, child.depth, child.ratemat  )
                     llh = llh + loglh(child)
                 return llh
             return loglh(self) + rootpriorpdfln(self.params,
@@ -300,7 +300,7 @@ class Logistic(Node):
                     llh = llh + mixlaplacepdfln(child.params,
                                                 (self.base_value, -self.base_value),
                                                 est_std, root.params,
-                                                child.depth, self.ratemat  )
+                                                child.depth, child.ratemat)
                     llh = llh + loglh(child)
                 return llh
             return loglh(self) + rootpriorpdfln(self.params,
