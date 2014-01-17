@@ -865,6 +865,9 @@ class TSSB(object):
         print >>fh, """}"""
 
     def print_graph_full_logistic(self, fh, base_width=5, min_width=300):
+        edges   = sticks_to_edges(self.root['sticks'])
+        weights = diff(hstack([0.0, edges]))
+        root_mass = weights[0] * self.root['main']
         print >>fh, """graph: { title:            "TSSB Graph"  \
                                 portsharing:      no            \
                                 smanhattanedges:  yes           \
@@ -872,11 +875,12 @@ class TSSB(object):
                                 equalydist:       yes           \
                                 layout_algorithm: tree          \
                                 node.fontname:    "helvR8"      \
-                                node.height:      200            \
+                                node.height:      60            \
                                 yspace:            20           \
                                 xspace:            5 """
         print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
             " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(8)]))), \
+            "\n Branch Length: %0.2f Node Mass: %0.2f" % (self.root['node'].branch_length, root_mass), \
             """" title:"%s" width:%d}""" \
           %("X", min_width)
         def descend(root, name, mass):
@@ -888,6 +892,7 @@ class TSSB(object):
                 child_mass = mass * weights[i] * child['main']
                 print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
                 " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(8)]))), \
+                "\n Branch Length: %0.2f Node Mass: %0.2f" % (child['node'].branch_length, child_mass),\
                 """" title:"%s" width:%d}""" \
                     %(child_name, min_width)
                 print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
