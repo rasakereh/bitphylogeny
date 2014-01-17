@@ -82,8 +82,10 @@ def estimate_ratemat(parent_params, params, branch_length):
     rate1 = mean(sum(pp, axis=1).astype(float64)/m)
             
 
-    if rate1 == 0.0 or rate1 == 1.0:
-        rate1 = 1.0/8.0
+    if rate1 == 0.0:
+        rate1 = 0.0 + numpy.finfo(numpy.float64).eps
+    if rate1 == 1.0:
+        rate1 = 1.0-numpy.finfo(numpy.float64).eps
 
     rate2 = 1-rate1
 
@@ -100,7 +102,7 @@ class Logistic(Node):
     max_mu0   = 5.0
     min_mu    = 2.0
     max_mu    = 7.0
-    min_std   = 1e-3
+    min_std   = 1e-1
     max_std   = 5.0
     min_branch_length = 0.0
     max_branch_length = 8.0
@@ -108,7 +110,7 @@ class Logistic(Node):
 
     def __init__(self, parent=None, dims=1, tssb=None, mu = 3.0, mu0 = 3.0,
                  ratemat = (32.0/7.0)*array([[-1.0/8.0,1.0/8.0],[7.0/8.0,-7.0/8.0]]),
-                 branch_length = 1.0, std = 1e-2 ):
+                 branch_length = 1.0, std =0.5 ):
         super(Logistic, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
@@ -184,7 +186,7 @@ class Logistic(Node):
               sum((num_data-counts)*sigmoidln(-params))
 
             for child in self.children():
-                llh = llh + mixlaplacepdfln(child.params, mm, std, params,depth+1.0,
+                llh = llh + mixlaplacepdfln(child.params, mm, std, params, depth+1.0,
                                             ratemat)
 
             return llh
