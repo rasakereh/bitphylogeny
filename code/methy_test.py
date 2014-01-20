@@ -44,8 +44,7 @@ for seqsamp in files:
     data = numpy.array(data)
     dims = data.shape[1]
 
-    root = Logistic( dims=dims, mu = 5.0,
-                    ratemat= array([[-1.0/8.0,1.0/8.0],[1.0/8.0,-1.0/8.0]]))
+    root = Logistic( dims=dims, mu = 5.0)
     tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
                 root_node=root, data=data )
 
