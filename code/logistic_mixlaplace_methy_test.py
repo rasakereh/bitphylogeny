@@ -43,8 +43,8 @@ def mixlaplacepdfln(x, m, std, parent_params, depth, ratemat):
     res = empty(len(x))
     for index , d in enumerate(x):
         l1 = log( weights[index] ) + laplacepdfln(d, m[0][0], std)
-        if weights[index] == 1.0:
-            res[index] = l1
+        if isnan(log(1-weights[index])):
+            res[index] = laplacepdfln(d, m[0][0], std)
         else:
             l2 = log(1- weights[index]) + laplacepdfln(d, m[1][0], std)
             res[index] = logsumexp( (l1, l2) )
@@ -116,25 +116,22 @@ class Logistic(Node):
         if parent is None:
             self.dims   = dims
             self.depth  = 0.0
-            self.root_bias = mu0*ones(1)
-            self.base_value = mu*ones(1)
-            self.std = std*ones(1)
+            self._root_bias = mu0*ones(1)
+            self._base_value = mu*ones(1)
+            self._std = std*ones(1)
             self.ratemat = ratemat
             self.branch_length = branch_length*ones(1)
-            self.params = rootprior(-(self.base_value+self.root_bias) *ones(dims),
-                                    self.base_value + self.root_bias,
-                                    self.std, self.ratemat)
+            self.params = rootprior(-(self._base_value+self._root_bias) *ones(dims),
+                                    self._base_value + self._root_bias,
+                                    self._std, self.ratemat)
             
         else:
             self.dims   = parent.dims
             self.depth  = parent.depth + 1.0
-            self.root_bias = parent.root_bias
-            self.base_value = parent.base_value
-            self.std = parent.std
             self.ratemat = parent.ratemat
             self.branch_length = parent.branch_length
-            self.params = mixlaplaceprior(parent.params, self.base_value,
-                                          self.std, self.depth, self.ratemat)
+            self.params = mixlaplaceprior(parent.params, self.mu_caller(),
+                                          self.std_caller(), self.depth, self.ratemat)
 
             if any(abs(self.params)>self.max_param):
                 for index, x in enumerate(self.params):
@@ -149,9 +146,21 @@ class Logistic(Node):
 
     def mu_caller(self):
         if self.parent() is None:
-            return self._mu
+            return self._base_value
         else:
             return self.parent().mu_caller()
+
+    def mu0_caller(self):
+        if self.parent() is None:
+            return self._root_bias
+        else:
+            return self.parent().mu0_caller()
+
+    def std_caller(self):
+        if self.parent() is None:
+            return self._std
+        else:
+            return self.parent().std_caller()
         
     def sample(self, args):
         num_data = args['num_data'] if args.has_key('num_data') else 1
@@ -162,8 +171,8 @@ class Logistic(Node):
         data       = self.get_data()
         counts     = sum(data, axis=0)
         num_data   = data.shape[0]
-        mm         = (self.base_value, -self.base_value)
-        std        = self.std
+        mm         = (self.mu_caller(), -self.mu_caller())
+        std        = self.std_caller()
         depth      = self.depth
         ratemat    = self.ratemat
 
@@ -174,8 +183,8 @@ class Logistic(Node):
                 llh = float('-inf')
 
             if self.parent() is None:
-                llh = rootpriorpdfln(params, (self.base_value + self.root_bias,
-                                              -self.base_value - self.root_bias),
+                llh = rootpriorpdfln(params, (self.mu_caller() + self.mu0_caller(),
+                                              -self.mu_caller() - self.mu0_caller()),
                                      std,
                                      ratemat)
             else:
@@ -209,8 +218,8 @@ class Logistic(Node):
             if self.parent() is None:
                 parent_params = zeros(len(self.params))
                 ratemat = estimate_ratemat(parent_params, params, branch_length)
-                llh = rootpriorpdfln(params, (self.base_value + self.root_bias,
-                                              -self.base_value - self.root_bias),
+                llh = rootpriorpdfln(params, (self.mu_caller() + self.mu0_caller(),
+                                              -self.mu_caller() - self.mu0_caller()),
                                      std, ratemat)
             else:
                 parent_params = self.parent().params    
@@ -239,58 +248,36 @@ class Logistic(Node):
         if self.parent() is not None:
             raise Exception("Can only update hypers from root!")
 
-        ## def estimate_ratemat(root):
-        ##     (w,nodes) = root.tssb.get_mixture()
-        ##     params = []
-        ##     for idx, nn in enumerate(nodes):
-        ##         pp = nn.params
-        ##         pp = (pp > ones(len(pp)))
-        ##         params.append(pp)
-
-        ##     params = array(params)
-        ##     rate1 = mean(sum(params, axis=1).astype(float64)/len(pp))
-
-        ##     if rate1 == 0.0 or rate1 == 1.0:
-        ##         rate1 = 1.0/8.0
-
-        ##     rate2 = 1-rate1
-        ##     #scalar = 5.0/(2*rate1*rate2)
-        ##     scalar = 1.0
-        ##     ratemat = scalar*array([[-rate1,rate1],[rate2,-rate2]])
-            
-        ##     return ratemat
-
-        ## self.ratemat = estimate_ratemat(self)
-         
-                
         def logpost_mu(mu):
             if any(mu < self.min_mu) or any(mu > self.max_mu):
                 return float('-inf')
             def loglh(root):
                 llh = 0.0
                 for child in root.children():
-                    llh = llh + mixlaplacepdfln(child.params, (mu, -mu), self.std, \
-                                          root.params, child.depth, child.ratemat  )
+                    llh = llh + mixlaplacepdfln(child.params, (mu, -mu),
+                                                child.std_caller(),
+                                                root.params, child.depth,
+                                                child.ratemat)
                     llh = llh + loglh(child)
                 return llh
             return loglh(self) + rootpriorpdfln(self.params,
-                                                (mu+self.root_bias,
-                                                 - mu-self.root_bias ), self.std, \
+                                                (mu+self.mu0_caller(),
+                                                 - mu-self.mu0_caller() ),
+                                                self.std_caller(), 
                                                 self.ratemat) 
 
-        self.base_value = slice_sample(self.base_value, logpost_mu,
+        self._base_value = slice_sample(self._base_value, logpost_mu,
                                        sigma = 1.0, step_out=True, compwise=True)
-
 
         def logpost_mu0(mu0):
             if any(mu0 < self.min_mu0) or any(mu0 > self.max_mu0):
                 return float('-inf')
            
-            return rootpriorpdfln(self.params, (self.base_value + mu0,
-                                                -self.base_value - mu0),
-                                   self.std, self.ratemat) 
+            return rootpriorpdfln(self.params, (self.mu_caller() + mu0,
+                                                -self.mu_caller() - mu0),
+                                   self.std_caller(), self.ratemat) 
 
-        self.root_bias = slice_sample(self.root_bias, logpost_mu0,
+        self._root_bias = slice_sample(self._root_bias, logpost_mu0,
                                       sigma = 1.0, step_out=True, compwise=True)
 
         def logpost_std(est_std):
@@ -300,18 +287,21 @@ class Logistic(Node):
                 llh = 0.0
                 for child in root.children():
                     llh = llh + mixlaplacepdfln(child.params,
-                                                (self.base_value, -self.base_value),
+                                                (child.mu_caller(),
+                                                 -child.mu_caller()),
                                                 est_std, root.params,
                                                 child.depth, child.ratemat)
                     llh = llh + loglh(child)
                 return llh
             return loglh(self) + rootpriorpdfln(self.params,
-                                                (self.base_value + self.root_bias,
-                                                 -self.base_value - self.root_bias),
+                                                (self.mu_caller() + self.mu0_caller(),
+                                                 -self.mu_caller() - self.mu0_caller()),
                                                 est_std, self.ratemat) 
 
-        self.std = slice_sample(self.std, logpost_std,
+        self._std = slice_sample(self._std, logpost_std,
                                 sigma = 1.0, step_out=True, compwise=True)
+
+       
 
 
     def logprob(self, x):
@@ -324,21 +314,19 @@ class Logistic(Node):
 
         if self.parent() is None:
             llh = rootpriorpdfln(self.params,
-                                 (self.base_value+self.root_bias,
-                                  -self.base_value-self.root_bias),
-                                 self.std, self.ratemat)
+                                 (self.mu_caller()+self.mu0_caller(),
+                                  -self.mu_caller()-self.mu0_caller()),
+                                 self.std_caller(), self.ratemat)
         else:
-            llh = mixlaplacepdfln(self.params,(self.base_value,-self.base_value),
-                                  self.std, self.parent().params, self.depth,
+            llh = mixlaplacepdfln(self.params,(self.mu_caller(),-self.mu_caller()),
+                                  self.std_caller(), self.parent().params, self.depth,
                                   self.ratemat)
 
         for child in self.children():
             llh = llh + mixlaplacepdfln(child.params,
-                                        (self.base_value,-self.base_value),
-                                        self.std, self.params,
+                                        (self.mu_caller(),-self.mu_caller()),
+                                        self.std_caller(), self.params,
                                         self.depth + 1.0, self.ratemat)
        
         return llh
-        
     
-        

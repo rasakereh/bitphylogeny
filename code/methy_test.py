@@ -106,15 +106,15 @@ for seqsamp in files:
             bignodes_traces[iter]    = sum(numpy.array(weights)>0.01)
             unnormpost_traces[iter]  = tssb.unnormalized_postertior()
             depth_traces[iter]       = tssb.deepest_node_depth()
-            base_value_traces[iter]  = root.base_value
-            std_traces[iter]         = root.std
-            root_bias_traces[iter]   = root.root_bias
+            base_value_traces[iter]  = root.mu_caller()
+            std_traces[iter]         = root.std_caller()
+            root_bias_traces[iter]   = root.mu0_caller()
             
         if mod(iter, 1) == 0:
             (weights, nodes) = tssb.get_mixture()
             print codename, iter, len(nodes), cd_llh_traces[iter], \
-              root.base_value, root.std, \
-              root.root_bias+root.base_value , 'big nodes:', int(bignodes_traces[iter]),\
+              root.mu_caller(), root.std_caller(), \
+              root.mu0_caller()+root.mu_caller() , 'big nodes:', int(bignodes_traces[iter]),\
               tssb.dp_alpha, tssb.dp_gamma, \
               tssb.alpha_decay
           
@@ -139,7 +139,7 @@ for seqsamp in files:
         filename = 'nodes-%i-freq-%0.4f.gdl' % (node_num, node_freq)
         fn2 = tree_folder + filename
         fh2 = open(fn2,'w')
-        node_fit.print_graph_full_logistic(fh2)
+        node_fit.print_graph_full_logistic_different_branch_length(fh2)
         fh2.close()
 
     traces = hstack([dp_alpha_traces, dp_gamma_traces,\
