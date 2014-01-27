@@ -13,11 +13,11 @@ from util          import *
 from scipy.stats   import itemfreq
 from sklearn       import metrics 
 
-#rand_seed     = 1234
-rand_seed     = 1264
+rand_seed     = 1234
+#rand_seed     = 1264
 max_data      = 100
 burnin        = 0
-num_samples   = 2
+num_samples   = 20000
 checkpoint    = 50000
 dp_alpha      = 1
 dp_gamma      = 3e-1
@@ -30,7 +30,7 @@ print "Codename: ", codename
 
 seed(rand_seed)
 
-files = ['CT_IRX2P_R4.csv', 'CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv']
+files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv', 'CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv']
 
 sampno = 0
 for seqsamp in files:
@@ -53,7 +53,7 @@ for seqsamp in files:
     alpha_decay_traces = zeros((num_samples, 1))
     cd_llh_traces      = zeros((num_samples, 1))
     nodes_traces       = zeros((num_samples, 1))
-    tssb_traces        = empty((num_samples, 1),dtype = object)
+    #tssb_traces        = empty((num_samples, 1),dtype = object)
     bignodes_traces    = zeros((num_samples, 1))
     unnormpost_traces  = zeros((num_samples, 1))
     depth_traces       = zeros((num_samples, 1))
@@ -95,7 +95,7 @@ for seqsamp in files:
         intervals = intervals + diff(array(times))   
     
         if iter >= 0:
-            tssb_traces[iter]        = cPickle.dumps(tssb)  
+            #tssb_traces[iter]        = cPickle.dumps(tssb)  
             dp_alpha_traces[iter]    = tssb.dp_alpha
             dp_gamma_traces[iter]    = tssb.dp_gamma
             alpha_decay_traces[iter] = tssb.alpha_decay
@@ -124,22 +124,22 @@ for seqsamp in files:
                 % (cd_llh_traces[iter]/max_data)
 
 
-    nodes_tabular = itemfreq(nodes_traces)
-    tree_folder = './treescripts/%s-%s/' %(codename,seqsamp)
+    #nodes_tabular = itemfreq(nodes_traces)
+    #tree_folder = './treescripts/%s-%s/' %(codename,seqsamp)
 
-    if not os.path.exists(tree_folder):
-        os.makedirs(tree_folder)
+    #if not os.path.exists(tree_folder):
+    #    os.makedirs(tree_folder)
 
-    for idx, nn in enumerate(nodes_tabular):
-        node_num = nn[0]
-        node_freq = nn[1]/num_samples 
-        node_num_best_llh = cd_llh_traces[nodes_traces==node_num].max()
-        node_fit = cPickle.loads(tssb_traces[cd_llh_traces==node_num_best_llh][0])
-        filename = 'nodes-%i-freq-%0.4f.gdl' % (node_num, node_freq)
-        fn2 = tree_folder + filename
-        fh2 = open(fn2,'w')
-        node_fit.print_graph_full_logistic_different_branch_length(fh2)
-        fh2.close()
+    #for idx, nn in enumerate(nodes_tabular):
+    #    node_num = nn[0]
+    #    node_freq = nn[1]/num_samples 
+    #    node_num_best_llh = cd_llh_traces[nodes_traces==node_num].max()
+    #    node_fit = cPickle.loads(tssb_traces[cd_llh_traces==node_num_best_llh][0])
+    #    filename = 'nodes-%i-freq-%0.4f.gdl' % (node_num, node_freq)
+    #    fn2 = tree_folder + filename
+    #    fh2 = open(fn2,'w')
+    #    node_fit.print_graph_full_logistic_different_branch_length(fh2)
+    #    fh2.close()
 
     traces = hstack([dp_alpha_traces, dp_gamma_traces,\
                      alpha_decay_traces, cd_llh_traces,\
@@ -147,7 +147,7 @@ for seqsamp in files:
                      unnormpost_traces, depth_traces, \
                      base_value_traces, std_traces,\
                      root_bias_traces])
-    tracefile = './mcmc-traces/%s_%s_traces.csv' % (codename,seqsamp)
+    tracefile = './mcmc-traces/%s_%s_%s_traces.csv' % (codename,seqsamp,str(rand_seed))
     numpy.savetxt(tracefile, traces, delimiter = ',',
                   header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces,bignodes_traces,unnormpost_traces,depth_traces,base_value_traces,std_traces,root_bias_traces", comments='')
 
