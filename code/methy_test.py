@@ -64,7 +64,8 @@ for seqsamp in files:
     std_traces         = zeros((num_samples, 1))
     root_bias_traces   = zeros((num_samples, 1))
     width_dist         = zeros((num_samples, max_depth))
-    mass_dist         = zeros((num_samples, max_depth))
+    mass_dist          = zeros((num_samples, max_depth))
+    root_dist          = zeros((num_samples, dims)) 
 
     intervals = zeros((7))
     print "Starting MCMC run..." +seqsamp
@@ -115,6 +116,7 @@ for seqsamp in files:
             root_bias_traces[iter]   = root.mu0_caller()
             width_dist[iter]         = tssb.get_width_distribution()
             mass_dist[iter]          = tssb.get_weight_distribtuion()
+            root_dist[iter]          = tssb.root['node'].params
             
         if mod(iter, 1) == 0:
             (weights, nodes) = tssb.get_mixture()
@@ -154,10 +156,10 @@ for seqsamp in files:
                      unnormpost_traces, depth_traces, \
                      base_value_traces, std_traces, \
                      root_bias_traces,width_dist, \
-                     mass_dist])
+                     mass_dist, root_dist])
     tracefile = './mcmc-traces/%s_%s_%s_traces.csv' % (codename,seqsamp,str(rand_seed))
     numpy.savetxt(tracefile, traces, delimiter = ',',
-                  header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces,bignodes_traces,unnormpost_traces,depth_traces,base_value_traces,std_traces,root_bias_traces,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15", comments='')
+                  header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces,bignodes_traces,unnormpost_traces,depth_traces,base_value_traces,std_traces,root_bias_traces,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,r1,r2,r3,r4,r5,r6,r7,r8", comments='')
 
     sampno = sampno + 1
 
