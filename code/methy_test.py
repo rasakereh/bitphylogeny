@@ -17,7 +17,7 @@ rand_seed     = 1234
 #rand_seed     = 1264
 max_data      = 100
 burnin        = 0
-num_samples   = 20000
+num_samples   = 2
 checkpoint    = 50000
 dp_alpha      = 1
 dp_gamma      = 3e-1
@@ -25,12 +25,15 @@ init_drift    = 0.5
 init_galpha   = 1
 init_gbeta    = 0.5
 alpha_decay   = 0.1
+
+max_depth     = 15
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
 
 seed(rand_seed)
 
 files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv', 'CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv']
+files = ['CT_IRX2P_R1.csv']
 
 sampno = 0
 for seqsamp in files:
@@ -46,7 +49,7 @@ for seqsamp in files:
 
     root = Logistic( dims=dims, mu = 5.0)
     tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
-                root_node=root, data=data )
+                root_node=root, data=data, max_depth=max_depth )
 
     dp_alpha_traces    = zeros((num_samples, 1))
     dp_gamma_traces    = zeros((num_samples, 1))
@@ -60,6 +63,8 @@ for seqsamp in files:
     base_value_traces  = zeros((num_samples, 1))
     std_traces         = zeros((num_samples, 1))
     root_bias_traces   = zeros((num_samples, 1))
+    width_dist         = zeros((num_samples, max_depth))
+    mass_dist         = zeros((num_samples, max_depth))
 
     intervals = zeros((7))
     print "Starting MCMC run..." +seqsamp
@@ -108,6 +113,8 @@ for seqsamp in files:
             base_value_traces[iter]  = root.mu_caller()
             std_traces[iter]         = root.std_caller()
             root_bias_traces[iter]   = root.mu0_caller()
+            width_dist[iter]         = tssb.get_width_distribution()
+            mass_dist[iter]          = tssb.get_weight_distribtuion()
             
         if mod(iter, 1) == 0:
             (weights, nodes) = tssb.get_mixture()
@@ -141,15 +148,16 @@ for seqsamp in files:
     #    node_fit.print_graph_full_logistic_different_branch_length(fh2)
     #    fh2.close()
 
-    traces = hstack([dp_alpha_traces, dp_gamma_traces,\
-                     alpha_decay_traces, cd_llh_traces,\
+    traces = hstack([dp_alpha_traces, dp_gamma_traces, \
+                     alpha_decay_traces, cd_llh_traces, \
                      nodes_traces, bignodes_traces, \
                      unnormpost_traces, depth_traces, \
-                     base_value_traces, std_traces,\
-                     root_bias_traces])
+                     base_value_traces, std_traces, \
+                     root_bias_traces,width_dist, \
+                     mass_dist])
     tracefile = './mcmc-traces/%s_%s_%s_traces.csv' % (codename,seqsamp,str(rand_seed))
     numpy.savetxt(tracefile, traces, delimiter = ',',
-                  header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces,bignodes_traces,unnormpost_traces,depth_traces,base_value_traces,std_traces,root_bias_traces", comments='')
+                  header = "dp_alpha_traces,dp_gamma_traces,alpha_decay_traces,cd_llh_traces,node_traces,bignodes_traces,unnormpost_traces,depth_traces,base_value_traces,std_traces,root_bias_traces,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15", comments='')
 
     sampno = sampno + 1
 

@@ -991,3 +991,30 @@ class TSSB(object):
                     deepest = hdepth
             return deepest 
         return descend(self.root, 1)
+    
+    def get_width_distribution(self):
+        def descend(root, depth, width_vec):
+            width_vec[depth-1] = width_vec[depth-1] + 1
+            if len(root['children']) == 0:
+                return width_vec
+            for i, child in enumerate(root['children']):
+                descend(child, depth+1, width_vec)
+            return width_vec
+        width_vec = zeros(self.max_depth)
+        return descend(self.root, 1, width_vec)
+    
+    def get_weight_distribtuion(self):
+        def descend(root, mass, depth, mass_vec):
+            edges   = sticks_to_edges(root['sticks'])
+            weights = diff(hstack([0.0, edges]))
+            for i, child in enumerate(root['children']):
+                mass_vec[depth] = mass_vec[depth] + mass * weights[i] * child['main']
+                mass_vec = descend(child, mass*(1.0-child['main'])*weights[i],depth+1,mass_vec)
+            return mass_vec 
+        mass_vec = zeros(self.max_depth)
+        edges   = sticks_to_edges(self.root['sticks'])
+        weights = diff(hstack([0.0, edges]))
+        mass_vec[0] = weights[0] * self.root['main']
+        return descend(self.root, 1.0-mass_vec[0], 1, mass_vec)
+    
+        
