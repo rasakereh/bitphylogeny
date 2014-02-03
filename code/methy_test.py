@@ -13,13 +13,13 @@ from util          import *
 from scipy.stats   import itemfreq
 from sklearn       import metrics 
 
-rand_seed     = 1234
-#rand_seed     = 1264
+#rand_seed     = 1234
+rand_seed     = 1264
 max_data      = 100
 burnin        = 0
-num_samples   = 2
+num_samples   = 50000
 checkpoint    = 50000
-dp_alpha      = 1
+dp_alpha      = 2
 dp_gamma      = 3e-1
 init_drift    = 0.5
 init_galpha   = 1
@@ -32,8 +32,8 @@ print "Codename: ", codename
 
 seed(rand_seed)
 
-files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv', 'CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv']
-files = ['CT_IRX2P_R1.csv']
+#files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv', 'CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv']
+files = ['CT_IRX2P_R6.csv']
 
 sampno = 0
 for seqsamp in files:
@@ -95,7 +95,7 @@ for seqsamp in files:
    
         tssb.resample_tree_topology_root()
 
-        tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
+        #tssb.resample_hypers(dp_alpha=True, alpha_decay=True, dp_gamma=True)
         times.append(time.time())
 
         intervals = intervals + diff(array(times))   

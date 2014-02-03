@@ -44,3 +44,22 @@ for( i in 1:dim(Rx6_long)[2]) {
 }
 
 dev.off()
+
+pdf(file="git/phylo-tree/code/figures/sottoriva/CT_R6_long_logistic_mixlaplace_methy_test_noprior_sampling.pdf")
+
+Rx6_long<-read.table("git/phylo-tree/code/mcmc-traces/quintessences_CT_IRX2P_R6.csv_1264_traces.csv",sep=",",header=T)
+
+RC6_long<-read.table("git/phylo-tree/code/mcmc-traces/mangled_CT_IRX2P_R6.csv_1234_traces.csv",sep=",",header=T)
+
+range=c(1000:49999)
+
+for( i in 1:dim(Rx6_long)[2]) {
+	par(mfrow=c(2,2))
+	plot(Rx6_long[range,i],ylab=colnames(Rx6_long)[i], type="l",ylim=c(min(Rx6_long[range,i],RC6_long[range,i]),max(Rx6_long[range,i],RC6_long[range,i])),xlab="iteration 1000 to 49999")
+	lines(RC6_long[range,i],ylab=colnames(Rx6_long)[i], col="red")
+	hist(Rx6_long[range,i])
+	hist(RC6_long[range,i])
+}
+
+dev.off()
+
