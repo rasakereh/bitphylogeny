@@ -23,7 +23,7 @@ def laplacepdfln(x,m,std):
 def get_weights(parent_params, depth, ratemat):
     mapper = (parent_params > ones(len(parent_params)))
     weights = expm2(ratemat)
-    #weights = expm2(ratemat*(depth+1.0) )
+    #weights = expm2(ratemat*(depth+1.0))
     m1 = weights[1,1]
     m2 = weights[0,1]
     return m1 * mapper + ~mapper*m2
@@ -56,7 +56,7 @@ def rootprior(params, base_value, std, ratemat):
     #weights = expm2(ratemat)[0,1]* ones(len(params))
     #mapper = ( rand(len(weights)) < weights )
     #m1 = laplace(base_value*ones(len(params)), std*ones(len(params)))
-    m2 = laplace(-base_value*ones(len(weights)), std*ones(len(weights)))
+    m2 = laplace(-base_value*ones(len(params)), std*ones(len(params)))
 
     return m2#m1 * mapper + ~mapper*m2
 
@@ -90,7 +90,7 @@ class Logistic(Node):
 
     def __init__(self, parent=None, dims=1, tssb=None, mu = 5.0, mu0 = 3.0,
                  ratemat = 32.0/7.0*array([[-1.0/8.0,1.0/8.0],[7.0/8.0,-7.0/8.0]]),
-                 std = 1e-2, branch_length = 1.0):
+                 std = 1.0, branch_length = 1.0):
         super(Logistic, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
@@ -108,10 +108,6 @@ class Logistic(Node):
         else:
             self.dims   = parent.dims
             self.depth  = parent.depth + 1.0
-            ## self.root_bias = parent.root_bias
-            ## self.base_value = parent.base_value
-            ## self.std = parent.std
-            ## self.ratemat = parent.ratemat
             self.params = mixlaplaceprior(parent.params, self.mu_caller(),
                                           self.std_caller(), self.depth,
                                           self.ratemat_caller())
