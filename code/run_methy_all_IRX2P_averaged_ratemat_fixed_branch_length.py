@@ -37,9 +37,6 @@ f = int(sys.argv[1])
 if isnan(f) or f<0 or f>7:
     exit()
 
-trace_folder = './mcmc-traces/Sottoriva/final/%s-%i/' %(codename,rand_seed)
-if not os.path.exists(trace_folder):
-    os.makedirs(trace_folder)
 
 for seqsamp in files[f]:
 
