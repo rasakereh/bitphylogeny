@@ -83,7 +83,7 @@ class Logistic(Node):
     min_mu    = 2.0
     max_mu    = 7.0
     min_std   = 1e-1
-    max_std   = 5.0
+    max_std   = 30.0
     max_param    = 20.0
     min_branch_length = 0.0
     max_branch_length = 8.0
