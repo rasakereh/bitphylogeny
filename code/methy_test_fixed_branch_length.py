@@ -11,10 +11,10 @@ from logistic_mixlaplace_methy   import *
 from util          import *
 from scipy.stats   import itemfreq
 
-rand_seed     = 1264
+rand_seed     = 1234
 max_data      = 100
 burnin        = 0
-num_samples   = 10
+num_samples   = 100000
 checkpoint    = 50000
 dp_alpha      = 2.0
 dp_gamma      = 3e-1
@@ -24,15 +24,24 @@ max_depth     = 15
 codename      = os.popen('./random-word').read().rstrip()
 print "Codename: ", codename
 
-seed(rand_seed)
+#seed(rand_seed)
 
-files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv','CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv']
+rand_seed = int(round(rand(),4)*10000)
 
-trace_folder = './mcmc-traces/Sottoriva/CT_IRX2P/%s-%i/' %(codename,rand_seed)
+files = [['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv','CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv'],['CT_IRX2P_L2.csv', 'CT_IRX2P_L3.csv','CT_IRX2P_L7.csv', 'CT_IRX2P_L8.csv'],
+            ['CU_IRX2P_R1.csv', 'CU_IRX2P_R2.csv','CU_IRX2P_R3.csv', 'CU_IRX2P_R5.csv'],['CU_IRX2P_L4.csv', 'CU_IRX2P_L5.csv','CU_IRX2P_L7.csv', 'CU_IRX2P_L8.csv'],
+            ['CX_IRX2P_R1.csv', 'CX_IRX2P_R2.csv','CX_IRX2P_R6.csv'],['CX_IRX2P_L3.csv', 'CX_IRX2P_L4.csv','CX_IRX2P_L5.csv'],
+            ['HA_IRX2P_R5.csv', 'HA_IRX2P_R7.csv','HA_IRX2P_R8.csv', 'HA_IRX2P_R9.csv', 'HA_IRX2P_R10.csv'],['HA_IRX2P_L1.csv', 'HA_IRX2P_L2.csv','HA_IRX2P_L3.csv', 'HA_IRX2P_L4.csv', 'HA_IRX2P_L6.csv']]
+
+f = int(sys.argv[1])
+if isnan(f) or f<0 or f>7:
+    exit()
+
+trace_folder = './mcmc-traces/Sottoriva/final/%s-%i/' %(codename,rand_seed)
 if not os.path.exists(trace_folder):
     os.makedirs(trace_folder)
 
-for seqsamp in files:
+for seqsamp in files[f]:
 
     tree_folder = './treescripts/Sottoriva/CT-IRX2P/%s-%i/%s/' %(codename,rand_seed,seqsamp)
 
@@ -54,7 +63,7 @@ for seqsamp in files:
     tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
                 root_node=root, data=data )
 
-    tree_collect_band  = 2
+    tree_collect_band  = 100
     dp_alpha_traces    = zeros((num_samples, 1))
     dp_gamma_traces    = zeros((num_samples, 1))
     alpha_decay_traces = zeros((num_samples, 1))

@@ -63,3 +63,20 @@ for( i in 1:dim(Rx6_long)[2]) {
 
 dev.off()
 
+pdf(file="git/phylo-tree/code/figures/sottoriva/CT_R1_fixed_hyper_shared_rate.pdf")
+
+range=c(1000:20000)
+par(mfrow=c(2,2))
+R1<-read.table("/home/warriour/git/phylo-tree/code/mcmc-traces/Sottoriva/CT_IRX2P/notch-1264/traces-CT_IRX2P_R1.csv",sep=",",header=T)
+R1s<-read.table("/home/warriour/git/phylo-tree/code/mcmc-traces/Sottoriva/CT_IRX2P/amped-1234/traces-CT_IRX2P_R1.csv",sep=",",header=T)
+for( i in 1:dim(R1)[2]) {
+	
+	plot(R1[range,i],ylab=colnames(R1)[i], type="l")
+	lines(R1s[range,i],ylab=colnames(R1s)[i], col="red")
+	hist(R1[range,i])
+	hist(R1s[range,i])
+}
+
+dev.off()
+
+
