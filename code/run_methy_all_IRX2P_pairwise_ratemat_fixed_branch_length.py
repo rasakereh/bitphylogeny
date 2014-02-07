@@ -12,10 +12,13 @@ from logistic_mixlaplace_methy_pairwise_ratemat_fixed_branch_length\
 from util          import *
 from scipy.stats   import itemfreq
 
+os.chdir("/home/sathomas/git/phylo-tree/code/")
+
+
 rand_seed     = 1264
 burnin        = 0
 num_samples   = 5
-checkpoint    = 50000
+checkpoint    = 100000
 dp_alpha      = 2.0
 dp_gamma      = 3e-1
 alpha_decay   = 0.1
@@ -58,7 +61,7 @@ for seqsamp in files[f]:
     if not os.path.exists(tree_folder):
         os.makedirs(tree_folder)
 
-    trace_folder = './mcmc-traces/Sottoriva/IRX2P/%s-%i/%s/' \
+    trace_folder = './mcmc-traces/Sottoriva/IRX2P_pairwise/%s-%i/%s/' \
       %(codename,rand_seed,seqsamp)
     if not os.path.exists(trace_folder):
         os.makedirs(trace_folder)
@@ -80,7 +83,7 @@ for seqsamp in files[f]:
     tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
                 root_node=root, data=data )
 
-    tree_collect_band  = 1
+    tree_collect_band  = 100
     dp_alpha_traces    = zeros((num_samples, 1))
     dp_gamma_traces    = zeros((num_samples, 1))
     alpha_decay_traces = zeros((num_samples, 1))

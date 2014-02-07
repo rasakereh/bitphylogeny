@@ -2,7 +2,7 @@ import sys
 import scipy.stats
 
 from util         import *
-from pylab        import *
+#from pylab        import *
 from numpy        import *
 from numpy.random import *
 from node         import *

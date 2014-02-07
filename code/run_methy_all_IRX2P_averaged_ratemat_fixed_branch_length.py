@@ -11,6 +11,9 @@ from logistic_mixlaplace_methy   import *
 from util          import *
 from scipy.stats   import itemfreq
 
+os.chdir("/home/sathomas/git/phylo-tree/code/")
+
+
 rand_seed     = 1234
 max_data      = 100
 burnin        = 0
@@ -40,14 +43,14 @@ if isnan(f) or f<0 or f>7:
 
 for seqsamp in files[f]:
 
-    tree_folder = './treescripts/Sottoriva/CT-IRX2P/%s-%i/%s/' \
+    tree_folder = './treescripts/Sottoriva/IRX2P/%s-%i/%s/' \
       %(codename,rand_seed,seqsamp)
 
     if not os.path.exists(tree_folder):
         os.makedirs(tree_folder)
     reader = csv.DictReader(open('./data/Sottoriva/'+seqsamp),delimiter=',')
 
-    trace_folder = './mcmc-traces/Sottoriva/final/%s-%i/%s/' \
+    trace_folder = './mcmc-traces/Sottoriva/IRX2P_averaged/%s-%i/%s/' \
       %(codename,rand_seed,seqsamp)
 
     if not os.path.exists(trace_folder):
