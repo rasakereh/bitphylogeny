@@ -32,7 +32,7 @@ print "Codename: ", codename
 rand_seed = int(round(rand(),4)*10000)
 
 files = [['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv','CT_IRX2P_R5.csv', 'CT_IRX2P_R6.csv'],['CT_IRX2P_L2.csv', 'CT_IRX2P_L3.csv','CT_IRX2P_L7.csv', 'CT_IRX2P_L8.csv'],
-            ['CU_IRX2P_R1.csv', 'CU_IRX2P_R2.csv','CU_IRX2P_R3.csv', 'CU_IRX2P_R5.csv'],['CU_IRX2P_L4.csv', 'CU_IRX2P_L5.csv','CU_IRX2P_L7.csv', 'CU_IRX2P_L8.csv'],
+            ['CU_IRX2P_R1.csv', 'CU_IRX2P_R2.csv','CU_IRX2P_R3.csv', 'CU_IRX2P_R5.csv'],['CU_IRX2P_L4.csv', 'CU_IRX2P_L6.csv','CU_IRX2P_L7.csv', 'CU_IRX2P_L8.csv'],
             ['CX_IRX2P_R1.csv', 'CX_IRX2P_R2.csv','CX_IRX2P_R6.csv'],['CX_IRX2P_L3.csv', 'CX_IRX2P_L4.csv','CX_IRX2P_L5.csv'],
             ['HA_IRX2P_R5.csv', 'HA_IRX2P_R7.csv','HA_IRX2P_R8.csv', 'HA_IRX2P_R9.csv', 'HA_IRX2P_R10.csv'],['HA_IRX2P_L1.csv', 'HA_IRX2P_L2.csv','HA_IRX2P_L3.csv', 'HA_IRX2P_L4.csv', 'HA_IRX2P_L6.csv']]
 

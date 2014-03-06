@@ -35,7 +35,7 @@ files = [['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv',
           'CT_IRX2P_L7.csv', 'CT_IRX2P_L8.csv'],
          ['CU_IRX2P_R1.csv', 'CU_IRX2P_R2.csv',
           'CU_IRX2P_R3.csv', 'CU_IRX2P_R5.csv'],
-         ['CU_IRX2P_L4.csv', 'CU_IRX2P_L5.csv',
+         ['CU_IRX2P_L4.csv', 'CU_IRX2P_L6.csv',
           'CU_IRX2P_L7.csv', 'CU_IRX2P_L8.csv'],
          ['CX_IRX2P_R1.csv', 'CX_IRX2P_R2.csv',
           'CX_IRX2P_R6.csv'],
@@ -145,7 +145,7 @@ for seqsamp in files[f]:
             base_value_traces[iter]  = root.mu_caller()
             std_traces[iter]         = root.std_caller()
             root_bias_traces[iter]   = root.mu0_caller()
-            branch_traces            = root.branch_caller()
+            branch_traces[iter]      = root.branch_caller()
             width_dist[iter]         = tssb.get_width_distribution()
             mass_dist[iter]          = tssb.get_weight_distribtuion()
             root_dist[iter]          = tssb.root['node'].params

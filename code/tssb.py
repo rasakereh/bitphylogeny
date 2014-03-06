@@ -1014,7 +1014,10 @@ class TSSB(object):
         mass_vec = zeros(self.max_depth)
         edges   = sticks_to_edges(self.root['sticks'])
         weights = diff(hstack([0.0, edges]))
-        mass_vec[0] = weights[0] * self.root['main']
-        return descend(self.root, 1.0-mass_vec[0], 1, mass_vec)
+        if len(weights) > 0 :
+            mass_vec[0] = weights[0] * self.root['main']
+            return descend(self.root, 1.0-mass_vec[0], 1, mass_vec)
+        else:
+            return mass_vec
     
         
