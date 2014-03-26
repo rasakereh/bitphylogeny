@@ -15,7 +15,7 @@ def object2label(obj,nodes):
         for ii, nn in enumerate(nodes):
             if item == nn:
                 labels.append(ii)
-    labels = array(labels)
+    labels = numpy.array(labels)
     return(labels)
 
 def log_sum_exp(log_X):
