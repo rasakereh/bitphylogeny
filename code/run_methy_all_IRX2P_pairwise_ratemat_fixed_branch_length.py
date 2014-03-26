@@ -100,6 +100,7 @@ for seqsamp in files[f]:
     width_dist         = zeros((num_samples, max_depth))
     mass_dist          = zeros((num_samples, max_depth))
     root_dist          = zeros((num_samples, dims))
+    label_traces       = zeros((num_samples, data.shape[0]))
 
     intervals = zeros((7))
     print "Starting MCMC run..." +seqsamp
@@ -149,6 +150,7 @@ for seqsamp in files[f]:
             width_dist[iter]         = tssb.get_width_distribution()
             mass_dist[iter]          = tssb.get_weight_distribtuion()
             root_dist[iter]          = tssb.root['node'].params
+            label_traces[iter]       = object2label(tssb.assignments, nodes)
             
         if mod(iter, 1) == 0:
             (weights, nodes) = tssb.get_mixture()

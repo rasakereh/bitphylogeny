@@ -8,6 +8,16 @@ import scipy.stats
 import scipy.io
 from _abcoll import Iterable
 
+
+def object2label(obj,nodes):
+    labels = []
+    for idx, item in enumerate(obj):
+        for ii, nn in enumerate(nodes):
+            if item == nn:
+                labels.append(ii)
+    labels = array(labels)
+    return(labels)
+
 def log_sum_exp(log_X):
     '''
     Given a list of values in log space, log_X. Compute exp(log_X[0] + log_X[1] + ... log_X[n])
