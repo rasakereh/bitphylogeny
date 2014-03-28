@@ -16,8 +16,8 @@ os.chdir("/home/sathomas/git/phylo-tree/code/")
 
 
 rand_seed     = 1264
-burnin        = 0
-num_samples   = 20000
+burnin        = 30000
+num_samples   = 50000
 checkpoint    = 100000
 dp_alpha      = 2.0
 dp_gamma      = 3e-1
@@ -65,7 +65,11 @@ files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv',
          'HA_IRX2P_R10.csv',
          'HA_IRX2P_L1.csv', 'HA_IRX2P_L2.csv',
          'HA_IRX2P_L3.csv', 'HA_IRX2P_L4.csv',
-         'HA_IRX2P_L6.csv']
+         'HA_IRX2P_L6.csv',
+         'noisy_full_methy_8_2000_0_mutmat.csv',
+         'noisy_full_methy_8_2000_0.01_mutmat.csv',
+         'noisy_full_methy_8_2000_0.02_mutmat.csv',
+         'noisy_full_methy_8_2000_0.05_mutmat.csv']
 
 #files = [['noisy_full_methy_8_2000_0_mutmat.csv',
 #         'noisy_full_methy_8_2000_0.01_mutmat.csv',
