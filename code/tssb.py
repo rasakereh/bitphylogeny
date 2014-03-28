@@ -530,9 +530,11 @@ class TSSB(object):
 
             if empty_root:
                 print 'checking alternative root'
-                nodenum = range(len(nodes))
-                nodenum = nodenum[1:]
-                post_temp = zeros(len(nodes)-1)
+                nodenum = []
+                for ii, nn in enumerate(nodes):
+                    if len(nodes[ii].data) > 0:
+                        nodenum.append(ii)
+                post_temp = zeros(len(nodenum))
                 for idx, nodeBnum in enumerate(nodenum):
                     print 'nodeBnum', nodeBnum
                     print 'nodeAnum', nodeAnum

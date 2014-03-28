@@ -234,7 +234,7 @@ traces = hstack([dp_alpha_traces, dp_gamma_traces,\
                  unnormpost_traces, depth_traces, \
                  base_value_traces, std_traces,\
                  root_bias_traces, branch_traces, width_dist, \
-                 mass_dist, root_dist, label_traces])
+                 mass_dist, root_dist])
 
 tracefile = 'traces-%s' % (seqsamp)
 header = ['dp_alpha_traces','dp_gamma_traces', 
@@ -254,3 +254,9 @@ writer.writerow(header)
 [ writer.writerow(x) for x in traces ]
 fh3.close()
 
+write_traces2csv(trace_folder+tracefile+'label_traces',label_traces)
+write_traces2csv(trace_folder+tracefile+'node_depth_traces',node_depth_traces)
+
+fh = open(trace_folder+tracefile++'params','w')
+cPickle.dump('params_traces', params_traces)
+fh.close()
