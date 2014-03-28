@@ -7,7 +7,7 @@ import scipy.special
 import scipy.stats
 import scipy.io
 from _abcoll import Iterable
-
+import csv
 
 def object2label(obj,nodes):
     labels = []
@@ -17,6 +17,70 @@ def object2label(obj,nodes):
                 labels.append(ii)
     labels = numpy.array(labels)
     return(labels)
+
+def cluster_with_maxpear(X):
+    try:         
+        import rpy2
+    except:
+        raise Exception('''Clustering with maximum PEAR requires rpy2 package. See http://rpy.sourceforge.net/rpy2.html.''')
+    
+    import rpy2.robjects as robjects
+    import rpy2.robjects.numpy2ri
+    from rpy2.robjects.packages import importr    
+    
+    rpy2.robjects.numpy2ri.activate()
+    
+    importr('mcclust')
+
+    r = robjects.r
+    
+    robjects.globalenv['X'] = r.matrix(X, nrow=X.shape[0])
+    
+    r(
+      '''
+          class(X) <- 'interger'
+          clusters <- maxpear( comp.psm(X+1) )$cl;
+       '''
+    )
+
+    return numpy.array(r.clusters)
+
+
+def write_traces2csv(file_name, traces, header=None):
+    fh = open(file_name, 'wb')
+    writer = csv.writer(fh)
+    if header:
+        writer.writerow(header)
+    [writer.writerow(x) for x in traces]
+    fh.close()
+
+def summary_clone(best_cluster_labels, params_traces, node_depth_traces):
+    
+    member = []
+    for idx1 , item1 in enumerate(numpy.unique(best_cluster_labels)):
+        mm = []
+        for idx2, bc in enumerate(best_cluster_labels):
+            if bc == item1:
+                mm.append(idx2)
+                
+        member.append(mm)
+
+    genotype = []
+    depth = []
+    for idx, item in enumerate(numpy.unique(best_cluster_labels)):
+
+        genotype.append(numpy.mean(
+            numpy.mean(params_traces[:,member[idx],:], axis = 0),axis = 0))
+        depth.append(numpy.mean(
+            node_depth_traces[:,member[idx]]) )
+
+    data_genotype = numpy.zeros((params_traces.shape[1], params_traces.shape[2]))
+    data_depth = numpy.zeros((params_traces.shape[1]))
+
+    for idx in range(params_traces.shape[1]):
+        data_genotype[idx] = genotype[best_cluster_labels[idx]-1]
+        data_depth[idx] = depth[best_cluster_labels[idx]-1]
+    return([data_genotype , data_depth] ) 
 
 def log_sum_exp(log_X):
     '''
