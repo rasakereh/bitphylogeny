@@ -78,7 +78,7 @@ files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv',
 
 f = int(sys.argv[1])
 #f = 0
-if isnan(f) or f<0 or f>31:
+if isnan(f) or f<0 or f>35:
     exit()
 
 seqsamp = files[f]
@@ -261,6 +261,6 @@ fh3.close()
 write_traces2csv(trace_folder+tracefile+'label_traces',label_traces)
 write_traces2csv(trace_folder+tracefile+'node_depth_traces',node_depth_traces)
 
-fh = open(trace_folder+tracefile++'params','w')
+fh = open(trace_folder+tracefile+'params','w')
 cPickle.dump('params_traces', params_traces)
 fh.close()
