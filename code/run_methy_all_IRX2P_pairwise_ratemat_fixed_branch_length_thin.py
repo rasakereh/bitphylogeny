@@ -16,8 +16,8 @@ os.chdir("/home/sathomas/git/phylo-tree/code/")
 
 
 rand_seed     = 1264
-burnin        = 3e4
-num_samples   = 5e4
+burnin        = 3e1
+num_samples   = 5e1
 dp_alpha      = 2.0
 dp_gamma      = 3e-1
 alpha_decay   = 0.1
@@ -139,7 +139,7 @@ node_depth_traces  = zeros((num_samples/thin, data.shape[0]))
 
 intervals = zeros((7))
 print "Starting MCMC run..." +seqsamp
-for iter in range(-burnin,num_samples):
+for iter in range(-int(burnin),int(num_samples)):
 
     times = [ time.time() ]
 
@@ -193,6 +193,7 @@ for iter in range(-burnin,num_samples):
         node_depth_traces[idx]  = array([x.depth for x in tssb.assignments])
         
     if mod(idx, 1) == 0:
+        (weights, nodes) = tssb.get_mixture()
         print seqsamp, codename, iter, len(nodes), cd_llh_traces[idx], \
           root.mu_caller(), root.std_caller(), \
           root.mu0_caller()+root.mu_caller() , \
