@@ -8,6 +8,7 @@ import scipy.stats
 import scipy.io
 from _abcoll import Iterable
 import csv
+import re
 
 def object2label(obj,nodes):
     labels = []
@@ -81,6 +82,39 @@ def summary_clone(best_cluster_labels, params_traces, node_depth_traces):
         data_genotype[idx] = genotype[best_cluster_labels[idx]-1]
         data_depth[idx] = depth[best_cluster_labels[idx]-1]
     return([data_genotype , data_depth] ) 
+
+
+def write_params_traces2file(trace, x, filepath,ftype='.npz'):
+    n = trace.shape[0]
+    m = n/x
+    for i in range(x):
+        tmp_trace = trace[i*m:(i+1)*m]
+        filename = 'array_{0}'.format(i)
+        numpy.savez_compressed(filepath+filename,
+                                   tmp_trace)
+       
+    
+
+## Functions for natural sorting
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+    return [ atoi(c) for c in re.split('(\d+)', text) ]
+        
+def load_params_traces(filepath,ftype='.npz'):
+    f = [x for x in os.listdir(filepath) if x.endswith(ftype)]
+    f.sort(key=natural_keys)
+    t = []
+    for file in f:
+        temp = numpy.load( filepath+file )
+        t.append(temp['arr_0'])
+    return(numpy.vstack(t))
 
 def log_sum_exp(log_X):
     '''
