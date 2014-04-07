@@ -90,7 +90,7 @@ def write_params_traces2file(trace, x, filepath,ftype='.npz'):
     for i in range(x):
         tmp_trace = trace[i*m:(i+1)*m]
         filename = 'array_{0}'.format(i)
-        numpy.savez_compressed(filepath+filename,
+        numpy.savez(filepath+filename,
                                    tmp_trace)
        
     
