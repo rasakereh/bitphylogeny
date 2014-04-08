@@ -385,7 +385,7 @@ class TSSB(object):
                 #lln.append(weights[i])
         return (sum(array(lln)),sum(array(llhs)))
     
-    def unnormalized_postertior(self):
+    def unnormalized_postertior_with_hypers(self):
         weights, nodes = self.get_mixture();
         llhs = []
         for i, node in enumerate(nodes):
@@ -412,6 +412,18 @@ class TSSB(object):
         sticks_log_prob =  gamma_descend(self.root)
         
         return llh + weights_log_prob + sticks_log_prob
+    
+    def unnormalized_postertior(self):
+        weights, nodes = self.get_mixture();
+        llhs = []
+        for i, node in enumerate(nodes):
+            if node.num_local_data():
+                llhs.append(node.num_local_data()*log(weights[i]) +
+                            node.data_log_likelihood() +
+                            node.parameter_log_prior() ) 
+        llh = sum(array(llhs))
+        
+        return llh
     
     def resample_tree_topology(self):
         #x = self.complete_data_log_likelihood_nomix()
