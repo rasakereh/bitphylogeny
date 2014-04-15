@@ -24,7 +24,6 @@ alpha_decay   = 0.1
 max_depth     = 15
 
 codename      = os.popen('./random-word').read().rstrip()
-codename      = 'test_thin'
 
 print "Codename: ", codename
 

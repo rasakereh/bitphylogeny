@@ -16,15 +16,14 @@ from scipy.stats   import itemfreq
 
 
 rand_seed     = 1264
-burnin        = 0
-num_samples   = 5e3
+burnin        = 3e4
+num_samples   = 5e4
 dp_alpha      = 2.0
 dp_gamma      = 3e-1
 alpha_decay   = 0.1
 max_depth     = 15
 
 codename      = os.popen('./random-word').read().rstrip()
-codename      = 'test_thin'
 
 print "Codename: ", codename
 
@@ -57,7 +56,7 @@ dims = data.shape[1]
 max_data = data.shape[0]
 
 
-seqsamp="ground_truth"
+seqsamp="ground_truth_0"
 
 tree_folder = './treescripts/Sottoriva/pairwise/%s-%i/%s/' \
   %(codename,rand_seed,seqsamp)
