@@ -40,7 +40,7 @@ for row in reader:
 genotypes = numpy.array(genotypes)
 
 
-reader = csv.DictReader(open('./data/full_methy/noisy_full_methy_8_2000_0_mutmat.csv'),
+reader = csv.DictReader(open('./data/full_methy/noisy_full_methy_8_2000_0.05_mutmat.csv'),
                         delimiter=',')
 data = []
 labels = []
@@ -56,7 +56,7 @@ dims = data.shape[1]
 max_data = data.shape[0]
 
 
-seqsamp="ground_truth_0"
+seqsamp="ground_truth_0.05.csv"
 
 tree_folder = './treescripts/Sottoriva/pairwise/%s-%i/%s/' \
   %(codename,rand_seed,seqsamp)
