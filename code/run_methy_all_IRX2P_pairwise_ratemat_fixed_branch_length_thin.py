@@ -12,12 +12,12 @@ from logistic_mixlaplace_methy_pairwise_ratemat_fixed_branch_length\
 from util          import *
 from scipy.stats   import itemfreq
 
-#os.chdir("/home/sathomas/git/phylo-tree/code/")
+os.chdir("/home/sathomas/git/phylo-tree/code/")
 
 
 rand_seed     = 1264
-burnin        = 3e1
-num_samples   = 5e1
+burnin        = 3e4
+num_samples   = 5e4
 dp_alpha      = 2.0
 dp_gamma      = 3e-1
 alpha_decay   = 0.1
@@ -71,17 +71,21 @@ files = ['CT_IRX2P_R1.csv', 'CT_IRX2P_R4.csv',
          'noisy_full_methy_8_2000_0_mutmat.csv',
          'noisy_full_methy_8_2000_0.01_mutmat.csv',
          'noisy_full_methy_8_2000_0.02_mutmat.csv',
-         'noisy_full_methy_8_2000_0.05_mutmat.csv']
+         'noisy_full_methy_8_2000_0.05_mutmat.csv',
+         'noisy_small_clones_8_2000_0_mutmat.csv',
+         'noisy_small_clones_8_2000_0.01_mutmat.csv',
+         'noisy_small_clones_8_2000_0.02_mutmat.csv',
+         'noisy_small_clones_8_2000_0.05_mutmat.csv']
 
 #files = [['noisy_full_methy_8_2000_0_mutmat.csv',
 #         'noisy_full_methy_8_2000_0.01_mutmat.csv',
 #         'noisy_full_methy_8_2000_0.02_mutmat.csv',
 #         'noisy_full_methy_8_2000_0.05_mutmat.csv']]
 
-#f = int(sys.argv[1])
-f = 0
-#if isnan(f) or f<0 or f>35:
-#    exit()
+f = int(sys.argv[1])
+#f = 0
+if isnan(f) or f<0 or f>39:
+    exit()
 
 seqsamp = files[f]
 
@@ -272,7 +276,7 @@ fh3.close()
 write_traces2csv(trace_folder+tracefile+'_label_traces.csv',label_traces)
 write_traces2csv(trace_folder+tracefile+'_node_depth_traces.csv',node_depth_traces)
 
-numfiles = 1 # number of small arrays. Tested 50 files for (5e3,2e3,8) arrays. 
+numfiles = 20 # number of small arrays. Tested 50 files for (5e3,2e3,8) arrays. 
              # If numfiles = 50, the function will generate 50 files in the 
              # params_folder each contains a (1e2,2e3,8) array.
 write_params_traces2file(params_traces, numfiles, params_folder)
