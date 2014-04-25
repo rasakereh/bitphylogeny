@@ -205,7 +205,6 @@ class Logistic(Node):
                 pp = (pp > ones(len(pp)))
                 params.append(pp)
 
-            params.append(zeros(len(pp)))
             params = array(params)
             rate1 = mean(sum(params, axis=1).astype(float64)/len(pp))
 
