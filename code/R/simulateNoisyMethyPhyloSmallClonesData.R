@@ -14,7 +14,7 @@ construct_genotype <- function(num_snvs,mix){
   #   |             |
   # clone6        clone7
   #  |    \        |       \     \
-  #clone8 clone9  clone10 clone11 cone13 	
+  #clone8 clone9  clone10 clone11 cone12 	
   # 
   # Inputs: 
   #   num_snvs: number of SNVs

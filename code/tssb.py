@@ -921,7 +921,10 @@ class TSSB(object):
     def print_graph_full_logistic_different_branch_length(self, fh, base_width=5, min_width=300):
         edges   = sticks_to_edges(self.root['sticks'])
         weights = diff(hstack([0.0, edges]))
-        root_mass = weights[0] * self.root['main']
+        if len(weights) > 0:
+            root_mass = weights[0] * self.root['main']
+        else: #in case there is a problem with weights, as observed in some runs
+            root_mass = -1
         print >>fh, """graph: { title:            "TSSB Graph"  \
                                 portsharing:      no            \
                                 smanhattanedges:  yes           \

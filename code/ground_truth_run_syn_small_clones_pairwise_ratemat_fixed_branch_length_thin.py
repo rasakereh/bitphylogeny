@@ -31,7 +31,7 @@ print "Codename: ", codename
 rand_seed = int(round(rand(),4)*10000)
 
 
-reader = csv.DictReader(open('./data/full_methy/noisy_full_methy_8_2000_genotype.csv'),
+reader = csv.DictReader(open('./data/full_methy/noisy_small_clones_8_2000_genotype.csv'),
                         delimiter=',')
 genotypes = []
 for row in reader:
@@ -39,7 +39,7 @@ for row in reader:
 genotypes = numpy.array(genotypes)
 
 
-reader = csv.DictReader(open('./data/full_methy/noisy_full_methy_8_2000_0.01_mutmat.csv'),
+reader = csv.DictReader(open('./data/full_methy/noisy_small_clones_8_2000_0.01_mutmat.csv'),
                         delimiter=',')
 data = []
 labels = []
@@ -55,7 +55,7 @@ dims = data.shape[1]
 max_data = data.shape[0]
 
 
-seqsamp="ground_truth_0.01.csv"
+seqsamp="ground_truth_small_clones_0.01.csv"
 
 tree_folder = './treescripts/Sottoriva/pairwise/%s-%i/%s/' \
   %(codename,rand_seed,seqsamp)
@@ -73,7 +73,7 @@ if not os.path.exists(params_folder):
     os.makedirs(params_folder)
     
 
-root = Logistic( dims=dims)
+root = Logistic( dims=dims )
 c1 = Logistic( parent=root,dims=dims )
 root.add_child(c1)
 c2 = Logistic( parent=c1, dims=dims )
@@ -86,6 +86,16 @@ c5 = Logistic( parent=c2, dims=dims )
 c2.add_child(c5)
 c6 = Logistic( parent=c4, dims=dims )
 c4.add_child(c6)
+c7 = Logistic( parent=c5, dims=dims )
+c5.add_child(c7)
+c8 = Logistic( parent=c5, dims=dims )
+c5.add_child(c8)
+c9 = Logistic( parent=c6, dims=dims )
+c6.add_child(c9)
+c10 = Logistic( parent=c6, dims=dims )
+c6.add_child(c10)
+c11 = Logistic( parent=c6, dims=dims )
+c6.add_child(c11)
 
 tssb = TSSB( dp_alpha=dp_alpha, dp_gamma=dp_gamma, alpha_decay=alpha_decay,
             root_node=root, data=data )
@@ -95,6 +105,11 @@ c3.tssb = tssb
 c4.tssb = tssb
 c5.tssb = tssb
 c6.tssb = tssb
+c7.tssb = tssb
+c8.tssb = tssb
+c9.tssb = tssb
+c10.tssb = tssb
+c11.tssb = tssb
 
 depth = 1
 tssb.root['sticks'] = vstack([ tssb.root['sticks'], boundbeta(1, tssb.dp_gamma) ])
@@ -124,8 +139,36 @@ tssb.root['children'][0]['children'][0]['children'].append({ 'node'     : c5,
                           'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
                           'sticks'   : empty((0,1)),
                           'children' : [] })
+
 tssb.root['children'][0]['children'][2]['sticks'] = vstack([ tssb.root['children'][0]['children'][2]['sticks'], boundbeta(1, tssb.dp_gamma) ])
 tssb.root['children'][0]['children'][2]['children'].append({ 'node'     : c6,
+                          'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
+                          'sticks'   : empty((0,1)),
+                          'children' : [] })
+depth=4
+tssb.root['children'][0]['children'][0]['children'][0]['sticks'] = vstack([ tssb.root['children'][0]['children'][0]['children'][0]['sticks'], boundbeta(1, tssb.dp_gamma) ])
+tssb.root['children'][0]['children'][0]['children'][0]['children'].append({ 'node'     : c7,
+                          'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
+                          'sticks'   : empty((0,1)),
+                          'children' : [] })
+tssb.root['children'][0]['children'][0]['children'][0]['sticks'] = vstack([ tssb.root['children'][0]['children'][0]['children'][0]['sticks'], boundbeta(1, tssb.dp_gamma) ])
+tssb.root['children'][0]['children'][0]['children'][0]['children'].append({ 'node'     : c8,
+                          'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
+                          'sticks'   : empty((0,1)),
+                          'children' : [] })
+
+tssb.root['children'][0]['children'][2]['children'][0]['sticks'] = vstack([ tssb.root['children'][0]['children'][2]['children'][0]['sticks'], boundbeta(1, tssb.dp_gamma) ])
+tssb.root['children'][0]['children'][2]['children'][0]['children'].append({ 'node'     : c9,
+                          'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
+                          'sticks'   : empty((0,1)),
+                          'children' : [] })
+tssb.root['children'][0]['children'][2]['children'][0]['sticks'] = vstack([ tssb.root['children'][0]['children'][2]['children'][0]['sticks'], boundbeta(1, tssb.dp_gamma) ])
+tssb.root['children'][0]['children'][2]['children'][0]['children'].append({ 'node'     : c10,
+                          'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
+                          'sticks'   : empty((0,1)),
+                          'children' : [] })
+tssb.root['children'][0]['children'][2]['children'][0]['sticks'] = vstack([ tssb.root['children'][0]['children'][2]['children'][0]['sticks'], boundbeta(1, tssb.dp_gamma) ])
+tssb.root['children'][0]['children'][2]['children'][0]['children'].append({ 'node'     : c11,
                           'main'     : boundbeta(1.0, (tssb.alpha_decay**(depth+1))*tssb.dp_alpha) if tssb.min_depth <= (depth+1) else 0.0,
                           'sticks'   : empty((0,1)),
                           'children' : [] })
@@ -162,6 +205,27 @@ for i in range(labels.count(7)):
     ii=i+labels.count(1)+labels.count(2)+labels.count(3)+labels.count(4)+labels.count(5)+labels.count(6)
     c6.add_datum(ii)
     tssb.assignments.append(c6)
+for i in range(labels.count(8)):
+    ii=i+labels.count(1)+labels.count(2)+labels.count(3)+labels.count(4)+labels.count(5)+labels.count(6)+labels.count(7)
+    c7.add_datum(ii)
+    tssb.assignments.append(c7)
+for i in range(labels.count(9)):
+    ii=i+labels.count(1)+labels.count(2)+labels.count(3)+labels.count(4)+labels.count(5)+labels.count(6)+labels.count(7)+labels.count(8)
+    c8.add_datum(ii)
+    tssb.assignments.append(c8)
+for i in range(labels.count(10)):
+    ii=i+labels.count(1)+labels.count(2)+labels.count(3)+labels.count(4)+labels.count(5)+labels.count(6)+labels.count(7)+labels.count(8)+labels.count(9)
+    c9.add_datum(ii)
+    tssb.assignments.append(c9)
+for i in range(labels.count(11)):
+    ii=i+labels.count(1)+labels.count(2)+labels.count(3)+labels.count(4)+labels.count(5)+labels.count(6)+labels.count(7)+labels.count(8)+labels.count(9)+labels.count(10)
+    c10.add_datum(ii)
+    tssb.assignments.append(c10)
+for i in range(labels.count(12)):
+    ii=i+labels.count(1)+labels.count(2)+labels.count(3)+labels.count(4)+labels.count(5)+labels.count(6)+labels.count(7)+labels.count(8)+labels.count(9)+labels.count(10)+labels.count(11)
+    c11.add_datum(ii)
+    tssb.assignments.append(c11)
+    
 
 tree_collect_band  = 5.0
 thin               = 5.0
