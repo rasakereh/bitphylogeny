@@ -2,7 +2,6 @@ import sys
 import scipy.stats
 
 from util         import *
-#from pylab        import *
 from numpy        import *
 from numpy.random import *
 from node         import *
@@ -60,7 +59,7 @@ def rootpriorpdfln(x, m, std, ratemat):
         res[index] = l1        
     return sum(res)
 
-class Logistic(Node):
+class BitPhylogeny(Node):
 
 
     min_mu    = 2.0
@@ -74,7 +73,7 @@ class Logistic(Node):
     def __init__(self, parent=None, dims=1, tssb=None, mu = 4.0,
                  ratemat = 32.0/7.0*array([[-1.0/8.0,1.0/8.0],[7.0/8.0,-7.0/8.0]]),
                  std = 1.0):
-        super(Logistic, self).__init__(parent=parent, tssb=tssb)
+        super(BitPhylogeny, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
             self.dims   = dims
