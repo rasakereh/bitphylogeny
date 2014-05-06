@@ -33,6 +33,6 @@ The code generates a pdf file of the v-measure porfile under '../output/data_sam
 
 
 Others:
-The data folder has all the data used in the paper
+The data folder has all the data in the paper
 The baseline folder contains the implementation of the baseline methods described in the paper. 
 

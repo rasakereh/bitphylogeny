@@ -1,0 +1,13 @@
+graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      60                                            yspace:            20                                           xspace:            5 
+node: { label:"55 ~ Genotype  0.03 0.01 0.01 0.94 0.05 0.36 0.02 0.90 
+ Branch Length: 0.00 Node Mass: 0.09 " title:"X" width:300}
+node: {  label:"41 ~ Genotype  0.31 0.07 0.00 0.99 0.00 0.02 0.79 1.00 
+ Branch Length: 0.06 Node Mass: 0.38 " title:"X-0" width:300}
+edge: { source:"X" target:"X-0" anchor:1}
+node: {  label:"65 ~ Genotype  0.00 0.02 0.00 0.00 0.03 0.00 0.00 0.00 
+ Branch Length: 0.78 Node Mass: 0.42 " title:"X-1" width:300}
+edge: { source:"X" target:"X-1" anchor:1}
+node: {  label:"39 ~ Genotype  0.15 1.00 0.25 1.00 0.40 0.98 0.80 0.99 
+ Branch Length: 0.04 Node Mass: 0.19 " title:"X-2" width:300}
+edge: { source:"X" target:"X-2" anchor:1}
+}

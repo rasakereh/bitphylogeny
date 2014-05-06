@@ -3,6 +3,8 @@ import sys
 import time
 import cPickle
 import csv
+import shutil
+
 
 from numpy         import *
 from numpy.random  import *
@@ -35,14 +37,24 @@ def run(seqsamp , fout, num_samples, burnin, thin):
 
     if not os.path.exists(tree_folder):
         os.makedirs(tree_folder)
+    else:
+        shutil.rmtree(tree_folder)
+        os.makedirs(tree_folder)
+
 
     trace_folder = fout + '/' + seqsamp + '/mcmc-traces/' 
 
     if not os.path.exists(trace_folder):
         os.makedirs(trace_folder)
+    else:
+        shutil.rmtree(trace_folder)
+        os.makedirs(trace_folder)
 
     params_folder = trace_folder+'params_traces/' 
     if not os.path.exists(params_folder):
+        os.makedirs(params_folder)
+    else:
+        shutil.rmtree(params_folder)
         os.makedirs(params_folder)
 
     rand_seed = int(round(rand(),4)*10000)
