@@ -3,7 +3,6 @@ import sys
 import time
 import cPickle
 import csv
-print sys.argv[1]
 
 from numpy         import *
 from numpy.random  import *
@@ -12,15 +11,26 @@ from model_spec    import *
 from util          import *
 from scipy.stats   import itemfreq
 
-
-burnin        = 1e1
-num_samples   = 2e1
-thin          = 5.0
-
-rand_seed = int(round(rand(),4)*10000)
+#burnin        = 1e1
+#num_samples   = 2e1
+#thin          = 5.0
 
 def run(seqsamp , fout, num_samples, burnin, thin):
 
+    reader = csv.DictReader(open(seqsamp),delimiter=',')
+    data = []
+    for row in reader:
+        data.append([int(row['V1']),int(row['V2']),int(row['V3']),
+                     int(row['V4']),int(row['V5']),int(row['V6']),
+                     int(row['V7']),int(row['V8'])])
+
+    data = numpy.array(data)
+    dims = data.shape[1]
+    max_data = data.shape[0]
+   
+    seqsamp = seqsamp.split('/')[len(seqsamp.split('/'))-1]
+
+    print seqsamp
     tree_folder =  fout + '/' + seqsamp  + '/treescripts/'
 
     if not os.path.exists(tree_folder):
@@ -38,25 +48,12 @@ def run(seqsamp , fout, num_samples, burnin, thin):
     rand_seed = int(round(rand(),4)*10000)
     seed(rand_seed)
     
-    reader = csv.DictReader(open(seqsamp),delimiter=',')
-
-    data = []
-
-    for row in reader:
-        data.append([int(row['V1']),int(row['V2']),int(row['V3']),
-                     int(row['V4']),int(row['V5']),int(row['V6']),
-                     int(row['V7']),int(row['V8'])])
-
-    data = numpy.array(data)
-    dims = data.shape[1]
-    max_data = data.shape[0]
 
     root = BitPhylogeny( dims=dims, mu = 5.0)
     tssb = TSSB( dp_alpha=2.0, dp_gamma=3e-1, alpha_decay=0.1,
             root_node=root, data=data )
 
-    tree_collect_band  = 5.0
-    
+    tree_collect_band  = 5 # has to be smaller than num_samples/thin
     max_depth          = 15
     cd_llh_traces      = zeros((num_samples/thin, 1))
     nodes_traces       = zeros((num_samples/thin, 1))
@@ -140,8 +137,6 @@ def run(seqsamp , fout, num_samples, burnin, thin):
                 print "\t%f is best per-data complete data likelihood so far." \
                     % (unnormpost_traces[idx]/max_data)
 
-    
-
             # print treescripts
             if idx + 1 == num_samples/thin:
                 idx = idx + 1
@@ -165,11 +160,7 @@ def run(seqsamp , fout, num_samples, burnin, thin):
         nodes_tabular[:,1] = nodes_tabular[:,1] / (num_samples/thin)
         treefreqfile = 'tree-freq'
         header = ['unique_node_num', 'freq']
-        fh4 = open(tree_folder+treefreqfile, 'wb')
-        writer = csv.writer(fh4)
-        writer.writerow(header)
-        [ writer.writerow(x) for x in nodes_tabular ]
-        fh4.close()
+        write_traces2csv(tree_folder+'tree-freq.csv',nodes_tabular,header)
 
         traces = hstack([cd_llh_traces,\
                          nodes_traces, bignodes_traces, \
@@ -177,7 +168,7 @@ def run(seqsamp , fout, num_samples, burnin, thin):
                          base_value_traces, std_traces,\
                          width_dist, mass_dist, root_dist])
 
-        tracefile = 'traces-%s' % (seqsamp)
+        tracefile = 'other_traces.csv'
         header = ['cd_llh_traces',
                   'node_traces','bignodes_traces',
                   'unnormpost_traces','depth_traces',
@@ -188,15 +179,10 @@ def run(seqsamp , fout, num_samples, burnin, thin):
                   'm7','m8','m9','m10','m11','m12','m13','m14','m15',
                   'r1','r2','r3','r4','r5','r6','r7','r8']
 
-        fh3 = open(trace_folder+tracefile, 'wb')
-        writer = csv.writer(fh3)
-        writer.writerow(header)
-        [ writer.writerow(x) for x in traces ]
-        fh3.close()
-
-        write_traces2csv(trace_folder+tracefile+'_label_traces.csv',label_traces)
-        write_traces2csv(trace_folder+tracefile+'_node_depth_traces.csv',node_depth_traces)
-        write_traces2csv(trace_folder+tracefile+'_branch_traces.csv',branch_traces)
+        write_traces2csv(trace_folder+'other_traces.csv',traces,header)
+        write_traces2csv(trace_folder+'label_traces.csv',label_traces)
+        write_traces2csv(trace_folder+'node_depth_traces.csv',node_depth_traces)
+        write_traces2csv(trace_folder+'branch_traces.csv',branch_traces)
 
         numfiles = 10 # number of small arrays. Tested 50 files for (5e3,2e3,8) arrays. 
                       # If numfiles = 50, the function will generate 50 files in the 
