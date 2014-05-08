@@ -6,4 +6,4 @@ Rscript compute_mpear_label.R $1
 python compute_vmeasures.py $1 $2
 
 ## plot vmeasure
-##Rscript plot_vmeasure.R $1
+Rscript plot_vmeasure.R $1
