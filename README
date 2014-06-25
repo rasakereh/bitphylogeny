@@ -11,17 +11,29 @@ http://hips.seas.harvard.edu/files/tssb.tgz
 Dependencies:
 
 Python:
-NumPy
-SciPy
+NumPy,SciPy
 scikit-learn: http://scikit-learn.org/stable/ 
-rpy2
+rpy2: http://rpy.sourceforge.net/ 
 
 R:
-mcclust, e1071, igraph, gplots
---------------------------------------------------------------------
+rPython, mcclust, e1071, igraph, gplots, riverplot.
+---------------------------------------------------------------------
 
+Installation:
 
-1. We've provided a sample data file 'sample_data.csv' in the folder. To run the sample file, execute the following code. 
+1. Clone the BitPhylogeny repository 
+git clone git@bitbucket.org:ke_yuan/bitphylogeny.git 
+cd bitphylogeny
+
+2. Install the BitPhylogeny python package
+cd python
+sudo python setup.py install
+
+3. Install the R package
+cd ../R
+R CMD INSTALL bitphylogenyR_0.1.tar.gz
+
+We've provided a sample data file 'sample_data.csv' in the folder. To run the sample file, execute the following code. 
 
 BitPhylogeny 'sample_data.csv' 'output' -f -n 200 -b 10 -t 5 
 
@@ -33,19 +45,8 @@ BitPhylogeny 'sample_data.csv' 'output' -f -n 200 -b 10 -t 5
 -t: thin number (a current requirement is (number of mcmc samples / thin) > 5)
 
 The output folder contains the mcmc-traces and treescripts. To visualise tree, one need to use the aisee software to run *.gdl files. The aisee software can be obtained from http://www.absint.com/aisee/index.htm
-The sankey plot script will be provided in future release. 
+ 
+For post processing, please use the accompanying R package. Tutorials of the R package are stored in doc/ directory 
 
 
-2. To compute the MPEAR summrized label and corresponding v-measures, execute the following code from the post-process/ folder.
 
-sh post_process.sh '../output/sample_data.csv/' '../sample_data.csv' 
-
-'../output/sample_data.csv/': the folder which contains mcmc-traces and treescripts
-'../sample_data.csv': the data file
-
-The code generates a pdf file of the v-measure porfile under '../output/sample_data.csv/'
-
-
-3. Others:
-The data folder has all the data used in the paper
-The baseline folder contains the implementation of the baseline methods described in the paper. 

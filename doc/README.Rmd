@@ -15,7 +15,7 @@ output:
 
 The `BitPhylogeny` packages depends on several `python` and `R` packages. The 
 first step is to make sure the following the packages are installed. 
-* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/ .
+* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/
 * `R`: rPython, mcclust, e1071, igraph, gplots, riverplot.
    
 Secondly, clone the BitPhylogeny repository 
