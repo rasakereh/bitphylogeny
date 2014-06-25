@@ -1,0 +1,11 @@
+Package: bitphylogenyR
+Type: Package
+Title: What the package does (short line)
+Version: 0.1
+Date: 2014-06-12
+Author: Ke Yuan
+Maintainer: Ke Yuan <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: GPL-3
+Depends: rPython, igraph
+Imports: cluster, mcclust, e1071, gplots, riverplot

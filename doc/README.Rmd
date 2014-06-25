@@ -1,0 +1,291 @@
+---
+title: 'BitPhylogeny: A probabilistic framework for reconstructing intra-tumor phylogenies'
+output:
+  html_document:
+    fig_caption: yes
+    number_sections: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document: default
+---
+
+
+# Installation
+
+The `BitPhylogeny` packages depends on several `python` and `R` packages. The 
+first step is to make sure the following the packages are installed. 
+* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/ .
+* `R`: rPython, mcclust, e1071, igraph, gplots, riverplot.
+   
+Secondly, clone the BitPhylogeny repository 
+```
+git clone git@bitbucket.org:ke_yuan/bitphylogeny.git 
+cd bitphylogeny
+```
+
+The third step is install the BitPhylogeny python package. To do this, 
+navigate into the python directory and run the following 
+```
+cd python
+sudo python setup.py install
+```
+Finally, install the R package
+```
+cd ../R
+R CMD INSTALL bitphylogenyR_0.1.tar.gz 
+```
+# An example
+## BitPhylogeny
+We use an example dataset
+```{r}
+library('bitphylogenyR')
+example_file = system.file('sample_data.csv', package='bitphylogenyR')
+tmp <- read.csv( example_file )
+head(tmp)
+```
+
+Note that the last column is set to be the true cluster label of each data point. 
+We separate the data and its label. 
+```{r}
+x <- tmp[,-dim(tmp)[2]]
+true_label <- tmp[,dim(tmp)[2]]
+```
+
+Run the BitPhylogeny analysis as the following 
+```{r}
+bitphyloR( example_file, './output', T, 20, 10, 2)
+```
+The program saves the results in the directory 'output'.
+```{r}
+dir('./output', recursive=T)
+```
+
+The clustering performance is assessed by the V-measure. In addition, the label
+trace is summarised by the maximum posterior expected adjusted Rand method.
+```{r}
+compute_vmeasures('./output/sample_data.csv', 
+                  system.file('sample_data.csv', package='bitphylogenyR'))
+```
+We can visualise the results in the following way
+```{r}
+fp <- get_path('./output/sample_data.csv', 'mcmc-traces')
+vmeasure_traces <- as.matrix(load_vmeasures(fp, 'vmeasure_traces.csv'))
+mpear_vmeasure <- as.matrix(load_vmeasures(fp, 'mpear_label_vmeasure.csv'))
+class(vmeasure_traces) <- 'numeric'
+class(mpear_vmeasure) <- 'numeric'
+par(cex.lab=1.5, cex.axis=1.5)
+boxplot(vmeasure_traces, outline=F, cex.main=1.3, ylim=c(0,1),
+        border=c('gray60'), col='gray90')
+points(c(1,2,3),mpear_vmeasure, pch=22,cex = 1.5, bg= 'black')
+colors1 <- c("gray90",'black')
+colors2 <- c("gray",'black')
+add_legend("bottomleft", legend=c("traces", 'BitPhylogeny'),
+           pch=c(22,22), inset = c(0.1,0.20), col=colors1, 
+           pt.bg=colors2,
+           horiz=F, bty='n', cex=1.5)
+```
+
+The resulting trees are stored in the `treescripts` directory. The file 
+`tree-freq` contains the appearance frequency of each tree in the folder. 
+```{r, fig.width=15, fig.height=9}
+treefreq <- read.csv('./output/sample_data.csv/treescripts//tree-freq.csv')
+treefreq
+plot_sankey_mft('./output/sample_data.csv/treescripts//tree-freq.csv')
+```
+Alternatively, the .gdl files can be visualised with the [aisee3][id] software.
+
+## Baseline methods
+
+The baseline methods are consisted of clustering followed by minimum spanning 
+tree construction. 
+
+### Hierarchical clustering
+ 
+We first compute the Jacard distance matrix for the sequences.   
+```{r}
+dis <- dist(x, 'binary')
+```
+Then, we use the R function `hclust` to perform 
+hierarchical clustering based on the previously computed distance matrix.
+```{r}
+hc <- hclust(dis)
+hc
+```
+
+The resulting labels of each data point is obtained with the function `cutree`. 
+The function takes the output of `hclust` and the number of desired clusters `k`. 
+In this case, we set `k` to be $7$.
+```{r}
+label <- cutree(hc, k=7)
+label
+```
+
+When there is a range of cluster number hypothesis, we compute a list of possible labels.
+```{r}
+K <- seq(2,14,1)
+hc_cand <- lapply(K, function(ii) cutree(hc, ii) )
+```
+
+Each of these hypothesis is evaluated by the Silhouette score. 
+The one with the highest score is chosen as the clustering result.
+```{r}
+library(cluster)
+hc_silhouette_res <- sapply(1:length(K), 
+                              function(ii) 
+                                summary( silhouette(hc_cand[[ii]] ,dis) )$avg.width )
+idx <- which.max( hc_silhouette_res )
+hc_label <- hc_cand[[idx]]
+hc_label
+```
+
+Once the label is computed, we compute the genotype of each cluster as the following 
+```{r}
+clone <- sapply(unique(hc_label), function(i) which(hc_label==i) )
+n <- length(clone)
+hc_genotype <- matrix(0, n, dim(x)[2])
+for (i in 1:n){
+    idx <- clone[[i]]
+    if ( length(idx)==1 ){
+      hc_genotype[i,] <- as.matrix(x[idx,])
+    }else{
+      hc_genotype[i,] <- as.numeric( colMeans(as.matrix(x[idx,])) > 0.5 )
+    }
+}
+hc_genotype
+```
+
+Finally, we put the above steps into a function which gives the label and genotype estimates.
+```{r}
+get_label_hc
+```
+
+### K-centroids clustering
+The k-centroids methods uses the same distance matrix compute above. 
+```{r}
+kc = pam(dis, 7)
+kc
+```
+In this case, the genotypes can be obtained as the metroids. The Silhouette score 
+is used to choose the number of clusters. 
+```{r}
+kc_cand <- lapply(K, function(ii) pam( dis, ii) )
+kc_silhouette_res <- sapply(1:length(K), function(ii) 
+                            summary( silhouette(kc_cand[[ii]]$clustering,dis) )$avg.width )
+idx <- which.max( kc_silhouette_res )
+  
+kc_label <- kc_cand[[idx]]$clustering
+kc_label
+kc_genotype <- x[kc_cand[[idx]]$medoids,]
+kc_genotype
+```
+
+We also wrapped up a function for k-centroids clustering. 
+```{r}
+get_label_kc 
+```
+
+### Tree building
+We construct the minimum spanning tree based the clustering results from the previous stage. 
+```{r, fig.width=15, fig.height=9}
+mst <- get_mst(hc_genotype)
+plot_mst(hc_genotype, hc_label, flag=F)
+```
+
+# Reproduce figure 3B
+```{r}
+data(saved_vmeasures)
+
+mcmc_vmeasures <- saved_vmeasures$mcmc_vmeasures
+hc_vmeasures <- saved_vmeasures$hc_vmeasures
+kc_vmeasures <- saved_vmeasures$kc_vmeasures
+mpear_vmeasures <- saved_vmeasures$mpear_vmeasures
+
+par(mfrow=c(1,2), oma = c(3,3,0,0) + 0.1,
+    mar = c(0,0,1,0.5) + 0.1, cex.lab=1.5, cex.axis=1.5) 
+boxplot(mcmc_vmeasures$big_clone, outline=F, 
+        ylim=c(0.5,1) , 
+        cex.main=1.3, 
+        border=c('gray60'), col='gray90')
+points( mpear_vmeasures$big_clone, pch=22,cex = 1.5, bg= 'black')
+points( hc_vmeasures$big_clone, pch=24,cex = 1.5, bg= 'black')
+points( kc_vmeasures$big_clone, pch=25,cex = 1.5, bg= 'black') 
+
+boxplot(mcmc_vmeasures$small_clone, outline=F, 
+        ylim=c(0.5,1) , 
+        yaxt='n',cex.main=1.3,
+        border=c('gray60'), col='gray90')
+points( mpear_vmeasures$small_clone, pch=22, cex = 1.5, bg= 'black')
+points( hc_vmeasures$small_clone, pch=24, cex=1.5, bg= 'black')
+points( kc_vmeasures$small_clone, pch=25, cex = 1.5, bg= 'black') 
+colors1 <- c("gray90",'black', 'black', "black")
+colors2 <- c("gray",'black', 'black', "black")
+add_legend("bottomleft", legend=c("traces", 'BitPhylogeny',
+                                  'k-centroids',
+                                  'hierarchical clustering'),
+           pch=c(22,22,25,24), inset = c(0.1,0.13), col=colors1, 
+           pt.bg=colors2,
+           horiz=F, bty='n', cex=1.5)
+title(xlab = "error",
+      ylab = "v-measure",
+      outer = TRUE, line = 2.2)
+```
+
+#Reproduce figure 3C
+
+```{r}
+big_clone_t <- c(3, 7)
+big_clone_bit <- c(2, 5)
+big_clone_hc <- c(4, 7)
+big_clone_kc <- c(4, 7)
+big_clone_bit <- rbind(big_clone_bit, 
+                      c(3, 7), c(2,9 ), c(2,7) )
+big_clone_hc <- rbind(big_clone_hc, 
+                     c(5, 19), c(5,20), c(6,20))
+big_clone_kc <- rbind(big_clone_kc, 
+                     c(5, 20), c(5, 20), c(5,20))
+
+small_clone_t <- c(4, 12)
+small_clone_bit <- c(2, 8)
+small_clone_hc <- c(5, 12)
+small_clone_kc <- c(5, 12)
+
+small_clone_bit <- rbind(small_clone_bit, 
+                        c(3, 14),c(2,16 ), c(2,13) )
+small_clone_hc <- rbind(small_clone_hc, 
+                       c(7, 19),c(5,20), c(9,20))
+small_clone_kc <- rbind(small_clone_kc, 
+                       c(9, 20),c(7, 20), c(6,20))
+
+par(mfrow=c(1,2), oma = c(3,3,0,0) + 0.1,
+    mar = c(0,0,1,0.5) + 0.1, cex.lab=1.5, cex.axis=1.5) 
+color <- c('blue', 'red', 'red', 'red')
+plot(big_clone_t[2], big_clone_t[1],pch=3, ylim=c(0,10) ,xlim= c(5,22)
+     ,cex=1.5)
+points(big_clone_bit[,2], big_clone_bit[,1],pch=0,cex=1.5, col=color)
+points(big_clone_hc[,2], big_clone_hc[,1],pch=2,cex=1.5, col=color)
+points(big_clone_kc[,2], big_clone_kc[,1],pch=6,cex=1.5, col=color)
+
+plot(small_clone_t[2], small_clone_t[1],pch=3, ylim=c(0,10) ,xlim= c(5,22),cex=1.5,yaxt='n')
+points(small_clone_bit[,2], small_clone_bit[,1],pch=0,cex=1.5, col=color)
+points(small_clone_hc[,2], small_clone_hc[,1],pch=2,cex=1.5, col=color)
+points(small_clone_kc[,2], small_clone_kc[,1],pch=6,cex=1.5, col=color)
+
+colors1 <- c("black",'black', 'black', "black")
+colors2 <- c("black",'black', 'black', "black")
+add_legend("topleft", legend=c("truth", 'BitPhylogeny',
+                                  'k-centroids',
+                                  'hierarchical clustering'),
+           pch=c(3,0,6,2), inset = c(0.08,0.02), col=colors1, 
+           pt.bg=colors2,
+           horiz=F, bty='n', cex=1.5)
+add_legend("topleft", legend=c("noiseless", 'noise levels: \n0.01,0.02,0.05'),
+           inset = c(0.50,0.02), text.col=c('blue','red'),
+           horiz=F, bty='n', cex=1.5)
+title(xlab = "number of clones",
+      ylab = "maximum tree depth",
+      outer = TRUE, line = 2.2)
+```
+
+
+[id]:http://www.absint.com/aisee/index.htm

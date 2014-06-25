@@ -1,0 +1,15 @@
+export('bitphyloR', 'compute_vmeasures',
+       'load_vmeasures', 'compute_mpear_label',
+       'load_label_traces', 'write_mpear_label',
+       'get_label_kc', 'get_label_hc',
+       'get_mst', 'plot_mst',
+       'get_path', 'add_legend',
+       'load_true_label', 'vmeasureR',
+	'gdl2df','plot_sankey', 'plot_sankey_mft')
+import(rPython)
+import(igraph)
+importFrom(cluster, pam, silhouette)
+importFrom(mcclust, comp.psm, maxpear)
+importFrom(e1071, hamming.distance)
+importFrom(gplots, textplot)
+importFrom(riverplot, makeRiver, riverplot)
