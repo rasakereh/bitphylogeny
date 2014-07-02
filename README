@@ -33,9 +33,9 @@ sudo python setup.py install
 cd ../R
 R CMD INSTALL bitphylogenyR_0.1.tar.gz
 
-We've provided a sample data file 'sample_data.csv' in the folder. To run the sample file, execute the following code. 
+We've provided a sample data file 'sample_data.csv' in the python folder. To run the sample file, execute the following code. 
 
-BitPhylogeny 'sample_data.csv' 'output' -f -n 200 -b 10 -t 5 
+BitPhylogeny analyse 'sample_data.csv' 'output' -f -n 200 -b 10 -t 5 
 
 'sample_data.csv': the data file
 'output': the output folder where the MCMC traces and tree scripts are stored.
