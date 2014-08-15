@@ -1,0 +1,159 @@
+graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      25                                            yspace:            20           				xspace:            5 
+node: { label:"23 ~ Freq(0.663907)" title:"X" width:200}
+node: {  label:"15 ~ Freq(0.020127)" title:"X-0" width:200}
+edge: { source:"X" target:"X-0" anchor:1}
+node: {  label:"6 ~ Freq(0.049015)" title:"X-0-0" width:200}
+edge: { source:"X-0" target:"X-0-0" anchor:1}
+node: {  label:"1 ~ Freq(0.006391)" title:"X-0-1" width:200}
+edge: { source:"X-0" target:"X-0-1" anchor:1}
+node: {  label:"9 ~ Freq(0.072566)" title:"X-0-2" width:200}
+edge: { source:"X-0" target:"X-0-2" anchor:1}
+node: {  label:"5 ~ Freq(0.091850)" title:"X-0-3" width:200}
+edge: { source:"X-0" target:"X-0-3" anchor:1}
+node: {  label:"3 ~ Freq(0.189173)" title:"X-0-3-0" width:200}
+edge: { source:"X-0-3" target:"X-0-3-0" anchor:1}
+node: {  label:"0 ~ Freq(-0.125492)" title:"X-0-3-1" width:200}
+edge: { source:"X-0-3" target:"X-0-3-1" anchor:1}
+node: {  label:"1 ~ Freq(0.171256)" title:"X-0-3-2" width:200}
+edge: { source:"X-0-3" target:"X-0-3-2" anchor:1}
+node: {  label:"0 ~ Freq(0.062289)" title:"X-0-3-2-0" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-0" anchor:1}
+node: {  label:"0 ~ Freq(-0.139300)" title:"X-0-3-2-1" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-1" anchor:1}
+node: {  label:"0 ~ Freq(0.165076)" title:"X-0-3-2-2" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-2" anchor:1}
+node: {  label:"0 ~ Freq(-0.028798)" title:"X-0-3-2-3" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-3" anchor:1}
+node: {  label:"0 ~ Freq(0.379812)" title:"X-0-3-2-4" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-4" anchor:1}
+node: {  label:"0 ~ Freq(0.222860)" title:"X-0-3-2-5" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-5" anchor:1}
+node: {  label:"1 ~ Freq(0.058207)" title:"X-0-3-2-6" width:200}
+edge: { source:"X-0-3-2" target:"X-0-3-2-6" anchor:1}
+node: {  label:"0 ~ Freq(0.163643)" title:"X-0-3-3" width:200}
+edge: { source:"X-0-3" target:"X-0-3-3" anchor:1}
+node: {  label:"0 ~ Freq(-0.000459)" title:"X-0-3-4" width:200}
+edge: { source:"X-0-3" target:"X-0-3-4" anchor:1}
+node: {  label:"0 ~ Freq(0.024544)" title:"X-0-3-5" width:200}
+edge: { source:"X-0-3" target:"X-0-3-5" anchor:1}
+node: {  label:"0 ~ Freq(0.140795)" title:"X-0-3-6" width:200}
+edge: { source:"X-0-3" target:"X-0-3-6" anchor:1}
+node: {  label:"1 ~ Freq(0.136043)" title:"X-0-3-7" width:200}
+edge: { source:"X-0-3" target:"X-0-3-7" anchor:1}
+node: {  label:"0 ~ Freq(-0.060481)" title:"X-0-3-8" width:200}
+edge: { source:"X-0-3" target:"X-0-3-8" anchor:1}
+node: {  label:"0 ~ Freq(0.013959)" title:"X-0-3-9" width:200}
+edge: { source:"X-0-3" target:"X-0-3-9" anchor:1}
+node: {  label:"1 ~ Freq(0.111657)" title:"X-0-3-10" width:200}
+edge: { source:"X-0-3" target:"X-0-3-10" anchor:1}
+node: {  label:"0 ~ Freq(0.050178)" title:"X-0-3-11" width:200}
+edge: { source:"X-0-3" target:"X-0-3-11" anchor:1}
+node: {  label:"0 ~ Freq(-0.108022)" title:"X-0-3-12" width:200}
+edge: { source:"X-0-3" target:"X-0-3-12" anchor:1}
+node: {  label:"0 ~ Freq(0.045062)" title:"X-0-3-13" width:200}
+edge: { source:"X-0-3" target:"X-0-3-13" anchor:1}
+node: {  label:"1 ~ Freq(0.057893)" title:"X-0-3-14" width:200}
+edge: { source:"X-0-3" target:"X-0-3-14" anchor:1}
+node: {  label:"14 ~ Freq(0.087243)" title:"X-0-4" width:200}
+edge: { source:"X-0" target:"X-0-4" anchor:1}
+node: {  label:"1 ~ Freq(0.223862)" title:"X-0-5" width:200}
+edge: { source:"X-0" target:"X-0-5" anchor:1}
+node: {  label:"9 ~ Freq(0.034983)" title:"X-0-6" width:200}
+edge: { source:"X-0" target:"X-0-6" anchor:1}
+node: {  label:"2 ~ Freq(0.026640)" title:"X-0-7" width:200}
+edge: { source:"X-0" target:"X-0-7" anchor:1}
+node: {  label:"3 ~ Freq(0.011421)" title:"X-0-8" width:200}
+edge: { source:"X-0" target:"X-0-8" anchor:1}
+node: {  label:"10 ~ Freq(0.236686)" title:"X-1" width:200}
+edge: { source:"X" target:"X-1" anchor:1}
+node: {  label:"5 ~ Freq(0.260633)" title:"X-2" width:200}
+edge: { source:"X" target:"X-2" anchor:1}
+node: {  label:"5 ~ Freq(0.206895)" title:"X-3" width:200}
+edge: { source:"X" target:"X-3" anchor:1}
+node: {  label:"3 ~ Freq(0.337208)" title:"X-4" width:200}
+edge: { source:"X" target:"X-4" anchor:1}
+node: {  label:"0 ~ Freq(0.288392)" title:"X-4-0" width:200}
+edge: { source:"X-4" target:"X-4-0" anchor:1}
+node: {  label:"1 ~ Freq(0.105749)" title:"X-4-1" width:200}
+edge: { source:"X-4" target:"X-4-1" anchor:1}
+node: {  label:"0 ~ Freq(0.364413)" title:"X-4-2" width:200}
+edge: { source:"X-4" target:"X-4-2" anchor:1}
+node: {  label:"0 ~ Freq(0.149234)" title:"X-4-3" width:200}
+edge: { source:"X-4" target:"X-4-3" anchor:1}
+node: {  label:"0 ~ Freq(0.160573)" title:"X-4-4" width:200}
+edge: { source:"X-4" target:"X-4-4" anchor:1}
+node: {  label:"0 ~ Freq(0.225849)" title:"X-4-5" width:200}
+edge: { source:"X-4" target:"X-4-5" anchor:1}
+node: {  label:"0 ~ Freq(0.069236)" title:"X-4-6" width:200}
+edge: { source:"X-4" target:"X-4-6" anchor:1}
+node: {  label:"2 ~ Freq(0.205851)" title:"X-4-7" width:200}
+edge: { source:"X-4" target:"X-4-7" anchor:1}
+node: {  label:"0 ~ Freq(0.350775)" title:"X-4-8" width:200}
+edge: { source:"X-4" target:"X-4-8" anchor:1}
+node: {  label:"1 ~ Freq(0.196467)" title:"X-4-9" width:200}
+edge: { source:"X-4" target:"X-4-9" anchor:1}
+node: {  label:"0 ~ Freq(0.406629)" title:"X-5" width:200}
+edge: { source:"X" target:"X-5" anchor:1}
+node: {  label:"6 ~ Freq(0.710427)" title:"X-6" width:200}
+edge: { source:"X" target:"X-6" anchor:1}
+node: {  label:"3 ~ Freq(0.317905)" title:"X-7" width:200}
+edge: { source:"X" target:"X-7" anchor:1}
+node: {  label:"0 ~ Freq(0.523025)" title:"X-8" width:200}
+edge: { source:"X" target:"X-8" anchor:1}
+node: {  label:"0 ~ Freq(0.607788)" title:"X-9" width:200}
+edge: { source:"X" target:"X-9" anchor:1}
+node: {  label:"1 ~ Freq(0.614712)" title:"X-10" width:200}
+edge: { source:"X" target:"X-10" anchor:1}
+node: {  label:"1 ~ Freq(0.355729)" title:"X-11" width:200}
+edge: { source:"X" target:"X-11" anchor:1}
+node: {  label:"0 ~ Freq(0.717330)" title:"X-12" width:200}
+edge: { source:"X" target:"X-12" anchor:1}
+node: {  label:"0 ~ Freq(0.266886)" title:"X-13" width:200}
+edge: { source:"X" target:"X-13" anchor:1}
+node: {  label:"0 ~ Freq(0.262300)" title:"X-13-0" width:200}
+edge: { source:"X-13" target:"X-13-0" anchor:1}
+node: {  label:"0 ~ Freq(-0.095164)" title:"X-13-1" width:200}
+edge: { source:"X-13" target:"X-13-1" anchor:1}
+node: {  label:"0 ~ Freq(0.368509)" title:"X-13-2" width:200}
+edge: { source:"X-13" target:"X-13-2" anchor:1}
+node: {  label:"0 ~ Freq(0.286400)" title:"X-13-3" width:200}
+edge: { source:"X-13" target:"X-13-3" anchor:1}
+node: {  label:"0 ~ Freq(0.143011)" title:"X-13-4" width:200}
+edge: { source:"X-13" target:"X-13-4" anchor:1}
+node: {  label:"0 ~ Freq(0.298131)" title:"X-13-5" width:200}
+edge: { source:"X-13" target:"X-13-5" anchor:1}
+node: {  label:"0 ~ Freq(0.342530)" title:"X-13-6" width:200}
+edge: { source:"X-13" target:"X-13-6" anchor:1}
+node: {  label:"0 ~ Freq(0.490137)" title:"X-13-6-0" width:200}
+edge: { source:"X-13-6" target:"X-13-6-0" anchor:1}
+node: {  label:"0 ~ Freq(-0.013502)" title:"X-13-6-1" width:200}
+edge: { source:"X-13-6" target:"X-13-6-1" anchor:1}
+node: {  label:"0 ~ Freq(0.610276)" title:"X-13-6-2" width:200}
+edge: { source:"X-13-6" target:"X-13-6-2" anchor:1}
+node: {  label:"0 ~ Freq(0.136754)" title:"X-13-6-3" width:200}
+edge: { source:"X-13-6" target:"X-13-6-3" anchor:1}
+node: {  label:"0 ~ Freq(0.214852)" title:"X-13-6-4" width:200}
+edge: { source:"X-13-6" target:"X-13-6-4" anchor:1}
+node: {  label:"0 ~ Freq(0.127187)" title:"X-13-6-5" width:200}
+edge: { source:"X-13-6" target:"X-13-6-5" anchor:1}
+node: {  label:"0 ~ Freq(0.103479)" title:"X-13-6-6" width:200}
+edge: { source:"X-13-6" target:"X-13-6-6" anchor:1}
+node: {  label:"0 ~ Freq(0.153519)" title:"X-13-6-7" width:200}
+edge: { source:"X-13-6" target:"X-13-6-7" anchor:1}
+node: {  label:"0 ~ Freq(0.195215)" title:"X-13-6-8" width:200}
+edge: { source:"X-13-6" target:"X-13-6-8" anchor:1}
+node: {  label:"0 ~ Freq(0.352367)" title:"X-13-6-9" width:200}
+edge: { source:"X-13-6" target:"X-13-6-9" anchor:1}
+node: {  label:"0 ~ Freq(-0.066147)" title:"X-13-6-10" width:200}
+edge: { source:"X-13-6" target:"X-13-6-10" anchor:1}
+node: {  label:"0 ~ Freq(0.236488)" title:"X-13-6-11" width:200}
+edge: { source:"X-13-6" target:"X-13-6-11" anchor:1}
+node: {  label:"0 ~ Freq(0.450741)" title:"X-13-6-12" width:200}
+edge: { source:"X-13-6" target:"X-13-6-12" anchor:1}
+node: {  label:"0 ~ Freq(0.560312)" title:"X-13-6-12-0" width:200}
+edge: { source:"X-13-6-12" target:"X-13-6-12-0" anchor:1}
+node: {  label:"0 ~ Freq(0.108763)" title:"X-13-6-12-1" width:200}
+edge: { source:"X-13-6-12" target:"X-13-6-12-1" anchor:1}
+node: {  label:"1 ~ Freq(0.205028)" title:"X-13-6-12-2" width:200}
+edge: { source:"X-13-6-12" target:"X-13-6-12-2" anchor:1}
+}
