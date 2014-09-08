@@ -174,25 +174,24 @@ plot_mst_from_dir <- function(p1,p2, flag=T){
   }
 }
 
-
 plot_sankey<-function(nodemat, edgemat, genomat){
   nn <- nodemat[,1]
   g <- graph.empty() + vertices(nn)
-  ee <- unlist( t( edgemat[,1:2] ) )
-  g <- g + edges( sapply(ee, function(i) which(nn==i) ) )
+  ee <- unlist(t(edgemat[,1:2]))
+  g <- g + edges(sapply(ee, function(i) which(nn==i)))
   ll <- layout.reingold.tilford(g)
   nodemat[,'y'] = ll[,1]
   river <- makeRiver(nodemat, edgemat)
-  style <- list( edgecol= "col")
+  style <- list(edgecol= "col")
   par(mfrow = c(1, 2))
-  riverplot(river, srt=90, lty=1, default_style= style)
+  riverplot(river, srt=90, lty=1, default_style=style)
   textplot(genomat, show.rownames = F)
 }
 
 plot_sankey_mft <- function(fh){
   treefreq <- read.csv(fh)
   mft <- treefreq[which.max(treefreq[,'freq']), 1]
-  fn <- paste(dirname(fh),'/nodes-', mft, '.gdl', sep='')
+  fn <- paste(dirname(fh), '/nodes-', mft, '.gdl', sep='')
   df <- gdl2df(fn)
   plot_sankey(df$nodemat, df$edgemat, df$genomat)
 }
@@ -267,29 +266,19 @@ gdl2df <- function( file_gdl ){
   # change branch length
   for (k in 1:nrow(nodes)) {
     code = unlist(strsplit(nodes[k,"ID"],'-'))
-    if (length(code) == 3 ) {
-      index = which(nodes[, "layer" ] == (length(code)-1))
-      for (id in index) {
-        if (unlist(strsplit(nodes[id,"ID"],'-'))[length(code)-1] ==
-            code[length(code)-1]){
-          nodes[k, "x"] = as.numeric(nodes[k,"x"]) +
-              as.numeric(nodes[id, "x"])
-          break
-        }
-      }
-    }
-    #
-    if (length(code) == 4 ) {
-      index = which(nodes[, "layer" ] == (length(code)-1))
-      for (id in index) {
-        if ((unlist(strsplit(nodes[id,"ID"],'-'))[2] == code[2])
-            & (unlist(strsplit(nodes[id,"ID"],'-'))[3] == code[3])){
-          nodes[k, "x"] = as.numeric(nodes[k,"x"]) + as.numeric(nodes[id, "x"])
-          break
-        }
-      }
-    }
 
+    if (length(code) >=3) {
+      index = which(nodes[, "layer" ] == (length(code)-1))
+      for (id in index) {
+        code1 = unlist(strsplit(nodes[id,"ID"],'-'))
+        tt = sapply(2:length(code1), function(i) code1[i] == code[i])
+        if ( sum(tt) == (length(code1) - 1) ) {
+          nodes[k, "x"] = as.numeric(nodes[k,"x"]) +
+            as.numeric(nodes[id, "x"])
+          break
+        }
+      }
+    }
   }
 
   col_pa = c("coral2", "deepskyblue","lightgreen", "pink2", "black")
@@ -346,7 +335,6 @@ get_path <- function(folder, key){
   return(filepath)
 }
 
-
 add_legend <- function(...) {
   opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0),
               mar=c(0, 0, 0, 0), new=TRUE)
@@ -355,3 +343,4 @@ add_legend <- function(...) {
   legend(...)
 }
 
+# tree distance
