@@ -162,7 +162,6 @@ plot_mst <- function(genotype, label, flag= FALSE){
 
 }
 
-
 plot_mst_from_dir <- function(p1,p2, flag=T){
   fns <- dir(p1, pattern='genotype')
   fns1 <- dir(p1, pattern='label')
@@ -174,7 +173,10 @@ plot_mst_from_dir <- function(p1,p2, flag=T){
   }
 }
 
-plot_sankey<-function(nodemat, edgemat, genomat){
+plot_sankey<-function(df){
+  nodemat <- df$nodemat
+  edgemat <- df$edgemat
+  genomat <- df$genomat
   nn <- nodemat[,1]
   g <- graph.empty() + vertices(nn)
   ee <- unlist(t(edgemat[,1:2]))
@@ -193,7 +195,7 @@ plot_sankey_mft <- function(fh){
   mft <- treefreq[which.max(treefreq[,'freq']), 1]
   fn <- paste(dirname(fh), '/nodes-', mft, '.gdl', sep='')
   df <- gdl2df(fn)
-  plot_sankey(df$nodemat, df$edgemat, df$genomat)
+  plot_sankey(df)
 }
 
 #-------------------------------------------------------------------------------
@@ -281,7 +283,7 @@ gdl2df <- function( file_gdl ){
     }
   }
 
-  col_pa = c("coral2", "deepskyblue","lightgreen", "pink2", "black")
+  col_pa = c("coral2", "deepskyblue","lightgreen", "pink2", "black", 'yellow')
   for (i in unique(nodes[,"layer"]) ) {
     i = as.numeric(i)
     nodes[nodes[,"layer"] == as.character(i),"col"] = col_pa[i]
