@@ -214,8 +214,6 @@ for iter in range(-int(burnin),int(num_samples)):
         print "\t%f is best per-data complete data likelihood so far." \
             % (unnormpost_traces[idx]/max_data)
 
-    
-
     # print treescripts
     if idx + 1 == num_samples/thin:
         idx = idx + 1

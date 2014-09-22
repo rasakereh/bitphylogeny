@@ -8,31 +8,42 @@ Main function to run BitPhylogeny analysis
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-bitphyloR(fin, fout, n = 100, b = 10, t = 1)
+bitphyloR(fin, fout, contains_true_label = FALSE, n = 100, b = 10, t = 1, 
+mode = "methylation", rand_seed = 1234)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{fin}{
-    data file
+  path to data file
 }
   \item{fout}{
-    result directory 
+  path to result directory 
 }
-\item{n}{
-  number of mcmc samples
+  \item{contains_true_label}{
+  flag indicating whether the data file contains the true labels  
 }
-\item{b}{
-  number of burnin samples
+  \item{n}{
+number of mcmc samples
 }
-\item{t}{
-  thinning window
+  \item{b}{
+number of burnin samples
+}
+  \item{t}{
+thinning window
+}
+  \item{mode}{
+type of data. Choose from "methylation" and "mutation". The default value is 
+"methylation"
+}
+  \item{rand_seed}{
+default 1234
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-  The function doesn't return anything. Instead, it makes a result
+The function doesn't return anything. Instead, it makes a result
   directory and saves MCMC traces. 
 }
 \references{
@@ -51,16 +62,10 @@ Ke Yuan
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+## example_file <- system.file('sample_data.csv', package='bitphylogenyR')
+## bitphyloR(example_file, './output', T, 200, 50, 5)
+## bitphyloR(example_file, './output', T, 200, 50, 5, mode = "mutation")
 
-## The function is currently defined as
-function (fin, fout, n = 100, b = 10, t = 1) 
-{
-    python.exec("from bitphylogeny.run import run_analysis")
-    python.call("run_analysis", fin, fout, n, b, t)
-  }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -519,7 +519,6 @@ class TSSB(object):
                 (nodeA,nodeB,nodeNum) = findNodes(self.root, nodeNum=0)
                 
                 paramsA = nodeA['node'].params
-                branchA = nodeA['node'].branch_length
                 dataA = set(nodeA['node'].data)
                 mainA = nodeA['main']
             

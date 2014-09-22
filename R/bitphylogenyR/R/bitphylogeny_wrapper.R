@@ -1,8 +1,10 @@
 
 # Run BitPhylogeny analysis-----------------------------------------------------
-bitphyloR <- function(fin, fout, contains_true_label=False, n=100, b=10, t=1){
+bitphyloR <- function(fin, fout, contains_true_label=FALSE, n=100, b=10, t=1,
+                      mode = "methylation", rand_seed = 1234) {
     python.exec('from bitphylogeny.run import run_analysis')
-    python.call('run_analysis', fin, fout, contains_true_label, n, b, t)
+    python.call('run_analysis', fin, fout, contains_true_label, n, b, t, 
+                mode, rand_seed)
 }
 #-------------------------------------------------------------------------------
 
@@ -319,7 +321,6 @@ gdl2df <- function( file_gdl ){
       for (k in (index+2):(index+9)) {
         geno_single = paste(geno_single,ftsplit[k])
       }
-
       genotype = geno_single
       reads= unlist(strsplit(ftsplit[index-2], '"'))[2]
       genomat <- rbind(genomat, c(reads, genotype))
@@ -344,5 +345,3 @@ add_legend <- function(...) {
   plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
   legend(...)
 }
-
-# tree distance

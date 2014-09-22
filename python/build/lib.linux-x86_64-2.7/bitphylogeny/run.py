@@ -1,4 +1,3 @@
-from __future__ import division
 import os
 import time
 import cPickle
@@ -10,7 +9,6 @@ from numpy         import *
 from numpy.random  import *
 from scipy.stats   import itemfreq
 
-import pandas as pd
 
 from bitphylogeny.tssb          import *
 from bitphylogeny.model_spec    import *
@@ -21,27 +19,17 @@ from bitphylogeny.post_process.compute_vmeasures import *
 def run_wrapper(args):
     fin = args.fin
     fout = args.fout
-    contains_true_label = args.true_label
+    contains_true_label = args.f
     num_samples = args.n
     burnin = args.b
     thin = args.t
-    mode = args.mode
-    rand_seed = args.seed
-    row_names = args.row_names
-    run_analysis(fin, fout, contains_true_label, num_samples, 
-                 burnin, thin, mode, rand_seed, row_names)
+    run_analysis(fin, fout, contains_true_label, num_samples, burnin, thin)
 
 
-def run_analysis(seqsamp , fout, contains_true_label, 
-                 num_samples, burnin, thin, 
-                 mode = "methylation", rand_seed = 1234, row_names = False):
+def run_analysis(seqsamp , fout, contains_true_label, num_samples, burnin, thin):
 
-    if row_names:
-        index_col = 1
-    else:
-        index_col = False
-    data = pd.read_csv(seqsamp, index_col = index_col)
-    data = data.values
+    reader = csv.reader(open(seqsamp, 'rb'), delimiter=',')
+    data = array( list(reader) )[1:,:].astype('int')
 
     if contains_true_label:
         data = data[:,:-1]
@@ -76,12 +64,13 @@ def run_analysis(seqsamp , fout, contains_true_label,
         shutil.rmtree(params_folder)
         os.makedirs(params_folder)
 
+    rand_seed = int(round(rand(),4)*10000)
     seed(rand_seed)
     
 
-    root = BitPhylogeny(dims=dims, mode = mode)
-    tssb = TSSB(dp_alpha=2.0, dp_gamma=3e-1, alpha_decay=0.1,
-            root_node=root, data=data)
+    root = BitPhylogeny( dims=dims, mu = 5.0)
+    tssb = TSSB( dp_alpha=2.0, dp_gamma=3e-1, alpha_decay=0.1,
+            root_node=root, data=data )
 
     tree_collect_band  = 5 # has to be smaller than num_samples/thin
     max_depth          = 15
@@ -135,10 +124,9 @@ def run_analysis(seqsamp , fout, contains_true_label,
         idx = iter/thin
 
         if idx >= 0 and mod(iter, thin) == 0:
-            idx = int(idx)
             tssb_traces[mod(idx,tree_collect_band)] = cPickle.dumps(tssb)
             cd_llh_traces[idx]      = tssb.complete_data_log_likelihood()
-            (weights, nodes)        = tssb.get_mixture()
+            (weights, nodes)         = tssb.get_mixture()
             nodes_traces[idx]       = len(nodes)
             bignodes_traces[idx]    = sum(numpy.array(weights)>0.01)
             unnormpost_traces[idx]  = tssb.unnormalized_postertior()
@@ -153,7 +141,7 @@ def run_analysis(seqsamp , fout, contains_true_label,
             params_traces[idx]      = array([x.params for x in tssb.assignments])
             node_depth_traces[idx]  = array([x.depth for x in tssb.assignments])
         
-            if mod(idx, 10) == 0:
+            if mod(idx, 1) == 0:
                 (weights, nodes) = tssb.get_mixture()
                 print seqsamp, iter, len(nodes), cd_llh_traces[idx], \
                     root.mu_caller(), root.std_caller(), \
@@ -161,8 +149,10 @@ def run_analysis(seqsamp , fout, contains_true_label,
                     diag(root.ratemat_caller()), mean(branch_traces[idx]),\
                     tssb.dp_alpha, tssb.dp_gamma, \
                     tssb.alpha_decay
-            
-            if argmax(unnormpost_traces[:idx+1]) == idx:
+      
+            intervals = zeros((7))
+
+            if idx > 0 and argmax(unnormpost_traces[:idx+1]) == idx:
                 print "\t%f is best per-data complete data likelihood so far." \
                     % (unnormpost_traces[idx]/max_data)
 
@@ -185,41 +175,38 @@ def run_analysis(seqsamp , fout, contains_true_label,
                         node_fit.print_graph_full_logistic_different_branch_length(fh2)
                         fh2.close()
 
-    nodes_tabular = itemfreq(bignodes_traces)
-    nodes_tabular[:,1] = nodes_tabular[:,1] / (num_samples/thin)
-    treefreqfile = 'tree-freq'
-    header = ['unique_node_num', 'freq']
-    write_traces2csv(tree_folder+'tree-freq.csv',nodes_tabular,header)
+        nodes_tabular = itemfreq(bignodes_traces)
+        nodes_tabular[:,1] = nodes_tabular[:,1] / (num_samples/thin)
+        treefreqfile = 'tree-freq'
+        header = ['unique_node_num', 'freq']
+        write_traces2csv(tree_folder+'tree-freq.csv',nodes_tabular,header)
 
-    traces = hstack([cd_llh_traces,\
-                     nodes_traces, bignodes_traces, \
-                     unnormpost_traces, depth_traces, \
-                     base_value_traces, std_traces,\
-                     width_dist, mass_dist])
+        traces = hstack([cd_llh_traces,\
+                         nodes_traces, bignodes_traces, \
+                         unnormpost_traces, depth_traces, \
+                         base_value_traces, std_traces,\
+                         width_dist, mass_dist, root_dist])
 
-    tracefile = 'other_traces.csv'
-    header = ['cd_llh_traces',
-              'node_traces','bignodes_traces',
-              'unnormpost_traces','depth_traces',
-              'base_value_traces',
-              'std_traces','w1','w2','w3',
-              'w4','w5','w6','w7','w8','w9','w10','w11','w12',
-              'w13','w14','w15','m1','m2','m3','m4','m5','m6',
-              'm7','m8','m9','m10','m11','m12','m13','m14','m15']
+        tracefile = 'other_traces.csv'
+        header = ['cd_llh_traces',
+                  'node_traces','bignodes_traces',
+                  'unnormpost_traces','depth_traces',
+                  'base_value_traces',
+                  'std_traces','w1','w2','w3',
+                  'w4','w5','w6','w7','w8','w9','w10','w11','w12',
+                  'w13','w14','w15','m1','m2','m3','m4','m5','m6',
+                  'm7','m8','m9','m10','m11','m12','m13','m14','m15',
+                  'r1','r2','r3','r4','r5','r6','r7','r8']
 
-    write_traces2csv(trace_folder + 'other_traces.csv', traces,header)
-    write_traces2csv(trace_folder + 'label_traces.csv', label_traces)
-    write_traces2csv(trace_folder + 'node_depth_traces.csv', node_depth_traces)
-    write_traces2csv(trace_folder + 'branch_traces.csv', branch_traces)
-    write_traces2csv(trace_folder + 'root_param_traces.csv', root_dist)
+        write_traces2csv(trace_folder+'other_traces.csv',traces,header)
+        write_traces2csv(trace_folder+'label_traces.csv',label_traces)
+        write_traces2csv(trace_folder+'node_depth_traces.csv',node_depth_traces)
+        write_traces2csv(trace_folder+'branch_traces.csv',branch_traces)
 
-    numfiles = 10 # number of small arrays. Tested 50 files for (5e3,2e3,8) arrays. 
-                  # If numfiles = 50, the function will generate 50 files in the 
-                  # params_folder each contains a (1e2,2e3,8) array.
-    write_params_traces2file(params_traces, numfiles, params_folder)
-
-    write_traces2h5(trace_folder + 'params_traces.h5', params_traces)
-
+        numfiles = 10 # number of small arrays. Tested 50 files for (5e3,2e3,8) arrays. 
+                      # If numfiles = 50, the function will generate 50 files in the 
+                      # params_folder each contains a (1e2,2e3,8) array.
+        write_params_traces2file(params_traces, numfiles, params_folder)
 
 def post_process_wrapper(args):
     path = args.fout

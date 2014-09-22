@@ -10,12 +10,11 @@ output:
   word_document: default
 ---
 
-
 # Installation
 
 The `BitPhylogeny` packages depends on several `python` and `R` packages. The 
 first step is to make sure the following the packages are installed. 
-* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/
+* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/, pandas: http://pandas.pydata.org/, h5py: http://www.h5py.org/.
 * `R`: rPython, mcclust, e1071, igraph, gplots, riverplot.
    
 Secondly, clone the BitPhylogeny repository 
@@ -37,10 +36,10 @@ R CMD INSTALL bitphylogenyR_0.1.tar.gz
 ```
 # An example
 ## BitPhylogeny
-We use an example dataset
+We use an example dataset 
 ```{r}
 library('bitphylogenyR')
-example_file = system.file('sample_data.csv', package='bitphylogenyR')
+example_file <- system.file('sample_data.csv', package='bitphylogenyR')
 tmp <- read.csv( example_file )
 head(tmp)
 ```
@@ -54,8 +53,16 @@ true_label <- tmp[,dim(tmp)[2]]
 
 Run the BitPhylogeny analysis as the following 
 ```{r}
-bitphyloR( example_file, './output', T, 20, 10, 2)
+bitphyloR(example_file, './output', T, 200, 50, 5)
 ```
+
+By default, `bitphyloR` runs with methylation model setting. To analyse mutation 
+data, one can use the `mode` parameter
+
+```{r, eval=FALSE}
+bitphyloR(example_file, './output', T, 200, 50, 5, mode = "mutation")
+```
+
 The program saves the results in the directory 'output'.
 ```{r}
 dir('./output', recursive=T)

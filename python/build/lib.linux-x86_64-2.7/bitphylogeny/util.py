@@ -55,17 +55,6 @@ def write_traces2csv(file_name, traces, header=None):
     [writer.writerow(x) for x in traces]
     fh.close()
 
-def write_traces2h5(file_name, traces):
-    try:
-        import h5py
-    except:
-        raise Exception("Need h5py")
-    f = h5py.File(file_name, 'w')
-    f['dset'] = traces
-    f.close()
-
-
-
 def summary_clone(best_cluster_labels, params_traces, node_depth_traces):
     
     member = []

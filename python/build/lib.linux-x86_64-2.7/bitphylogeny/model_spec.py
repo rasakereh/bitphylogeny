@@ -21,66 +21,62 @@ def normpdfln(x, m, std):
 def laplacepdfln(x,m,std):
     return -log(2*std) - abs(x - m)/std
 
-def boundprob(x):
-    return (1.0-finfo(float64).eps)*(x-0.5)+0.5
-
-def get_weights(parent_params,  ratemat):
+def get_weights(parent_params, depth, ratemat):
     mapper = (parent_params > ones(len(parent_params)))
     weights = expm2(ratemat)
     m1 = weights[1,1]
     m2 = weights[0,1]
-    if m1 == 0.0:
-        m1 = boundprob(m1)
-    if m2 == 0.0:
-        m2 = boundprob(m2)
     return m1 * mapper + ~mapper*m2
 
-def mixlaplaceprior(params, base_value, std, ratemat):
-    weights = get_weights(params, ratemat)    
+def mixlaplaceprior(params, base_value, std, depth, ratemat):
+
+    weights = get_weights(params, depth, ratemat)    
     mapper = ( rand(len(weights)) < weights )
     m1 = laplace(base_value*ones(len(weights)), std*ones(len(weights)))
     m2 = laplace(-base_value*ones(len(weights)), std*ones(len(weights)))
-    return m1 * mapper + ~mapper * m2
+    
+    return m1 * mapper + ~mapper*m2
 
-def mixlaplacepdfln(x, m, std, parent_params, ratemat):
-    weights = get_weights(parent_params, ratemat)
-    #print weights, ratemat, parent_params 
-    logw1  = log(weights)
-    mapper = ( logw1 != 0 )
-    lap1 = laplacepdfln(x, m[0], std)
-    lap2 = laplacepdfln(x, m[1], std)
-    ll1 = logw1[mapper] + lap1[mapper]
-    logw2 = log(1-weights[mapper])
-    ll2 = logw2 + lap2[mapper]
-    ll  = sum(logsumexp(vstack([ll1,ll2]),0))
-    ll  = ll + sum(lap1[~mapper])
-    return ll
+def mixlaplacepdfln(x, m, std, parent_params, depth, ratemat):
+    weights = get_weights(parent_params, depth, ratemat)
+    res = empty(len(x))
+    for index , d in enumerate(x):
+        l1 = log( weights[index] ) + laplacepdfln(d, m[0], std)
+        if log( weights[index] ) == 0:
+            res[index] = l1
+        else:
+            l2 = log(1- weights[index]) + laplacepdfln(d, m[1], std)
+            res[index] = logsumexp( (l1, l2) )
+    return sum(res)
 
 def rootprior(base_value, std, dims):
     m2 = laplace(-5.0*ones(dims), 0.5*ones(dims))
     return m2
 
 def rootpriorpdfln(x, m, std, ratemat):
-    ll = laplacepdfln(x, -5.0, 0.5) 
-    return sum(ll)
+    res = empty(len(x))
+    for index , d in enumerate(x):
+        l1 = laplacepdfln(d, -5.0, 0.5)  
+        res[index] = l1        
+    return sum(res)
 
 class BitPhylogeny(Node):
+
 
     min_mu    = 2.0
     max_mu    = 7.0
     min_std   = 0.3
-    max_std   = 20.0
+    max_std   = 30.0
     max_param    = 10.0
     min_branch_length = 0.0
     max_branch_length = 1.0
 
-    def __init__(self, parent=None, dims=1, tssb=None, mu = 5.0,
+    def __init__(self, parent=None, dims=1, tssb=None, mu = 4.0,
                  ratemat = 32.0/7.0*array([[-1.0/8.0,1.0/8.0],[7.0/8.0,-7.0/8.0]]),
-                 std = 1.0, mode = 'methylation'):
+                 std = 1.0):
         super(BitPhylogeny, self).__init__(parent=parent, tssb=tssb)
 
         if parent is None:
-            self.mode   = mode
             self.dims   = dims
             self.depth  = 0.0
             self._base_value = mu*ones(1)
@@ -91,12 +87,11 @@ class BitPhylogeny(Node):
                                     self._std, dims)
             
         else:
-            self.mode = parent.mode
             self.dims   = parent.dims
             self.depth  = parent.depth + 1.0
             self.branch_length = uniform(0,1)*ones(1)
             self.params = mixlaplaceprior(parent.params, self.mu_caller(),
-                                          self.std_caller(),
+                                          self.std_caller(), self.depth,
                                           self.ratemat_caller()*self.branch_length)
 
             if any(abs(self.params)>self.max_param):
@@ -138,12 +133,12 @@ class BitPhylogeny(Node):
     
     def resample_params(self):
         
-        mode       = self.mode
         data       = self.get_data()
         counts     = sum(data, axis=0)
         num_data   = data.shape[0]
         mm         = (self.mu_caller(), -self.mu_caller())
         est_std    = self.std_caller()
+        depth      = self.depth
         ratemat    = self.ratemat_caller()
         est_branch = self.branch_length
         
@@ -157,18 +152,14 @@ class BitPhylogeny(Node):
                                      est_std,
                                      ratemat)
             else:
-                llh = mixlaplacepdfln(params, mm, est_std, self.parent().params,
+                llh = mixlaplacepdfln(params, mm, est_std, self.parent().params, depth,
                                       ratemat*est_branch)
 
-            if mode == "methylation":
-                llh = llh + sum(counts*sigmoidln(params)) + \
-                      sum((num_data-counts)*sigmoidln(-params))
-            elif num_data > 0:
-                llh = llh + nansum(data*sigmoidln(params) + \
-                                   (1.0 - data)*sigmoidln(-params))
+            llh = llh + sum(counts*sigmoidln(params)) + \
+              sum((num_data-counts)*sigmoidln(-params))
 
             for child in self.children():
-                llh = llh + mixlaplacepdfln(child.params, mm, est_std, params,
+                llh = llh + mixlaplacepdfln(child.params, mm, est_std, params,depth+1.0,
                                             ratemat*child.branch_length)
 
             return llh
@@ -186,7 +177,7 @@ class BitPhylogeny(Node):
 
             params = self.params
             parent_params = self.parent().params    
-            llh = mixlaplacepdfln(params, mm, est_std, parent_params,
+            llh = mixlaplacepdfln(params, mm, est_std, parent_params, depth,
                                   ratemat*branch_length)
 
             return llh
@@ -217,18 +208,15 @@ class BitPhylogeny(Node):
             params = array(params)
             rate1 = mean(sum(params, axis=1).astype(float64)/len(pp))
 
-            if (rate1 == 0.0) or (rate1 == 1.0):
-                rate1 = boundprob(rate1)
+            if rate1 == 0.0:
+                rate1 = 0.0 + numpy.finfo(numpy.float64).eps
+            if rate1 == 1.0:
+                rate1 = 1.0-numpy.finfo(numpy.float64).eps
                 
             rate2 = 1-rate1
-
-            if self.mode == "methylation":
-                scalar = 1.0/(2*rate1*rate2)
-                ratemat = scalar*array([[-rate1,rate1],[rate2,-rate2]])
-            else:
-                scalar = 1.0/(rate1*rate2)
-                ratemat = scalar*array([[-rate1,rate1],[0.0,0.0]])
-                
+            scalar = 1.0/(2*rate1*rate2)
+            ratemat = scalar*array([[-rate1,rate1],[rate2,-rate2]])
+            
             return ratemat
 
         
@@ -242,7 +230,7 @@ class BitPhylogeny(Node):
                 for child in root.children():
                     llh = llh + mixlaplacepdfln(child.params, (mu, -mu),
                                                 child.std_caller(),
-                                                root.params, 
+                                                root.params, child.depth,
                                                 child.ratemat_caller()*child.branch_length)
                     llh = llh + loglh(child)
                 return llh
@@ -260,7 +248,8 @@ class BitPhylogeny(Node):
                     llh = llh + mixlaplacepdfln(child.params,
                                                 (child.mu_caller(),
                                                   -child.mu_caller()),
-                                                est_std, root.params, 
+                                                est_std, root.params,
+                                                child.depth, 
                                                 child.ratemat_caller()*child.branch_length)
                     llh = llh + loglh(child)
                 return llh
@@ -283,6 +272,9 @@ class BitPhylogeny(Node):
                                  self.std_caller(), self.ratemat_caller())
         else:
             llh = mixlaplacepdfln(self.params,(self.mu_caller(),-self.mu_caller()),
-                                  self.std_caller(), self.parent().params,
+                                  self.std_caller(), self.parent().params, self.depth,
                                   self.ratemat_caller()*self.branch_length)
         return llh
+        
+    
+        

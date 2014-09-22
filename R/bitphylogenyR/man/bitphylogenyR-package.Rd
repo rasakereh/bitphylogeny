@@ -3,7 +3,7 @@
 \alias{bitphylogenyR}
 \docType{package}
 \title{
-R functions for BitPhylogeny
+R functions for BitPhylogeny 
 }
 \description{
 More about what it does (maybe more than one line)
