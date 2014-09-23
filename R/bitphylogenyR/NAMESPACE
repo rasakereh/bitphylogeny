@@ -5,7 +5,8 @@ export('bitphyloR', 'compute_vmeasures',
        'get_mst', 'plot_mst',
        'get_path', 'add_legend',
        'load_true_label', 'vmeasureR',
-	'gdl2df','plot_sankey', 'plot_sankey_mft')
+	'gdl2df','plot_sankey', 'plot_sankey_mft',
+	'run_baseline', 'plot_mst_from_dir', 'baseline')
 import(rPython)
 import(igraph)
 importFrom(cluster, pam, silhouette)

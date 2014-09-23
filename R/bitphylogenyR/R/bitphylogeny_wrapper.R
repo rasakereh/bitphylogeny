@@ -11,8 +11,10 @@ bitphyloR <- function(fin, fout, contains_true_label=FALSE, n=100, b=10, t=1,
 # Post process BitPhylogeny results --------------------------------------------
 vmeasureR <- function(x, y){
     python.exec('from sklearn import metrics')
-    return( python.call('metrics.homogeneity_completeness_v_measure',
-                        x, y) )
+    vmeasure <- t(python.call('metrics.homogeneity_completeness_v_measure', 
+                              x, y))
+    colnames(vmeasure) <- c('homogeneity','completeness', 'v_measure')
+    return(vmeasure)
 }
 
 # Compute v-measure
@@ -101,7 +103,7 @@ get_label_hc <- function(x, K){
     }
   }
 
-  return(list(hc_label = hc_label, hc_genotype = genotype))
+  return(list(label = hc_label, genotype = genotype))
 }
 
 get_label_kc <- function( x, K ){
@@ -119,7 +121,7 @@ get_label_kc <- function( x, K ){
   kc_label <- kc_cand[[idx]]$clustering
   kc_genotype <- x[kc_cand[[idx]]$medoids,]
 
-  return(list(kc_label = kc_label, kc_genotype = kc_genotype))
+  return(list(label = kc_label, genotype = kc_genotype))
 }
 
 #-------------------------------------------------------------------------------
@@ -132,10 +134,11 @@ get_mst <- function(genotype){
   mst <- minimum.spanning.tree(gr, algorithm= 'prim')
 }
 
-plot_mst <- function(genotype, label, flag= FALSE){
+plot_mst <- function(genotype, label, mst, 
+                     flag = FALSE, filepath = "", filename = ""){
   reads <- sapply(unique(unlist( label ) ),
                     function(ii) length( which( label==ii )))
-  mst <- get_mst(genotype)
+  #mst <- get_mst(genotype)
   l = layout.reingold.tilford(graph=mst,
                               root=which.min(rowSums(genotype)))
   nodes = matrix(0, dim(genotype)[1], 3 )
@@ -151,7 +154,7 @@ plot_mst <- function(genotype, label, flag= FALSE){
   colnames(nodes) = c('Nodes','Read Counts','Genotype')
 
   if (flag){
-      pdf( paste(p2, '/', fns[i], '.pdf',sep=''),  width=15, height=9)
+      pdf( paste(filepath, '/', filename, '.pdf',sep=''),  width=15, height=9)
   }
   par(mfrow = c(1, 2), oma = c(3,3,0,0) + 0.1,
       mar = c(0,0,1,0.5) )
@@ -169,9 +172,9 @@ plot_mst_from_dir <- function(p1,p2, flag=T){
   fns1 <- dir(p1, pattern='label')
   n <- length(fns1)
   for ( i in 1:n ){
-    genotype <- read.csv(paste(p1,fns[i],sep='/'))
-    label <- read.csv(paste(p1,fns1[i],sep='/'))
-    plot_mst( genotype, label, flag )
+    genotype <- read.csv(paste(p1, fns[i], sep='/'))
+    label <- read.csv(paste(p1, fns1[i], sep='/'))
+    plot_mst( genotype, label, flag, p2, fn)
   }
 }
 
@@ -201,6 +204,84 @@ plot_sankey_mft <- function(fh){
 }
 
 #-------------------------------------------------------------------------------
+
+# Base pipeline
+
+baseline <- function(x, K, method = "hc", true_label = NA) {
+  if (method == "hc") {
+    res <- get_label_hc(x, K)
+  }
+  
+  if (method == "kc") {
+    res <- get_label_kc(x, K)
+  }
+  
+  if (length(true_label) > 1) { 
+    vmeasure <- vmeasureR(res$label, true_label)
+    res$vmeasure <- vmeasure
+  }
+  
+  genotype <- res$genotype
+  mst <- get_mst(genotype)
+  res$mst <- mst
+  
+  return(res)
+}
+
+run_baseline <- function(output, K, tree_type){ 
+  ## clustering
+  
+  filepath <- system.file(paste('extdata/synthetic/', tree_type, '/', sep = ""),
+                          package='bitphylogenyR')
+  
+  files <- dir(filepath, pattern = c('mutmat'))
+  fp1 <- paste(output, '/cluster/hc/', tree_type, sep='')
+  fp2 <- paste(output, '/cluster/kc/', tree_type, sep='')
+  fp3 <- paste(output, '/tree/hc/', tree_type, '/', sep='')
+  fp4 <- paste(output, '/tree/kc/', tree_type, '/', sep='')
+  
+  dir.create(fp1, recursive = T, showWarnings = FALSE)
+  dir.create(fp2, recursive = T, showWarnings = FALSE)
+  dir.create(fp3, recursive = T, showWarnings = FALSE)
+  dir.create(fp4, recursive = T, showWarnings = FALSE)
+  
+  for (file in files) {
+    
+    cat(sprintf('Processing %s ...\n', file))
+    
+    data <- read.csv(paste(filepath, file, sep=''))
+    tmpname <- substr(file, nchar(file)-14, nchar(file)-11)
+    true_label <- data[, dim(data)[2]]
+    data <- data[, -dim(data)[2]]  
+    
+    hcres <- baseline(data, K, method = "hc", true_label)    
+    kcres <- baseline(data, K, method = "kc", true_label)
+    
+    write.csv(hcres$label, file = paste(fp1, '/' ,'hc_labels_',
+                                           tmpname, '.csv', 
+                                           sep=''), row.names=F )
+    write.csv(hcres$vmeasure, file = paste(fp1, '/' ,'hc_vmeasure_',
+                                        tmpname, '.csv', 
+                                        sep=''), row.names = F)
+    write.csv(hcres$genotype, file = paste(fp1, '/' ,'hc_genotype_',
+                                              tmpname, '.csv', 
+                                              sep=''), row.names=F )
+    write.csv(kcres$label, file = paste(fp2, '/' ,'kc_labels_',
+                                           tmpname, '.csv', 
+                                           sep=''), row.names=F )
+    write.csv(kcres$vmeasure, file = paste(fp2, '/' ,'kc_vmeasure_',
+                                        tmpname, '.csv', 
+                                        sep=''), row.names = F)
+    write.csv(kcres$genotype, file = paste(fp2, '/' ,'kc_genotype_',
+                                              tmpname, '.csv', 
+                                              sep=''), row.names=F )
+    
+    plot_mst(hcres$genotype, hcres$label, hcres$mst, flag = T, fp3, tmpname)
+    plot_mst(kcres$genotype, kcres$label, kcres$mst, flag = T, fp4, tmpname)
+    
+  }
+  
+}
 
 # Utilities --------------------------------------------------------------------
 
