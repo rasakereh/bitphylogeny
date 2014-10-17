@@ -13,15 +13,14 @@ vmeasureR <- function(x, y){
     python.exec('from sklearn import metrics')
     vmeasure <- t(python.call('metrics.homogeneity_completeness_v_measure', 
                               x, y))
-    colnames(vmeasure) <- c('homogeneity','completeness', 'v_measure')
+    colnames(vmeasure) <- c('homogeneity', 'completeness', 'v_measure')
     return(vmeasure)
 }
 
 # Compute v-measure
 compute_vmeasures <- function(fout, fin){
     write_mpear_label(fout)
-    python.exec('from bitphylogeny.run import write_vmeasures')
-    python.call('write_vmeasures', fout,fin)
+    write_vmeasure_traces(fout, fin)    
 }
 
 load_true_label <- function(ft){
@@ -29,17 +28,21 @@ load_true_label <- function(ft){
   true_label <- x[,dim(x)[2]]
 }
 
-write_vmeasures <- function(filepath, ft, fn){
+write_vmeasure_traces <- function(filepath, ft){
   labels <- load_label_traces(filepath)
   true_label <- load_true_label(ft)
-  vmeasures <- compute_vmeasures(labels, true_label)
+  vmeasures <- t(sapply(1:dim(labels)[1], 
+                        function(i) vmeasureR(as.integer(labels[i,]), 
+                                              true_label)))
   colnames(vmeasures) <- c('homogeneity','completeness', 'v_measure')
-  write.csv(vmeasures, file = paste(filepath, fn, sep='/'), row.names=F)
+  write.csv(vmeasures, file = paste(filepath, "mcmc-traces", 
+                                    "vmeasure_traces.csv", sep='/'), 
+            row.names=F)
 }
 
 load_vmeasures<- function( fp, key ){
   fn <- get_path(fp, key)
-  x <- read.csv(fn, header=T, as.is = T)
+  x <- read.csv(fn, header = T, as.is = T)
   return(x)
 }
 
@@ -56,8 +59,9 @@ compute_mpear_label <- function(label_traces){
 
 # wrappers
 load_label_traces <- function(filepath){
-  filename <- get_path(filepath, 'label_traces')
-  label_traces <- read.csv(filename, header = F)
+  filename <- dir(filepath, pattern = 'label_traces', 
+                  full.names = T, recursive = T)
+  label_traces <- read.csv(filename, header = FALSE)
   return(label_traces)
 }
 
@@ -276,8 +280,10 @@ run_baseline <- function(output, K, tree_type){
                                               tmpname, '.csv', 
                                               sep=''), row.names=F )
     
-    plot_mst(hcres$genotype, hcres$label, hcres$mst, flag = T, fp3, tmpname)
-    plot_mst(kcres$genotype, kcres$label, kcres$mst, flag = T, fp4, tmpname)
+    plot_mst(hcres$genotype, hcres$label, hcres$mst, flag = T, fp3, 
+             paste("hc_", tmpname, sep = ""))
+    plot_mst(kcres$genotype, kcres$label, kcres$mst, flag = T, fp4, 
+             paste("kc_", tmpname, sep = ""))
     
   }
   

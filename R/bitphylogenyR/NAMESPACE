@@ -2,11 +2,15 @@ export('bitphyloR', 'compute_vmeasures',
        'load_vmeasures', 'compute_mpear_label',
        'load_label_traces', 'write_mpear_label',
        'get_label_kc', 'get_label_hc',
-       'get_mst', 'plot_mst',
+       'get_mst', 'plot_mst', 'write_vmeasure_traces',
        'get_path', 'add_legend',
        'load_true_label', 'vmeasureR',
 	'gdl2df','plot_sankey', 'plot_sankey_mft',
-	'run_baseline', 'plot_mst_from_dir', 'baseline')
+	'run_baseline', 'plot_mst_from_dir', 'baseline',
+       "df2igraph", "get_common_tree_distance_df",
+       "get_tree_distance_common", "get_tree_distance_pairwise",
+       "get_genotype_intercept", "get_genotype",
+       "get_pairwise_tree_distance_df")
 import(rPython)
 import(igraph)
 importFrom(cluster, pam, silhouette)
