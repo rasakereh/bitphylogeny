@@ -20,7 +20,20 @@ vmeasureR <- function(x, y){
 # Compute v-measure
 compute_vmeasures <- function(fout, fin){
     write_mpear_label(fout)
+    write_vmeasure_mpear(fout, fin)
     write_vmeasure_traces(fout, fin)    
+}
+
+write_vmeasure_mpear <- function(fout, fin){
+  mpear_file <- dir(fout, pattern = "mpear_label", recursive = T, 
+                    full.names = T)
+  mpear_label <- read.csv(mpear_file)
+  true_label <- load_true_label(fin)
+  mpear_vmeasure <- vmeasureR(as.integer(unlist(mpear_label)), true_label)
+  write.csv(mpear_vmeasure, 
+            file = paste(fout, "mcmc-traces", 
+                         "mpear_vmeasure.csv", sep = "/"), 
+            row.names = F)
 }
 
 load_true_label <- function(ft){
