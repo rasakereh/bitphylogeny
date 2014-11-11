@@ -1,5 +1,6 @@
 ---
-title: 'BitPhylogeny: A probabilistic framework for reconstructing intra-tumor phylogenies'
+title: 'R markdown file for "BitPhylogeny: A probabilistic framework for reconstructing
+  intra-tumor phylogenies" '
 output:
   html_document:
     fig_caption: yes
@@ -10,11 +11,13 @@ output:
   word_document: default
 ---
 
-# Installation
+# The `BitPhylogeny` package
 
-The `BitPhylogeny` packages depends on several `python` and `R` packages. The 
+## Installation
+
+The `BitPhylogeny` package depends on several `python` and `R` packages. The 
 first step is to make sure the following the packages are installed. 
-* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/.
+* `python`: numpy, scipy, scikit-learn: http://scikit-learn.org/stable/, rpy2: http://rpy.sourceforge.net/, pandas: http://pandas.pydata.org/, h5py: http://www.h5py.org/.
 * `R`: rPython, mcclust, e1071, igraph, gplots, riverplot.
    
 Secondly, clone the BitPhylogeny repository 
@@ -34,8 +37,8 @@ Finally, install the R package
 cd ../R
 R CMD INSTALL bitphylogenyR_0.1.tar.gz 
 ```
-# An example
-## BitPhylogeny
+## An example
+### BitPhylogeny
 We use an example dataset 
 ```{r}
 library('bitphylogenyR')
@@ -52,7 +55,7 @@ true_label <- tmp[,dim(tmp)[2]]
 ```
 
 Run the BitPhylogeny analysis as the following 
-```{r}
+```{r, cache = TRUE}
 bitphyloR(example_file, './output', T, 200, 50, 5)
 ```
 
@@ -78,7 +81,7 @@ We can visualise the results in the following way
 ```{r}
 fp <- get_path('./output/sample_data.csv', 'mcmc-traces')
 vmeasure_traces <- as.matrix(load_vmeasures(fp, 'vmeasure_traces.csv'))
-mpear_vmeasure <- as.matrix(load_vmeasures(fp, 'mpear_label_vmeasure.csv'))
+mpear_vmeasure <- as.matrix(load_vmeasures(fp, 'mpear_vmeasure.csv'))
 class(vmeasure_traces) <- 'numeric'
 class(mpear_vmeasure) <- 'numeric'
 par(cex.lab=1.5, cex.axis=1.5)
@@ -102,12 +105,12 @@ plot_sankey_mft('./output/sample_data.csv/treescripts//tree-freq.csv')
 ```
 Alternatively, the .gdl files can be visualised with the [aisee3][id] software.
 
-## Baseline methods
+### Baseline methods
 
 The baseline methods are consisted of clustering followed by minimum spanning 
 tree construction. 
 
-### Hierarchical clustering
+#### Hierarchical clustering
  
 We first compute the Jacard distance matrix for the sequences.   
 ```{r}
@@ -167,7 +170,7 @@ Finally, we put the above steps into a function which gives the label and genoty
 get_label_hc
 ```
 
-### K-centroids clustering
+#### K-centroids clustering
 The k-centroids methods uses the same distance matrix compute above. 
 ```{r}
 kc = pam(dis, 7)
@@ -199,7 +202,7 @@ mst <- get_mst(hc_genotype)
 plot_mst(hc_genotype, hc_label, mst, flag=F)
 ```
 
-# Reproduce figure 3B
+# Reproducing V-measures in Figure 3
 ```{r}
 data(saved_vmeasures)
 
@@ -238,7 +241,7 @@ title(xlab = "error",
       outer = TRUE, line = 2.2)
 ```
 
-#Reproduce figure 3C
+#Reproducing number of nodes and maximum tree depth plots in Figure 3
 
 ```{r}
 big_clone_t <- c(3, 7)
@@ -293,6 +296,365 @@ add_legend("topleft", legend=c("noiseless", 'noise levels: \n0.01,0.02,0.05'),
 title(xlab = "number of clones",
       ylab = "maximum tree depth",
       outer = TRUE, line = 2.2)
+```
+
+# Reproducing tree distance in Figure 4
+```{r, fig.width = 12, fig.height = 8, cache=TRUE, warning=FALSE}
+library(ggplot2)
+library(plyr)
+library(grid)
+
+
+metrics1 <- get_common_tree_distance_df("/media/nas/BitPhylogeny//methylation/mono_tree_simulations",
+                                        "/media/nas/BitPhylogeny//methylation/mono_tree_baseline",
+                                        "/media/nas/BitPhylogeny//methylation/mono_tree_baseline", 
+                                        "mono-clone", 
+                                        "/media/nas/BitPhylogeny//methylation/tree-truth-full-mono-methy.gdl")
+
+metrics2 <- get_common_tree_distance_df("/media/nas/BitPhylogeny//methylation/big_tree_simulations",
+                                        "/media/nas/BitPhylogeny//methylation/big_tree_baseline",
+                                        "/media/nas/BitPhylogeny//methylation/big_tree_baseline",
+                                        "big-clone",
+                                        "/media/nas/BitPhylogeny//methylation/tree-truth-full-big-methy.gdl")
+
+metrics3 <- get_common_tree_distance_df("/media/nas/BitPhylogeny//methylation/small_tree_simulations",
+                                        "/media/nas/BitPhylogeny//methylation/small_tree_baseline",
+                                        "/media/nas/BitPhylogeny//methylation/small_tree_baseline",
+                                        "small-clone",
+                                        "/media/nas/BitPhylogeny//methylation/tree-truth-full-small-methy.gdl")
+
+metrics4 <- get_common_tree_distance_df("/media/nas/BitPhylogeny//methylation/hyper_tree_simulations",
+                                        "/media/nas/BitPhylogeny//methylation/hyper_tree_baseline",
+                                        "/media/nas/BitPhylogeny//methylation/hyper_tree_baseline",
+                                        "hyper-clone",
+                                        "/media/nas/BitPhylogeny//methylation/tree-truth-full-hyper-methy.gdl") 
+
+
+metrics5 <- get_common_tree_distance_df("/media/nas/BitPhylogeny//methylation/star_tree_simulations",
+                                        "/media/nas/BitPhylogeny//methylation/star_tree_baseline",
+                                        "/media/nas/BitPhylogeny//methylation/star_tree_baseline",
+                                        "star-clone",
+                                        "/media/nas/BitPhylogeny//methylation/tree-truth-full-star-methy.gdl")
+
+metrics <- rbind(metrics1, metrics2, metrics3, metrics4, metrics5)
+levels(metrics$tree_type) <- c("monoclonal", 
+                               "polyclonal-L", 
+                               "polyclonal-M",
+                               "polyclonal-H", 
+                               "mutator")
+levels(metrics1$tree_type) <- c("monoclonal", 
+                                "polyclonal-L", 
+                                "polyclonal-M",
+                                "polyclonal-H", 
+                                "mutator")
+
+print(ggplot(data = metrics, aes(x = tree_type, y = distance,  color = method, 
+                                 shape = method)) +
+        geom_jitter( position = position_dodge(width = 0.75), alpha = 0.8,
+                     size = 5 ) + geom_boxplot(fill = NA, outlier.colour = NA) +
+        theme_bw() + xlab("tree type") +
+        theme(axis.title.x = element_text(face="bold", size=25), 
+              axis.text.x  = element_text(vjust=0.5, size=22, angle = 0),
+              axis.title.y = element_text(face="bold", size=25),
+              axis.text.y  = element_text(size=20),
+              legend.title = element_blank(),
+              legend.text = element_text(size = 22),
+              legend.position = c(0.2,0.8),
+              legend.key.size = unit(1.5, "cm")))
+
+print(ggplot(data = metrics1, aes(x = tree_type, y = distance,  color = method,
+                                  shape = method)) +
+        geom_jitter( position = position_dodge(width = 0.75), alpha = 0.8,
+                     size = 5) + geom_boxplot(fill = NA, outlier.colour = NA) +
+        theme_bw() +  xlab("tree type") +
+      theme(axis.title.x = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.x  = element_text(vjust=0.5, size=22),
+            axis.text.y  = element_text(size=20),
+            legend.position = "none"))
+```
+
+# Reproducing Figure 5
+```{r,  cache=TRUE}
+CT_R1<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/incorrespondent-6142/CT_IRX2P_R1.csv/traces-CT_IRX2P_R1.csv",sep=",",header=T)
+CT_R4<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/scolia-5868/CT_IRX2P_R4.csv/traces-CT_IRX2P_R4.csv",sep=",",header=T)
+CT_R5<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/neuromerous-9376/CT_IRX2P_R5.csv/traces-CT_IRX2P_R5.csv",sep=",",header=T)
+CT_R6<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/proaccelerin-3347/CT_IRX2P_R6.csv/traces-CT_IRX2P_R6.csv",sep=",",header=T)
+
+CT_L2<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/oceanity-4938/CT_IRX2P_L2.csv/traces-CT_IRX2P_L2.csv",sep=",",header=T)
+CT_L3<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/nonprolific-2900/CT_IRX2P_L3.csv/traces-CT_IRX2P_L3.csv",sep=",",header=T)
+CT_L7<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/buoy-3083/CT_IRX2P_L7.csv/traces-CT_IRX2P_L7.csv",sep=",",header=T)
+CT_L8<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/epistyle-3189/CT_IRX2P_L8.csv/traces-CT_IRX2P_L8.csv",sep=",",header=T)
+
+feature<-5
+band<-0.2
+g<-density(CT_R1[,feature],bw=band)
+
+plot(g, col=rgb(0,0.7,0.7,1/2), main="CT max depth", xlim=c(min(CT_R1[,feature],CT_R4[,feature],CT_R5[,feature],CT_R6[,feature],CT_L2[,feature],CT_L3[,feature],CT_L7[,feature],CT_L8[,feature]),max(CT_R1[,feature],CT_R4[,feature],CT_R5[,feature],CT_R6[,feature],CT_L2[,feature],CT_L3[,feature],CT_L7[,feature],CT_L8[,feature])),
+		ylim=c(0,2),lwd=2, xaxt='n')
+axis(1, at=c(2,3,4,5), labels=c(2,3,4,5))
+lines(density(CT_R4[,feature],bw=band), col=rgb(0,0.8,0.8,1/2),lwd=2)
+lines(density(CT_R5[,feature],bw=band), col=rgb(0,0.9,0.9,1/2),lwd=2)
+lines(density(CT_R6[,feature],bw=band), col=rgb(0,1,1,1/2),lwd=2)
+
+lines(density(CT_L2[,feature],bw=band), col=rgb(0.7,0,0.7,1/2),lwd=2)
+lines(density(CT_L3[,feature],bw=band), col=rgb(0.8,0,0.8,1/2),lwd=2)
+lines(density(CT_L7[,feature],bw=band), col=rgb(0.9,0,0.9,1/2),lwd=2)
+lines(density(CT_L8[,feature],bw=band), col=rgb(1,0,1,1/2),lwd=2)
+
+
+wilcox.test(c(var(CT_R1[,feature]), var(CT_R4[,feature]), var(CT_R5[,feature]), var(CT_R6[,feature])),c(var(CT_L2[,feature]),var(CT_L3[,feature]),var(CT_L7[,feature]),var(CT_L8[,feature])),
+	alternative="greater")
+
+
+
+feature<-23
+
+massesR<-matrix(c(mean(CT_R1[,feature]),mean(CT_R1[,feature+1]),mean(CT_R1[,feature+2]),mean(CT_R1[,feature+3]),mean(CT_R1[,feature+4]),mean(CT_R4[,feature]),mean(CT_R4[,feature+1]),mean(CT_R4[,feature+2]),mean(CT_R4[,feature+3]),mean(CT_R4[,feature+4]),
+		mean(CT_R5[,feature]),mean(CT_R5[,feature+1]),mean(CT_R5[,feature+2]),mean(CT_R5[,feature+3]),mean(CT_R5[,feature+4]),mean(CT_R6[,feature]),mean(CT_R6[,feature+1]),mean(CT_R6[,feature+2]),mean(CT_R6[,feature+3]),mean(CT_R6[,feature+4])),nrow=5)
+massesL<-matrix(c(mean(CT_L2[,feature]),mean(CT_L2[,feature+1]),mean(CT_L2[,feature+2]),mean(CT_L2[,feature+3]),mean(CT_L2[,feature+4]),mean(CT_L3[,feature]),mean(CT_L3[,feature+1]),mean(CT_L3[,feature+2]),mean(CT_L3[,feature+3]),mean(CT_L3[,feature+4]),
+				mean(CT_L7[,feature]),mean(CT_L7[,feature+1]),mean(CT_L7[,feature+2]),mean(CT_L7[,feature+3]),mean(CT_L7[,feature+4]),mean(CT_L8[,feature]),mean(CT_L8[,feature+1]),mean(CT_L8[,feature+2]),mean(CT_L8[,feature+3]),mean(CT_L8[,feature+4])),nrow=5)
+masses<-cbind(massesL,massesR)
+masses<-apply(masses,2,rev)
+par(mar=c(5.1,4.1,4.1,6.1))
+barplot(masses,col=rev(c("red","blue","green","pink","orange")),names.arg=c("CT_L2", "CT_L3", "CT_L7", "CT_L8", "CT_R1", "CT_R4", "CT_R5", "CT_R6"),main="mean posterior layer-wise tumor masses",
+		args.legend = list(x=11.5, y=1), bty = "n")
+
+
+x<-0
+massesR<-massesR+0.00000001
+massesL<-massesL+0.00000001
+rightDiff<-rep(0,6)
+leftDiff<-rep(0,6)
+for (j in 1:3 ) {
+	for (i in (j+1):4) {
+		x<-x+1
+			rightDiff[x]<-(sum(log(massesR[,j]/massesR[,i])*massesR[,j])+sum(log(massesR[,i]/massesR[,j])*massesR[,i]))/2
+			leftDiff[x]<-(sum(log(massesL[,j]/massesL[,i])*massesL[,j])+sum(log(massesL[,i]/massesL[,j])*massesL[,i]))/2
+		}
+}
+wilcox.test(rightDiff,leftDiff,alternative='less')
+
+```
+
+
+# Reproducing Figure 6
+```{r, cache=TRUE}
+CX_R1<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/demirelief-3049/CX_IRX2P_R1.csv/traces-CX_IRX2P_R1.csv",sep=",",header=T)
+CX_R2<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/spatulose-3680/CX_IRX2P_R2.csv/traces-CX_IRX2P_R2.csv",sep=",",header=T)
+CX_R6<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2//Sottoriva/final/alevin-293/CX_IRX2P_R6.csv/traces-CX_IRX2P_R6.csv",sep=",",header=T)
+
+CX_L3<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2/Sottoriva/final/uplinked-8718/CX_IRX2P_L3.csv/traces-CX_IRX2P_L3.csv",sep=",",header=T)
+CX_L4<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2/Sottoriva/final/subtransverse-8545/CX_IRX2P_L4.csv/traces-CX_IRX2P_L4.csv",sep=",",header=T)
+CX_L5<-read.table("/media/nas/BitPhylogeny/methylation/backup/final_mcmcrun_incomplete_2/Sottoriva/final/marbleness-8646/CX_IRX2P_L5.csv/traces-CX_IRX2P_L5.csv",sep=",",header=T)
+
+
+# #par(mfrow=c(1,2))
+feature<-2
+band<-0.7
+g<-density(CX_R1[,feature],bw=band)
+
+plot(g, col=rgb(0,0.7,0.7,1/2), lwd=2, main="CX node numbers", xlim=c(min(CX_R1[,feature],CX_R2[,feature],CX_L3[,feature],CX_L4[,feature],CX_L5[,feature]),25))
+lines(density(CX_R2[,feature],bw=band), col=rgb(0,0.8,0.8,1/2),lwd=2)
+lines(density(CX_R6[,feature],bw=band), col=rgb(0,0.9,0.9,1/2),lwd=2)
+
+lines(density(CX_L3[,feature],bw=band), col=rgb(0.7,0,0.7,1/2),lwd=2)
+lines(density(CX_L4[,feature],bw=band), col=rgb(0.8,0,0.8,1/2),lwd=2)
+lines(density(CX_L5[,feature],bw=band), col=rgb(0.9,0,0.9,1/2),lwd=2)
+# 
+# 
+ t.test(c(mean(CX_R1[,feature]),mean(CX_R2[,feature]),mean(CX_R6[,feature])),c(mean(CX_L3[,feature]),mean(CX_L4[,feature]),mean(CX_L5[,feature])))
+
+# 
+feature<-5
+band<-0.2
+g<-density(CX_R1[,feature],bw=band)
+
+plot(g, col=rgb(0,0.7,0.7,1/2), main="CX max depth", xlim=c(min(CX_R1[,feature],CX_R2[,feature],CX_L3[,feature],CX_L4[,feature],CX_L5[,feature]),max(CX_R1[,feature],CX_R2[,feature],CX_L3[,feature],CX_L4[,feature],CX_L5[,feature])),
+		ylim=c(0,2),lwd=2, xaxt='n')
+axis(1, at=c(1,2,3,4,5), labels=c(1,2,3,4,5))
+lines(density(CX_R2[,feature],bw=band), col=rgb(0,0.8,0.8,1/2),lwd=2)
+lines(density(CX_R6[,feature],bw=band), col=rgb(0,0.9,0.9,1/2),lwd=2)
+
+lines(density(CX_L3[,feature],bw=band), col=rgb(0.7,0,0.7,1/2),lwd=2)
+lines(density(CX_L4[,feature],bw=band), col=rgb(0.8,0,0.8,1/2),lwd=2)
+lines(density(CX_L5[,feature],bw=band), col=rgb(0.9,0,0.9,1/2),lwd=2)
+# 
+t.test(c(mean(CX_R1[,feature]),mean(CX_R2[,feature]),mean(CX_R6[,feature])),c(mean(CX_L3[,feature]),mean(CX_L4[,feature]),mean(CX_L5[,feature])))
+# 
+# 
+# 
+
+
+feature1<-2
+feature2<-5
+plot(mean(CX_R1[,feature1]),mean(CX_R1[,feature2]),xlim=c(4,12),ylim=c(2.5,3.3),col=rgb(0,0.7,0.7,1/2),lwd=4, cex=3, ylab=colnames(CX_R1)[feature2],xlab=colnames(CX_R1)[feature1])
+points(mean(CX_R2[,feature1]),mean(CX_R2[,feature2]),col=rgb(0,0.7,0.7,1/2),lwd=4,cex=3)
+points(mean(CX_R6[,feature1]),mean(CX_R6[,feature2]),col=rgb(0,0.8,0.8,1/2),lwd=4,cex=3)
+
+points(mean(CX_L3[,feature1]),mean(CX_L3[,feature2]),col=rgb(0.7,0,0.7,1/2),lwd=4,pch=2,cex=3)
+points(mean(CX_L4[,feature1]),mean(CX_L4[,feature2]),col=rgb(0.8,0,0.8,1/2),lwd=4,pch=2,cex=3)
+points(mean(CX_L5[,feature1]),mean(CX_L5[,feature2]),col=rgb(0.9,0,0.9,1/2),lwd=4,pch=2,cex=3)
+```
+
+# Reproducing Figure 7 and S3
+```{r, fig.width= 12, fig.height=15, cache=TRUE}
+library(e1071)
+load("~/Dropbox/bitphylogeny_pkg/single_cell/params_summary.Rdata")
+
+snv <- read.csv("~/Dropbox/bitphylogeny_pkg/single_cell/snv.csv", as.is = T)
+
+cellNames <- colnames(snv)[-1]
+
+geneList <- read.table("~/Dropbox/bitphylogeny_pkg/single_cell/Outfile_short.csv", header = T, as.is =T)
+
+bed <- read.csv('~/Dropbox/bitphylogeny_pkg/single_cell/hou_data_bed.csv', as.is = T)
+
+indexSESN2 <- geneList[which(geneList[,"GeneSym"] == "SESN2"), 
+                       c("Chrom", "Start", "GeneSym")]
+
+indexNTRK1 <- geneList[which(geneList[,"GeneSym"] == "NTRK1"), 
+                       c("Chrom", "Start", "GeneSym")]
+
+indexST13 <- geneList[which(geneList[,"GeneSym"] == "ST13"), 
+                      c("Chrom", "Start", "GeneSym")]
+
+indexABCB5 <- geneList[which(geneList[,"GeneSym"] == "ABCB5"), 
+                       c("Chrom", "Start", "GeneSym")]
+
+indexFRG1 <- geneList[which(geneList[,"GeneSym"] == "FRG1"), 
+                      c("Chrom", "Start", "GeneSym")]
+
+indexASNS <- geneList[which(geneList[,"GeneSym"] == "ASNS"), 
+                      c("Chrom", "Start", "GeneSym")]
+
+indexTOP1MT <- geneList[which(geneList[,"GeneSym"] == "TOP1MT"), 
+                        c("Chrom", "Start", "GeneSym")]
+
+indexDNAJC17 <- geneList[which(geneList[,"GeneSym"] == "DNAJC17"), 
+                         c("Chrom", "Start", "GeneSym")]
+
+indexDF <- rbind(indexSESN2, indexNTRK1, indexST13, indexABCB5, indexFRG1,
+                 indexASNS, indexTOP1MT, indexDNAJC17)
+
+rownames(indexDF) <- NULL
+
+ll <- mapLabels[1,]
+rownames(ll) <- NULL
+colnames(ll) <- NULL
+
+ll <- as.character(ll)
+ll <- revalue(ll, c("0"="a", "2"="c", "10"="f", "11"="g", "5"="i",
+              "7"="d", "4"="h", "8"="e", "1"="b"))
+
+
+FindGeneIndex <- function(x, y){
+  ind <- c()
+  for (i in 1:dim(y)[1]) {
+    tmp <- sapply(1:dim(x)[1], function(j) sum(x[j,] == y[i,]) == 2)
+    ind <- c(ind, which(tmp == T))
+  }
+  return(ind)
+}
+
+GetGeneDataFrame <- function (bed, index, snv, ll, meanParams, sdParams) {
+  x <- data.frame() 
+  for (i in 1 : dim(index)[1]) {
+    
+    ind <- FindGeneIndex(bed[, c(1,2)], index[i, c(1,2)])
+  
+    meanValues <- meanParams[ind, ] 
+    sdValues <- sdParams[ind, ]
+    snvData <- t(snv[ind, -1])
+    rownames(snvData) <- NULL
+    colnames(snvData) <- NULL
+    snvData[is.na(snvData)] <- 2
+    
+    x <- rbind(x, 
+               data.frame(mean= meanValues, 
+                          sd = sdValues, 
+                          cell = 1:60, 
+                          snv = as.factor(snvData),  
+                          clone = as.factor(t(ll)),
+                          gene = paste(index[i, 3],
+                                       index[i, 1], 
+                                       index[i, 2],
+                                       sep = ",") ) )
+  } 
+  return(x)
+}
+
+dfall <- GetGeneDataFrame(bed, indexDF, snv, ll, meanParams, sdParams)
+
+print(ggplot(dfall, aes(x=cell, y=sigmoid(mean), color = clone)) + 
+  geom_errorbar(aes(ymin= sigmoid(mean-sd), ymax=sigmoid(mean+sd)), width=1) + 
+  geom_point(size=2.5) + ylab("probability of mutation") + 
+  facet_wrap(~gene, ncol=2) + theme_bw() +
+  theme(axis.text.x  = element_text(vjust=0.5, size = 16),
+        axis.title.x = element_text(face="bold", size = 20),
+        axis.text.y = element_text(size = 16),
+        axis.title.y = element_text(face="bold", size = 20),
+        legend.title = element_text(face="bold",size = 18),
+        legend.text = element_text(face="bold",size = 18),
+        strip.text.x = element_text(face="bold",size = 18))
+  )
+
+
+```
+
+# Reproducing Figure S1
+
+```{r, cache=TRUE, warning=FALSE, fig.cap= "Precentage of significant correlation between loci of the three regions in Sottoriva et al."}
+library(bitphylogenyR)
+library(corrplot)
+library(psych)
+
+SetLociCorr <- function(mode = "IRX2P"){
+  files <- dir(system.file('extdata/sottoriva/', package = "bitphylogenyR"), 
+               full.names = T, pattern = mode)
+  if (mode == "IRX2P") {
+    n = 8
+  } else if (mode == "SLC5A7P") {
+    n = 6
+  } else {
+    n = 16
+  }
+  
+  corrmat <- array(0, dim = c(n, n))
+  nonnacount <- array(0, dim = c(n, n))
+  
+  for (i in 1:length(files)) {
+    x <- read.csv(files[i])  
+    t1 <- corr.test(unique(x), method = "kendall")
+    t2 <- t1$p <= 0.05
+    t2[which(is.na(t2))] <- FALSE
+    corrmat <- corrmat + t2
+    nonnacount <- nonnacount + !is.na(t1$p <= 0.05)
+  }
+  
+  corrmat[lower.tri(corrmat)] <- 0
+  corrmat <- corrmat + t(corrmat)
+  diag(corrmat) = diag(corrmat) / 2
+  M <- corrmat / nonnacount
+  return( M )
+}
+
+M1 <- SetLociCorr(mode = "IRX2P")
+M2 <- SetLociCorr(mode = "SLC5A7P")
+M3 <- SetLociCorr(mode = "ZNF454")
+
+mat <- matrix(c(1,3,3,2,3,3), 3)
+
+layout(mat)
+corrplot(M1, method = "pie", is.corr=F, 
+         cl.lim = c(0,1), type = "upper", tl.pos = "d", cl.pos = "n")
+title("IRX2P", line = -11, cex.main = 2)
+corrplot(M2, method = "pie", is.corr=F, 
+         cl.lim = c(0,1), type = "upper", tl.pos = "d", cl.pos = "n")
+title("SLC5A7P",  line = -11, cex.main = 2)
+corrplot(M3, method = "pie", is.corr=F, 
+         cl.lim = c(0,1), type = "upper", tl.pos = "d")
+title("ZNF454",  line = -21, cex.main = 2)
 ```
 
 
