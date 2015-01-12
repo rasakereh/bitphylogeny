@@ -1,3 +1,4 @@
+---
 ## Overview
 
 This README file discusses the code associated with the manuscript:
@@ -9,12 +10,12 @@ The Python code is based on the implementation from
 Ryan Prescott Adams, Zoubin Ghahramani and Michael I. Jordan. (2010)
 Tree-Structured Stick Breaking for Hierarchical Data. NIPS.
 http://hips.seas.harvard.edu/files/tssb.tgz
-
+---
 ## License
 
 BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 
-
+---
 ## Dependencies
 
 1. Python:
@@ -27,25 +28,25 @@ BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 2. R:
    rPython, mcclust, e1071, igraph, gplots, riverplot.
 
-
+---
 ## Installation:
 
-1.  Clone the BitPhylogeny repository 
+1. Clone the BitPhylogeny repository 
 ```
 git clone git@bitbucket.org:ke_yuan/bitphylogeny.git 
 cd bitphylogeny
 ```
-2.  Install the BitPhylogeny python package
+2. Install the BitPhylogeny python package
 ```
 cd python
 sudo python setup.py install
 ```
-3.  Install the R package
+3. Install the R package
 ```
 cd ../R
 R CMD INSTALL bitphylogenyR_0.1.tar.gz
 ```
-
+---
 ## Useage
 We've provided a sample data file 'sample_data.csv' in the python folder. To run the sample file, execute the following code. 
 ```
