@@ -31,17 +31,19 @@ BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 ---
 ## Installation:
 
-1. Clone the BitPhylogeny repository 
+Clone the BitPhylogeny repository:
 ```
 git clone git@bitbucket.org:ke_yuan/bitphylogeny.git 
 cd bitphylogeny
 ```
-2. Install the BitPhylogeny python package
+
+Install the BitPhylogeny python package:
 ```
 cd python
 sudo python setup.py install
 ```
-3. Install the R package
+
+Install the R package:
 ```
 cd ../R
 R CMD INSTALL bitphylogenyR_0.1.tar.gz
@@ -64,7 +66,4 @@ BitPhylogeny analyse 'sample_data.csv' 'output' -true_label -n 200 -b 10 -t 5 -m
 ```
 The output folder contains the mcmc-traces and treescripts. To visualise tree, one need to use the aisee software to run *.gdl files. The aisee software can be obtained from http://www.absint.com/aisee/index.htm
  
-For post processing, please use the accompanying R package. Tutorials of the R package are stored in doc/ directory 
-
-
-
+For post processing, please use the accompanying R package. Tutorials of the R package are stored in doc/ directory
