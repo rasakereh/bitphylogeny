@@ -29,7 +29,7 @@ BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
    rPython, mcclust, e1071, igraph, gplots, riverplot.
 
 ---
-## Installation:
+## Installation
 
 Clone the BitPhylogeny repository:
 ```
