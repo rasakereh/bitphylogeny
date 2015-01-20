@@ -123,7 +123,7 @@ get_label_hc <- function(x, K){
   return(list(label = hc_label, genotype = genotype))
 }
 
-get_label_kc <- function( x, K ){
+get_label_kc <- function(x, K){
 
   dis <- dist(x, 'binary')
 
@@ -155,7 +155,6 @@ plot_mst <- function(genotype, label, mst,
                      flag = FALSE, filepath = "", filename = ""){
   reads <- sapply(unique(unlist( label ) ),
                     function(ii) length( which( label==ii )))
-  #mst <- get_mst(genotype)
   l = layout.reingold.tilford(graph=mst,
                               root=which.min(rowSums(genotype)))
   nodes = matrix(0, dim(genotype)[1], 3 )
@@ -168,7 +167,7 @@ plot_mst <- function(genotype, label, mst,
     nodes[ii,2] <- reads[ii]
     nodes[ii,3] <- geno
   }
-  colnames(nodes) = c('Nodes','Read Counts','Genotype')
+  colnames(nodes) = c('Nodes', 'Read Counts', 'Genotype')
 
   if (flag){
       pdf( paste(filepath, '/', filename, '.pdf',sep=''),  width=15, height=9)
@@ -195,28 +194,35 @@ plot_mst_from_dir <- function(p1,p2, flag=T){
   }
 }
 
-plot_sankey<-function(df){
+plot_sankey<-function(df, gdl = FALSE){
   nodemat <- df$nodemat
   edgemat <- df$edgemat
-  genomat <- df$genomat
-  nn <- nodemat[,1]
-  g <- graph.empty() + vertices(nn)
-  ee <- unlist(t(edgemat[,1:2]))
-  g <- g + edges(sapply(ee, function(i) which(nn==i)))
-  ll <- layout.reingold.tilford(g)
-  nodemat[,'y'] = ll[,1]
+  # To be removed------------------------------------#
+  if (!gdl) {
+      nn <- nodemat[,1]
+      g <- graph.empty() + vertices(nn)
+      ee <- unlist(t(edgemat[,1:2]))
+      g <- g + edges(sapply(ee, function(i) which(nn==i)))
+      ll <- layout.reingold.tilford(g)
+      nodemat[,'y'] = ll[,1]
+  }
+  #--------------------------------------------------#
   river <- makeRiver(nodemat, edgemat)
   style <- list(edgecol= "col")
-  par(mfrow = c(1, 2))
   riverplot(river, srt=90, lty=1, default_style=style)
-  textplot(genomat, show.rownames = F)
 }
 
-plot_sankey_mft <- function(fh){
+plot_sankey_mft <- function(fh, format = "graphml"){
   treefreq <- read.csv(fh)
   mft <- treefreq[which.max(treefreq[,'freq']), 1]
-  fn <- paste(dirname(fh), '/nodes-', mft, '.gdl', sep='')
-  df <- gdl2df(fn)
+  if (format == "graphml"){
+      fn <- paste(dirname(fh), '/nodes-', mft, '.graphml', sep='')
+      g <- read.graph(normalizePath(fn), format = "graphml")
+      df <- igraph2df(g)
+  }else{
+      fn <- paste(dirname(fh), '/nodes-', mft, '.gdl', sep='')
+      df <- gdl2df(fn)
+  }  
   plot_sankey(df)
 }
 
@@ -303,6 +309,49 @@ run_baseline <- function(output, K, tree_type){
 }
 
 # Utilities --------------------------------------------------------------------
+
+igraph2df <- function(g) {
+  dataFrame <- get.data.frame(g, what = "both")
+  nodes <- dataFrame$vertices
+  edges <- dataFrame$edges
+  d1 <- strsplit(nodes$name, "-")
+  depth <- sapply(1:length(d1), function(i) length(d1[[i]]) ) - 1
+  nodes$layer <- depth
+  nodes$y <- layout.reingold.tilford(g)[,1]
+  nodes <- rename(nodes, c("name" = "ID", "branch" = "x"))
+  
+  # change branch length
+  for (k in 1:nrow(nodes)) {
+    code = unlist(strsplit(nodes[k,"ID"],'-'))
+    if (length(code) >=3) {
+      index = which(nodes[, "layer" ] == (length(code)-1))
+      for (id in index) {
+        code1 = unlist(strsplit(nodes[id,"ID"],'-'))
+        tt = sapply(2:length(code1), function(i) code1[i] == code[i])
+        if ( sum(tt) == (length(code1) - 1) ) {
+          nodes[k, "x"] = as.numeric(nodes[k,"x"]) +
+            as.numeric(nodes[id, "x"])
+          break
+        }
+      }
+    }
+  }
+  
+  # Node color
+  palette = gg_color_hue(length(unique(depth)))
+  nodes$col <- palette[factor( nodes$layer )]
+  nn <- subset(nodes, select = c(ID, x, y, col))
+  
+  #Edge 
+  edges <- rename(edges, c("from" = "N1", "to" = "N2"))
+  edges <- subset(edges, select = c(N1, N2, Value))
+  edges$direction <- "A"
+  edges$col <- "gray90"
+  
+  # Marker pattern
+  genomat <- subset(nodes, select = c(ID, size, params) )
+  return(list(nodemat = nn, edgemat = edges, genomat = genomat))
+}
 
 gdl2df <- function( file_gdl ){
   filetext <- read.csv(file_gdl, as.is  = T, quote="")
@@ -444,4 +493,9 @@ add_legend <- function(...) {
   on.exit(par(opar))
   plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
   legend(...)
+}
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length=n+1)
+  hcl(h=hues, l=65, c=100)[1:n]
 }

@@ -10,7 +10,7 @@ export('bitphyloR', 'compute_vmeasures',
        "df2igraph", "get_common_tree_distance_df",
        "get_tree_distance_common", "get_tree_distance_pairwise",
        "get_genotype_intercept", "get_genotype",
-       "get_pairwise_tree_distance_df")
+       "get_pairwise_tree_distance_df", "igraph2df")
 import(rPython)
 import(igraph)
 importFrom(cluster, pam, silhouette)
@@ -18,3 +18,4 @@ importFrom(mcclust, comp.psm, maxpear)
 importFrom(e1071, hamming.distance)
 importFrom(gplots, textplot)
 importFrom(riverplot, makeRiver, riverplot)
+importFrom(plyr, rename)

@@ -78,6 +78,8 @@ def run_analysis(seqsamp , fout, contains_true_label,
 
     seed(rand_seed)
     
+    burnin = int(burnin)
+    num_samples = int(num_samples)
 
     root = BitPhylogeny(dims=dims, mode = mode)
     tssb = TSSB(dp_alpha=2.0, dp_gamma=3e-1, alpha_decay=0.1,
@@ -103,7 +105,7 @@ def run_analysis(seqsamp , fout, contains_true_label,
 
     intervals = zeros((7))
     print "Starting MCMC run..." +seqsamp
-    for iter in range(-int(burnin),int(num_samples)):
+    for iter in range(-burnin, num_samples):
 
         times = [ time.time() ]
 
@@ -179,11 +181,11 @@ def run_analysis(seqsamp , fout, contains_true_label,
                     maxidx = where(unnormpost_traces==node_num_best_llh)[0][0]
                     if maxidx > idx - tree_collect_band or idx - tree_collect_band == 0:
                         node_fit = cPickle.loads(tssb_traces[mod(maxidx,tree_collect_band)][0])
-                        filename = 'nodes-%i.gdl' % (node_num)
+                        filename = 'nodes-%i.graphml' % (node_num)
                         fn2 = tree_folder + filename
-                        fh2 = open(fn2,'w')
-                        node_fit.print_graph_full_logistic_different_branch_length(fh2)
-                        fh2.close()
+                        g = node_fit.tssb2igraph()
+                        g["index"] = idx
+                        g.write_graphml(fn2)
 
     nodes_tabular = itemfreq(bignodes_traces)
     nodes_tabular[:,1] = nodes_tabular[:,1] / (num_samples/thin)
@@ -212,12 +214,6 @@ def run_analysis(seqsamp , fout, contains_true_label,
     write_traces2csv(trace_folder + 'node_depth_traces.csv', node_depth_traces)
     write_traces2csv(trace_folder + 'branch_traces.csv', branch_traces)
     write_traces2csv(trace_folder + 'root_param_traces.csv', root_dist)
-
-    numfiles = 10 # number of small arrays. Tested 50 files for (5e3,2e3,8) arrays. 
-                  # If numfiles = 50, the function will generate 50 files in the 
-                  # params_folder each contains a (1e2,2e3,8) array.
-    write_params_traces2file(params_traces, numfiles, params_folder)
-
     write_traces2h5(trace_folder + 'params_traces.h5', params_traces)
 
 
