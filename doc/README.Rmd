@@ -2,12 +2,12 @@
 title: 'R markdown file for "BitPhylogeny: A probabilistic framework for reconstructing
   intra-tumor phylogenies" '
 output:
-  html_document:
-    fig_caption: yes
-    number_sections: yes
   pdf_document:
     number_sections: yes
     toc: yes
+  html_document:
+    fig_caption: yes
+    number_sections: yes
   word_document: default
 ---
 
@@ -35,7 +35,7 @@ sudo python setup.py install
 Finally, install the R package
 ```
 cd ../R
-R CMD INSTALL bitphylogenyR_0.1.tar.gz 
+R CMD INSTALL bitphylogenyR_0.99.tar.gz 
 ```
 ## An example
 ### BitPhylogeny
@@ -55,7 +55,7 @@ true_label <- tmp[,dim(tmp)[2]]
 ```
 
 Run the BitPhylogeny analysis as the following 
-```{r, cache = TRUE}
+```{r, cache = TRUE} 
 bitphyloR(example_file, './output', T, 200, 50, 5)
 ```
 

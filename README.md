@@ -47,7 +47,7 @@ sudo python setup.py install
 Install the R package:
 ```
 cd ../R
-R CMD INSTALL bitphylogenyR_0.1.tar.gz
+R CMD INSTALL bitphylogenyR_0.99.tar.gz
 ```
 ---
 ## Useage
