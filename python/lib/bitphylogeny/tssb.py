@@ -5,6 +5,7 @@ import copy
 from time         import *
 from numpy        import *
 from numpy.random import *
+from igraph       import *
 
 from bitphylogeny.util import *
 
@@ -584,341 +585,7 @@ class TSSB(object):
                     print "successful swap!!!"
                     self.resample_node_params()
                     self.resample_stick_orders()
-        
-    
-    def print_graph(self, fh, base_width=5000, min_width=5):
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                equalydist:       no            \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      25 """
-        print >>fh, """node: { label:"%0.5f" title:"%s" width:%d}""" \
-            % (self.root['main'], "X", max(int(self.root['main']*base_width), min_width))
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%0.5f" title:"%s" width:%d}""" \
-                    % (child_mass, child_name, max(int(child_mass*base_width),min_width))
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        print >>fh, """}"""
-
-
-
-    def print_graph_normal(self, fh, base_width=5, min_width=200):
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      25            \
-                                yspace:            20           \
-				                xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Norm(%f,%f)" title:"%s" width:%d}""" \
-          %(len(self.root['node'].get_data()),self.root['node'].params[0],
-           self.root['node'].params[1]**2, "X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Norm(%f,%f)" title:"%s" width:%d}""" \
-                  % (len(child['node'].get_data()),
-                     child['node'].params[0], child['node'].params[1]**2,
-                     child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1)
-        print >>fh, """}"""
-
-
-        
-    def print_graph_binomial(self, fh, base_width=5, min_width=200):
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      30            \
-                                yspace:            20           \
-				xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Freq(%f)" title:"%s" width:%d}""" \
-          %(len(self.root['node'].get_data()),self.root['node'].params, "X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Freq(%f)" title:"%s" width:%d}""" \
-                       % (len(child['node'].get_data()), child['node'].params, child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1)
-        print >>fh, """}"""
-        
-    def print_graph_pairing(self, fh, base_width=5, min_width=300):
-        edges   = sticks_to_edges(self.root['sticks'])
-        weights = diff(hstack([0.0, edges]))
-        root_mass = weights[0] * self.root['main']
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      200            \
-                                yspace:            20           \
-                                xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(5)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(5,13)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(13,21)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(21,29)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(29,37)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(37,45)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(45,50)])), \
-            "\n", \
-            "mass: %0.3f" % (root_mass), \
-            """" title:"%s" width:%d}""" \
-          %("X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(5)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(5,13)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(13,21)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(21,29)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(29,37)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(37,45)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(45,50)])), \
-                "\n", \
-                "mass: %0.3f" % (child_mass), \
-                """" title:"%s" width:%d}""" \
-                    %(child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1-root_mass)
-        print >>fh, """}"""
-
-    def print_graph_full(self, fh, base_width=5, min_width=300):
-        edges   = sticks_to_edges(self.root['sticks'])
-        weights = diff(hstack([0.0, edges]))
-        root_mass = weights[0] * self.root['main']
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      200            \
-                                yspace:            20           \
-                                xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(5)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(5,8)])), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, self.root['node'].params[range(8,8)])), \
-            "\n", \
-            "mass: %0.3f" % (root_mass), \
-            """" title:"%s" width:%d}""" \
-          %("X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(5)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(5,8)])), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, child['node'].params[range(8,8)])), \
-                "\n", \
-                "mass: %0.3f" % (child_mass), \
-                """" title:"%s" width:%d}""" \
-                    %(child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1-root_mass)
-        print >>fh, """}"""
-
-
-    def print_graph_pairing_logistic(self, fh, base_width=5, min_width=300):
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      200            \
-                                yspace:            20           \
-                                xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(5)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(5,13)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(13,21)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(21,29)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(29,37)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(37,45)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(45,50)]))), \
-            """" title:"%s" width:%d}""" \
-          %("X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(5)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(5,13)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(13,21)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(21,29)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(29,37)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(37,45)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(45,50)]))), \
-                """" title:"%s" width:%d}""" \
-                    %(child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1)
-        print >>fh, """}"""
-        
-    def print_graph_full_logistic(self, fh, base_width=5, min_width=300):
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      200            \
-                                yspace:            20           \
-                                xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(5)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(5,13)]))), \
-            "\n", \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(13,16)]))), \
-            """" title:"%s" width:%d}""" \
-          %("X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(5)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(5,13)]))), \
-                "\n", \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(13,16)]))), \
-                """" title:"%s" width:%d}""" \
-                    %(child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1)
-        print >>fh, """}"""
-
-    def print_graph_full_logistic(self, fh, base_width=5, min_width=300):
-        edges   = sticks_to_edges(self.root['sticks'])
-        weights = diff(hstack([0.0, edges]))
-        if len(weights) > 0:
-            root_mass = weights[0] * self.root['main']
-        else: #in case there is a problem with weights, as observed in some runs
-            root_mass = -1
-        print >>fh, """graph: { title:            "TSSB Graph"  \
-                                portsharing:      no            \
-                                smanhattanedges:  yes           \
-                                splines:          yes           \
-                                equalydist:       yes           \
-                                layout_algorithm: tree          \
-                                node.fontname:    "helvR8"      \
-                                node.height:      60            \
-                                yspace:            20           \
-                                xspace:            5 """
-        print >>fh, """node: { label:"%d ~ Genotype """ %(len(self.root['node'].get_data())), \
-            " ".join(map(lambda x: "%0.2f" %x, sigmoid(self.root['node'].params[range(8)]))), \
-            "\n Branch Length: %0.2f Node Mass: %0.2f" % (self.root['node'].branch_caller(), root_mass), \
-            """" title:"%s" width:%d}""" \
-          %("X", min_width)
-        def descend(root, name, mass):
-            total   = 0.0
-            edges   = sticks_to_edges(root['sticks'])
-            weights = diff(hstack([0.0, edges]))
-            for i, child in enumerate(root['children']):
-                child_name = "%s-%d" % (name, i)
-                child_mass = mass * weights[i] * child['main']
-                print >>fh, """node: {  label:"%d ~ Genotype """ % (len(child['node'].get_data())), \
-                " ".join(map(lambda x: "%0.2f" %x, sigmoid(child['node'].params[range(8)]))), \
-                "\n Branch Length: %0.2f Node Mass: %0.2f" % (child['node'].branch_caller(), child_mass),\
-                """" title:"%s" width:%d}""" \
-                    %(child_name, min_width)
-                print >>fh, """edge: { source:"%s" target:"%s" anchor:1}""" % (name, child_name)
-                total += child_mass + descend(child, child_name, mass*weights[i] * (1.0 - child['main']))
-            return total
-        descend(self.root, 'X', 1)
-        print >>fh, """}"""
+                                                
 
     def print_graph_full_logistic_different_branch_length(self, fh, base_width=5, min_width=300):
         edges   = sticks_to_edges(self.root['sticks'])
@@ -959,6 +626,54 @@ class TSSB(object):
             return total
         descend(self.root, 'X', 1)
         print >>fh, """}"""
+
+
+    def tssb2igraph(self):
+        
+        edges   = sticks_to_edges(self.root['sticks'])
+        weights = diff(hstack([0.0, edges]))
+        if len(weights) > 0:
+            root_mass = weights[0] * self.root['main']
+        else: #in case there is a problem with weights, as observed in some runs
+            root_mass = -1
+
+        g = Graph(directed = True)
+        g.add_vertex(name = "X", 
+                     params = " ".join(map(lambda x: "%.15f" %x, 
+                                           self.root['node'].params)), 
+                     size = len(self.root['node'].get_data()), 
+                     mass = root_mass, 
+                     branch = self.root['node'].branch_length, 
+                     members = " ".join(map(lambda x: "%s" %x, 
+                                            self.root['node'].data)) ) 
+        
+        def descend(root, name, mass, g):
+            total   = 0.0
+            edges   = sticks_to_edges(root['sticks'])
+            weights = diff(hstack([0.0, edges]))
+            for i, child in enumerate(root['children']):
+                child_name = "%s-%d" % (name, i)
+                child_mass = mass * weights[i] * child['main']
+                g.add_vertex(name = child_name, 
+                             params = " ".join(map(lambda x: "%.15f" %x, 
+                                                   child['node'].params)), 
+                             size = len(child['node'].get_data()), 
+                             mass = child_mass, 
+                             branch = child['node'].branch_length,
+                             members = " ".join(map(lambda x: "%s" %x, 
+                                                    child['node'].data)) )
+                g.add_edge(name, child_name, weight = child['node'].branch_length, 
+                           Value = len(child['node'].get_data()))
+                (tmp, g) = descend(child, 
+                                   child_name, 
+                                   mass*weights[i] * (1.0 - child['main']),
+                                   g)
+                
+                total += child_mass + tmp
+            return (total, g)
+
+        (total,g) = descend(self.root, 'X', 1, g)
+        return g
 
     def remove_empty_nodes(self):
 
