@@ -37,7 +37,7 @@ def run_analysis(seqsamp , fout, contains_true_label,
                  mode = "methylation", rand_seed = 1234, row_names = False):
 
     if row_names:
-        index_col = 1
+        index_col = 0
     else:
         index_col = False
     data = pd.read_csv(seqsamp, index_col = index_col)
