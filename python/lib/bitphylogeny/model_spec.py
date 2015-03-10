@@ -140,8 +140,14 @@ class BitPhylogeny(Node):
         
         mode       = self.mode
         data       = self.get_data()
-        counts     = sum(data, axis=0)
         num_data   = data.shape[0]
+        
+        if sum(isnan(data)) == 0:
+            counts = sum(data, axis=0)
+            data_has_nan = False
+        else:
+            data_has_nan = True
+            
         mm         = (self.mu_caller(), -self.mu_caller())
         est_std    = self.std_caller()
         ratemat    = self.ratemat_caller()
@@ -150,7 +156,7 @@ class BitPhylogeny(Node):
         def logpost(params):
 
             if any(params >= self.max_param) or any(params <= -self.max_param):
-                llh = float('-inf')
+                return float('-inf')
 
             if self.parent() is None:
                 llh = rootpriorpdfln(params, self.mu_caller(),
@@ -160,7 +166,7 @@ class BitPhylogeny(Node):
                 llh = mixlaplacepdfln(params, mm, est_std, self.parent().params,
                                       ratemat*est_branch)
 
-            if mode == "methylation":
+            if not data_has_nan:
                 llh = llh + sum(counts*sigmoidln(params)) + \
                       sum((num_data-counts)*sigmoidln(-params))
             elif num_data > 0:
@@ -271,7 +277,7 @@ class BitPhylogeny(Node):
 
 
     def logprob(self, x):
-        if self.mode == "methylation":
+        if sum(isnan(x))==0:
             return sum(x*self._sigln + (1.0-x)*self._negsigln)
         else:
             return nansum(x*self._sigln + (1.0-x)*self._negsigln)
