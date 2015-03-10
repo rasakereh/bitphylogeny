@@ -1,7 +1,0 @@
-graph: { title:            "TSSB Graph"                                  portsharing:      no                                            smanhattanedges:  yes                                           splines:          yes                                           equalydist:       yes                                           layout_algorithm: tree                                          node.fontname:    "helvR8"                                      node.height:      60                                           yspace:            20                                           xspace:            5 
-node: { label:"214 ~ Genotype  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
- Branch Length: 0.00 Node Mass: 0.10 " title:"X" width:300}
-node: {  label:"1786 ~ Genotype  0.00 0.00 0.00 0.00 0.00 0.00 0.00 1.00 
- Branch Length: 0.20 Node Mass: 0.90 " title:"X-0" width:300}
-edge: { source:"X" target:"X-0" anchor:1}
-}
