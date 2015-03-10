@@ -271,7 +271,10 @@ class BitPhylogeny(Node):
 
 
     def logprob(self, x):
-        return sum(x*self._sigln + (1.0-x)*self._negsigln)
+        if self.mode == "methylation":
+            return sum(x*self._sigln + (1.0-x)*self._negsigln)
+        else:
+            return nansum(x*self._sigln + (1.0-x)*self._negsigln)
 
     def complete_logprob(self):
         return self.logprob(self.get_data())
