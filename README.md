@@ -53,17 +53,18 @@ R CMD INSTALL bitphylogenyR_0.99.tar.gz
 ## Useage
 We've provided a sample data file 'sample_data.csv' in the python folder. To run the sample file, execute the following code. 
 ```
-BitPhylogeny analyse 'sample_data.csv' 'output' -true_label -n 200 -b 10 -t 5 -mode "methylation" -rand_seed 1234 
+BitPhylogeny analyse 'sample_data.csv' 'output' -true_label -n 200 -b 10 -t 5 -mode "methylation" -seed 1234 
 ```
 ```
-'sample_data.csv': the data file
+'sample_data.csv': the data file. Please make sure rows represent data points, colums represent dimension 
 'output': the output folder where the MCMC traces and tree scripts are stored.
 -true_label: data file contains true labels as the last column.
 -n: number of mcmc samples in total 
 -b: number of burn-in samples
 -t: thin number (a current requirement is (number of mcmc samples / thin) > 5)
 -mode: "methylation" or "mutation"
--rand_seed: default 1234
+-seed: default 1234
+-row_names: the first colum of the data file is row names 
 ```
 The output folder contains the mcmc-traces and treescripts. 
 
