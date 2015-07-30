@@ -19,12 +19,13 @@ BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 ## Dependencies
 
 1. Python:
-   NumPy,SciPy
+   NumPy,
+   SciPy,
    scikit-learn: http://scikit-learn.org/stable/ 
    rpy2: http://rpy.sourceforge.net/ 
    pandas: http://pandas.pydata.org/
    h5py: http://www.h5py.org/
-   igraph
+   python-igraph: http://igraph.org/python/
 
 2. R:
    rPython, mcclust, e1071, igraph, gplots, riverplot, plyr.
