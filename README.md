@@ -16,19 +16,25 @@ http://hips.seas.harvard.edu/files/tssb.tgz
 BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 
 ---
-## Dependencies 
+## Dependencies and tested versions
 
-1. Python:
-   NumPy 1.9.2,
-   SciPy 0.15.1,
-   scikit-learn 0.16.1: http://scikit-learn.org/stable/ 
-   rpy2 2.5.6: http://rpy.sourceforge.net/ 
-   pandas 0.16.1: http://pandas.pydata.org/
-   h5py 2.5.0: http://www.h5py.org/
-   python-igraph 0.7.1: http://igraph.org/python/
+1. Python 2.7:
+      * NumPy 1.9.2,
+      * SciPy 0.15.1,
+      * scikit-learn 0.16.1: http://scikit-learn.org/stable/ 
+      * rpy2 2.5.6: http://rpy.sourceforge.net/ 
+      * pandas 0.16.1: http://pandas.pydata.org/
+      * h5py 2.5.0: http://www.h5py.org/
+      * python-igraph 0.7.1: http://igraph.org/python/
 
-2. R:
-   rPython 0.0-6, mcclust 1.0, e1071 1.6-7, igraph 0.7.1, gplots 2.17.0, riverplot 0.5, plyr 1.8.2.
+2. R 3.2:
+      * rPython 0.0-6
+      * mcclust 1.0
+      * e1071 1.6-7 
+      * igraph 0.7.1 
+      * gplots 2.17.0 
+      * riverplot 0.5 
+      * plyr 1.8.2.
 
 ---
 ## Installation
