@@ -16,40 +16,19 @@ http://hips.seas.harvard.edu/files/tssb.tgz
 BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 
 ---
-## Dependencies
+## Dependencies 
 
 1. Python:
-   * NumPy 1.9.2,
-   * SciPy 0.15.1,
-   * scikit-learn 0.16.1: http://scikit-learn.org/stable/ 
-   * rpy2 2.5.6: http://rpy.sourceforge.net/ 
-   * pandas 0.16.1: http://pandas.pydata.org/
-   * h5py 2.5.0: http://www.h5py.org/
-   * python-igraph 0.7: http://igraph.org/python/
+   NumPy 1.9.2,
+   SciPy 0.15.1,
+   scikit-learn 0.16.1: http://scikit-learn.org/stable/ 
+   rpy2 2.5.6: http://rpy.sourceforge.net/ 
+   pandas 0.16.1: http://pandas.pydata.org/
+   h5py 2.5.0: http://www.h5py.org/
+   python-igraph 0.7.1: http://igraph.org/python/
 
 2. R:
-   rPython, mcclust, e1071, igraph, gplots, riverplot, plyr.
-   ```
-   sessionInfo()
-   R version 3.2.0 (2015-04-16)
-   Platform: x86_64-apple-darwin13.4.0 (64-bit)
-   Running under: OS X 10.10.5 (Yosemite)
-
-   locale:
-   [1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8
-
-  attached base packages:
-   [1] stats     graphics  grDevices utils     datasets  methods   base     
-
-  other attached packages:
-   [1] bitphylogenyR_0.99 igraph_0.7.1       rPython_0.0-6      RJSONIO_1.3-0     
-
-  loaded via a namespace (and not attached):
-   [1] riverplot_0.5      Rcpp_0.11.6        gtools_3.5.0       class_7.3-12      
-   [5] mcclust_1.0        bitops_1.0-6       plyr_1.8.2         e1071_1.6-7       
-   [9] KernSmooth_2.23-14 gplots_2.17.0      gdata_2.17.0       tools_3.2.0       
-  [13] cluster_2.0.1      caTools_1.17.1 
-  ```
+   rPython 0.0-6, mcclust 1.0, e1071 1.6-7, igraph 0.7.1, gplots 2.17.0, riverplot 0.5, plyr 1.8.2.
 
 ---
 ## Installation
