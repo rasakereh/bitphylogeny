@@ -18,7 +18,7 @@ BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
 ---
 ## Dependencies and tested versions
 
-1. Python 2.7:
+1. Python 2.7.6:
       * NumPy 1.9.2,
       * SciPy 0.15.1,
       * scikit-learn 0.16.1: http://scikit-learn.org/stable/ 
@@ -27,7 +27,7 @@ BitPhylogeny is licensed under the GPL v3, see the LICENSE.txt file for details.
       * h5py 2.5.0: http://www.h5py.org/
       * python-igraph 0.7.1: http://igraph.org/python/
 
-2. R 3.2:
+2. R 3.2.0:
       * rPython 0.0-6
       * mcclust 1.0
       * e1071 1.6-7 
