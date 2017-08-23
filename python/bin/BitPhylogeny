@@ -45,6 +45,9 @@ analyse_parser.add_argument('-seed', default=1234, type=int,
 analyse_parser.add_argument('-row_names', action='store_true', default=False,
                             help="The first column is row names")
 
+analyse_parser.add_argument('-collect_all_trees', action='store_true', default=False,
+                            help="Store all graphml trees")
+
 analyse_parser.set_defaults(func=run_wrapper)
 
 #-------------------------------------------------------------------

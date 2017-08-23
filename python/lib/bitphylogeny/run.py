@@ -28,13 +28,14 @@ def run_wrapper(args):
     mode = args.mode
     rand_seed = args.seed
     row_names = args.row_names
+    collect_all_trees = args.collect_all_trees
     run_analysis(fin, fout, contains_true_label, num_samples, 
-                 burnin, thin, mode, rand_seed, row_names)
+                 burnin, thin, mode, rand_seed, row_names, collect_all_trees)
 
 
 def run_analysis(seqsamp , fout, contains_true_label, 
                  num_samples, burnin, thin, 
-                 mode = "methylation", rand_seed = 1234, row_names = False):
+                 mode = "methylation", rand_seed = 1234, row_names = False, collect_all_trees = False):
 
     if row_names:
         index_col = 0
@@ -59,6 +60,15 @@ def run_analysis(seqsamp , fout, contains_true_label,
     else:
         shutil.rmtree(tree_folder)
         os.makedirs(tree_folder)
+
+    if collect_all_trees:
+        all_tree_folder =  fout + '/' + seqsamp  + '/alltreescripts/'
+
+        if not os.path.exists(all_tree_folder):
+            os.makedirs(all_tree_folder)
+        else:
+            shutil.rmtree(all_tree_folder)
+            os.makedirs(all_tree_folder)
 
 
     trace_folder = fout + '/' + seqsamp + '/mcmc-traces/' 
@@ -154,6 +164,14 @@ def run_analysis(seqsamp , fout, contains_true_label,
             label_traces[idx]       = object2label(tssb.assignments, nodes)
             params_traces[idx]      = array([x.params for x in tssb.assignments])
             node_depth_traces[idx]  = array([x.depth for x in tssb.assignments])
+
+            if collect_all_trees:
+                filename = 'iter-%i.graphml' % (idx)
+                fn = all_tree_folder + filename
+                g = tssb.tssb2igraph()
+                g["index"] = idx
+                g.write_graphml(fn)
+
         
             if mod(idx, 10) == 0:
                 (weights, nodes) = tssb.get_mixture()
@@ -171,6 +189,7 @@ def run_analysis(seqsamp , fout, contains_true_label,
             # print treescripts
             if idx + 1 == num_samples/thin:
                 idx = idx + 1
+
 
             if mod(idx,tree_collect_band) == 0 and idx > 0:
                 tmp_nodes_tabular = itemfreq(bignodes_traces[idx-tree_collect_band:idx])
