@@ -72,7 +72,9 @@ BitPhylogeny analyse 'sample_data.csv' 'output' -true_label -n 200 -b 10 -t 5 -m
 -mode: "methylation" or "mutation"
 -seed: default 1234
 -row_names: the first colum of the data file is row names 
+-collect_all_trees: option to store all trees (default: false)
 ```
-The output folder contains the mcmc-traces and treescripts. 
+The output folder contains the mcmc-traces, treescripts, alltreescripts (if -collect_all_trees is flagged). 
 
 For post processing, please use the accompanying R package. Tutorials of the R package are stored in doc/ directory
+For instruction on the Bitphylogeny graph, please find doc/bitphylogeny_node.html
