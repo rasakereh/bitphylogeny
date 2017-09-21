@@ -90,6 +90,7 @@ def run_analysis(seqsamp , fout, contains_true_label,
     
     burnin = int(burnin)
     num_samples = int(num_samples)
+    thin = int(thin)
 
     root = BitPhylogeny(dims=dims, mode = mode)
     tssb = TSSB(dp_alpha=2.0, dp_gamma=3e-1, alpha_decay=0.1,
